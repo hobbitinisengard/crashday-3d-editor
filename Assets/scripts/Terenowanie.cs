@@ -1,90 +1,91 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-public class Terenowanie : MonoBehaviour {
-	public GameObject FormMenu;
+//handles terrain forming (FORM mode)
+public class Terenowanie : MonoBehaviour
+{
+    public GameObject FormMenu;
     public GameObject savePanel;
     public Text state_help_text;
-	public Slider slider;
+    public Slider slider;
     public Material transp;
-	public Material red;
-	public Button toslider; //ustawia zaznaczone vertexy do wartości slidera
-	public Button Flatten;
-    public Button Jumper; // Łagodne doprowadzenie do prostrego
-	public Button Prostry; // kształt /
-    public Button JumperEnd; //Łagodne zakończenie prostrego
-	public Button Integral; // kształt całki
-    public Toggle KeepShape; //Tryb kształtów
-    public Text HelperInputField; // Pomocniczy tekst do wpisywania konkretnej wartości
-    /// <summary>
-    /// przechowuje bieżące wysokości wszystkich wertexów. Podczas stawiania tilesów trawki są dorównywane, co zaburza teren. Gdy tiles jest usuwany, to wysokość danego vertexa jest przywracana z tej tablicy
-    /// </summary>
-	public static GameObject indicator;
-	public static List<GameObject> znaczniki = new List<GameObject> ();
-	public static List<GameObject> surroundings = new List<GameObject> ();
+    public Material red;
+    public Button toslider; //button TO SLIDER
+    public Button hill; //creates hill with smooth by ...
+    public byte hillDim = 0; //  .. hillDim edges
+    public Button Flatten;
+    public Button Jumper;
+    public Button Prostry;
+    public Button JumperEnd;
+    public Button Integral;
+    public Toggle KeepShape;
+    public Text HelperInputField; // Text for setting height by numpad
+    public static GameObject indicator;
+    public static List<GameObject> znaczniki = new List<GameObject>();
+    public static List<GameObject> surroundings = new List<GameObject>();
     public static int minHeight;
     public static int maxHeight;
     public static int rayHeight;
-	int index = 0; //Indexy do meshow dla vertexa
-    int max_verts_visible_dim = 60; // Maksymalna liczba widocznych znaczników vertexów terenu w trybie 2.
+    int index = 0; //Indexy do meshow dla vertexa
+    public static Vector3Int max_verts_visible_dim = new Vector3Int(60, 0, 60); // Vector3 of visible vertices in second form mode
     float slider_realheight;
-	GameObject current; // Ostatnio zaznaczony element
+    GameObject current; // Ostatnio zaznaczony element
 
-    public static bool firstFormingMode = true; //  Klawiszem F przestawiamy jej wartość logiczną => sterujemy trybem ustawiania
+    public static bool firstFormingMode = true; //  F - toggles forming mode
     public static bool istilemanip = false;
-	public static bool isSelecting = false; //Tryb zaznaczania vertexów w trybie manipulacji tilesa
-    bool waiting4LD = false; //Po kliknięciu kształtu, czekamy na 1 klik - zaznaczenie LewegoDolnego rogu
-    bool waiting4LDpassed = false; // Przypisywana w stanie waiting4LD. Jesteśmy po 1ym kliku
-    bool is_entering_keypad_value = false; // Przypisywana podczas pomocniczego wpisywania wysokości na klawiaturze - numericenter();
-    int menucontrol = 1;
-	string last_form_button;
-	Vector3Int LD;
-    float LDH; // wartość tylko dla wysokości LD.  Żeby nie mieszać intów z floatami
-	Vector3 mousePosition1;
-    RaycastHit hit;
+    public static bool isSelecting = false; //Selecting vertices mode (white <-> red)
+    bool waiting4LD = false; //After selecting shape, state of waiting for bottom-left vertex
+    bool waiting4LDpassed = false; // state of execution of shape after waiting for bottom-left vertex
+    bool is_entering_keypad_value = false; // used in numericenter();
+    int menucontrol = 1; // 0=do nothing 1=firstFormingMode 2=second forming mode
+    string last_form_button;
+    Vector3Int LD;
+    float LDH; // auxiliary value for height of bottom-left vertex
+    Vector3 mousePosition1;
     string buffer;
-    void Awake(){
-        toslider.onClick.AddListener(() => { if (KeepShape.isOn)
-                                                last_form_button = "to_slider";
-                                             else
-                                                FormMenu_toSlider();
-                                            });
-		Prostry.onClick.AddListener (() => last_form_button = "prostry");
+    void Awake()
+    {
+        toslider.onClick.AddListener(() =>
+        {
+            if (KeepShape.isOn)
+                last_form_button = "to_slider";
+            else
+                FormMenu_toSlider();
+        });
+        hill.onClick.AddListener(FormMenu_Hill);
+        Prostry.onClick.AddListener(() => last_form_button = "prostry");
         Integral.onClick.AddListener(() => last_form_button = "integral");
         Jumper.onClick.AddListener(() => last_form_button = "jumper");
         JumperEnd.onClick.AddListener(() => last_form_button = "jumperend");
         Flatten.onClick.AddListener(() => last_form_button = "flatter");
         state_help_text.text = "Manual forming..";
-	}
+    }
 
-    void Update () {
+    void Update()
+    {
         if (!savePanel.activeSelf)
         {
             Numericenter();
             mousewheelcheck();
             SetFormingMode();
-            ctrl_key_works();
-            istilemanip_state(); //dokonujemy zaznaczenia i (PPM anuluje zaznaczenie)
-            waiting4LD_state(); //  mamy LD
+            Ctrl_key_works();
+            istilemanip_state(); //selecting vertices. (PPM disables it)
+            waiting4LD_state(); //  to get bottom-left vertex
             selectShape();
-            menucontrol = control();
-            //Poziomowanie vertexa. Obsługa nakładających się vertexów
+            menucontrol = Control();
             if (menucontrol == 1)
             {
                 //Caps ON
                 if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
                 {
                     if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0) && index == 0)
-                        single_vertex_manipulation(); // single-action :)
+                        Single_vertex_manipulation(); // single-action :)
                     else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0) && index == 0)
-                        single_vertex_manipulation(); //auto-fire >:)
+                        Single_vertex_manipulation(); //auto-fire >:)
                     else if (Input.GetMouseButtonDown(1) && Highlight.nad)
-                        make_elevation();
+                        Make_elevation();
                     if (Input.GetKeyDown(KeyCode.Escape))
-                    {//Klawisz ESC wyłącza aktywność make_elevation
+                    {//ESC toggles off Make_Elevation()
                         index = 0;
                         if (indicator != null)
                             Destroy(indicator);
@@ -101,12 +102,17 @@ public class Terenowanie : MonoBehaviour {
                 }
                 if (Input.GetMouseButtonDown(0))
                 {
-                    czule_vertexy(Input.GetKey(KeyCode.Q));
+                    HandleVertexBoxes(Input.GetKey(KeyCode.Q));
                 }
             }
         }
-		
-	}
+
+    }
+
+    public void Update_HillDim(string val)
+    {
+        hillDim = byte.Parse(val);
+    }
     private void Hide_text_helper()
     {
         slider.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
@@ -124,9 +130,11 @@ public class Terenowanie : MonoBehaviour {
             }
             catch { }
         }
-        KeyCode[] keyCodes = {KeyCode.Keypad0,KeyCode.Keypad1,KeyCode.Keypad2,KeyCode.Keypad3,KeyCode.Keypad4,KeyCode.Keypad5,KeyCode.Keypad6,KeyCode.Keypad7,KeyCode.Keypad8,KeyCode.Keypad9, KeyCode.KeypadPeriod, KeyCode.KeypadMinus};
-        for(int i = 0; i<keyCodes.Length; i++){
-            if(Input.GetKeyDown(keyCodes[i])){
+        KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9, KeyCode.KeypadPeriod, KeyCode.KeypadMinus };
+        for (int i = 0; i < keyCodes.Length; i++)
+        {
+            if (Input.GetKeyDown(keyCodes[i]))
+            {
                 slider.transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.SetActive(false);
                 if (i < 10)
                     HelperInputField.text += i.ToString();
@@ -135,29 +143,29 @@ public class Terenowanie : MonoBehaviour {
                 else if (i == 11)
                     HelperInputField.text += "-";
                 is_entering_keypad_value = true;
-                return;   
+                return;
             }
         }
     }
 
     /// <summary>
-    /// a) Jeżeli lista MapColliderów => \-/ MapCollidera \-/ vertexa tegoż collidera uaktualnij pozycję (z former_heights) i zaaplikuj.
-    /// b) Jeżeli lista znaczników => Lista indexów, \-/ znacznika zapisz jego pozycję do listy, Wywołaj przeładowanie dla intów.
-    /// NewUpdate == Saveto Former
+    /// a) Given list of map colliders => \-/ MapCollider \-/ vertex of that mc update its position (using former_heights)
+    /// b) Given list of znaczniki(tags) => List of indexes of vertices, \-/ tag save its position to list, then run overload using list of int 
     /// </summary>
-    public static void UpdateMapColliders(List <GameObject> mcs, bool przywrocenie_terenu = false)
+    public static void UpdateMapColliders(List<GameObject> mcs, bool IsRecoveringTerrain = false)
     {
         if (mcs[0].layer == 11) // Argumentami znaczniki
         {
             List<int> indexes = new List<int>();
-            foreach(GameObject znacznik in mcs)
+            foreach (GameObject znacznik in mcs)
             {
                 Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
                 indexes.Add(v.x + 4 * v.z * SliderWidth.val + v.z);
             }
-            UpdateMapColliders(indexes, przywrocenie_terenu);
+            UpdateMapColliders(indexes, IsRecoveringTerrain);
 
-        } else //Argumentami MapCollidery
+        }
+        else //Argumentami MapCollidery
         {
             foreach (GameObject mc in mcs)
             {
@@ -165,8 +173,8 @@ public class Terenowanie : MonoBehaviour {
                 for (int i = 0; i < verts.Length; i++)
                 {
                     Vector3Int v = Vector3Int.RoundToInt(mc.transform.TransformPoint(verts[i]));
-                    if (przywrocenie_terenu)
-                    {    
+                    if (IsRecoveringTerrain)
+                    {
                         verts[i].y = Helper.former_heights[v.x + 4 * v.z * SliderWidth.val + v.z];
                         Helper.current_heights[v.x + 4 * v.z * SliderWidth.val + v.z] = Helper.former_heights[v.x + 4 * v.z * SliderWidth.val + v.z];
                     }
@@ -183,28 +191,30 @@ public class Terenowanie : MonoBehaviour {
         }
     }
     /// <summary>
-    /// Lista mapcolliderów, \-/ pozycji indexu rzuć raycast L=8, jeśli hita nie ma na liście, dodaj go. Wywołaj przeładowanie dla Gameobjectów.
+    /// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
     /// </summary>
     public static void UpdateMapColliders(List<int> indexes, bool przywrocenie_terenu = false)
     {
+        if (indexes.Count == 0)
+            return;
         List<GameObject> mcs = new List<GameObject>();
         foreach (int i in indexes)
         {
             Vector3Int v = Vector3Int.RoundToInt(Helper.IndexToPos(i));
-            v.y = Terenowanie.maxHeight+1;
-            RaycastHit[] hits = Physics.SphereCastAll(v,0.002f, Vector3.down, Terenowanie.rayHeight, 1 << 8);
+            v.y = Terenowanie.maxHeight + 1;
+            RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Terenowanie.rayHeight, 1 << 8);
             foreach (RaycastHit hit in hits)
                 if (!mcs.Contains(hit.transform.gameObject))
                 {
                     mcs.Add(hit.transform.gameObject);
                 }
-                   
+
         }
         UpdateMapColliders(mcs, przywrocenie_terenu);
     }
     public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
     {
-        rmc_pos.y = Terenowanie.maxHeight+1;
+        rmc_pos.y = Terenowanie.maxHeight + 1;
         RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, Terenowanie.rayHeight, 1 << 8);
         List<GameObject> mcs = new List<GameObject>();
         foreach (RaycastHit hit in hits)
@@ -214,7 +224,7 @@ public class Terenowanie : MonoBehaviour {
         UpdateMapColliders(mcs, przywrocenie_terenu);
     }
 
-    float FindLowestY(List <GameObject> znaczniki)
+    float FindLowestY(List<GameObject> znaczniki)
     {
         float lowest = 40;
         foreach (GameObject znacznik in znaczniki)
@@ -232,22 +242,24 @@ public class Terenowanie : MonoBehaviour {
     }
     void SetFormingMode()
     {
-        if(!firstFormingMode && Input.GetKeyDown(KeyCode.F)) // Mamy tryb 2 a chcemy na 1
+        if (!firstFormingMode && Input.GetKeyDown(KeyCode.F)) // Going from 2nd mode to 1st
         {
             waiting4LD = false;
             isSelecting = false;
             istilemanip = false;
-            del_znaczniki();
+            Del_znaczniki();
             state_help_text.text = "Manual forming..";
             firstFormingMode = true;
-        } else if(firstFormingMode && Input.GetKeyDown(KeyCode.F)) // Mamy 1 a chcemy na 2
+        }
+        else if (firstFormingMode && Input.GetKeyDown(KeyCode.F)) //Going from 1st mode to 2nd
         {
             firstFormingMode = false;
             state_help_text.text = "Shape forming..";
         }
     }
 
-    void istilemanip_state(){
+    void istilemanip_state()
+    {
         if (!waiting4LD)
         {
             if (istilemanip)
@@ -255,14 +267,14 @@ public class Terenowanie : MonoBehaviour {
                 if (Input.GetMouseButtonDown(1))
                 { // PPM wyłącza formMenu
                     istilemanip = false;
-                    del_znaczniki();
+                    Del_znaczniki();
                     state_help_text.text = "Shape forming..";
                 }
                 else
-                    zaznacz_vertexy_tilesa();
+                    Zaznacz_vertexy_tilesa();
             }
         }
-	}
+    }
 
     void selectShape()
     {
@@ -281,20 +293,24 @@ public class Terenowanie : MonoBehaviour {
                 KeepShape.isOn = false;
             }
         }
-        
+
     }
 
-	void waiting4LD_state(){
-		if (waiting4LD && !waiting4LDpassed) {
+    void waiting4LD_state()
+    {
+        RaycastHit hit;
+        if (waiting4LD && !waiting4LDpassed)
+        {
             state_help_text.text = "Waiting for bottom-left vertex..";
-			foreach (GameObject znacznik in znaczniki) {
-				znacznik.GetComponent<BoxCollider> ().enabled = true;
-				znacznik.layer = 11;
+            foreach (GameObject znacznik in znaczniki)
+            {
+                znacznik.GetComponent<BoxCollider>().enabled = true;
+                znacznik.layer = 11;
             }
 
             if (Input.GetMouseButtonDown(0)) //Pierwszy klik
             {
-                if (Physics.Raycast(new Vector3(Highlight.pos.x, 100, Highlight.pos.z), Vector3.down, out hit, Terenowanie.maxHeight+1, 1 << 11) && hit.transform.gameObject.name == "on")
+                if (Physics.Raycast(new Vector3(Highlight.pos.x, 100, Highlight.pos.z), Vector3.down, out hit, Terenowanie.maxHeight + 1, 1 << 11) && hit.transform.gameObject.name == "on")
                 {
                     LD = Vector3Int.RoundToInt(hit.transform.position);
                     LDH = hit.transform.position.y;
@@ -311,113 +327,376 @@ public class Terenowanie : MonoBehaviour {
                 state_help_text.text = "Marking vertices..";
 
             }
-               
-		}
-	}
-	void mousewheelcheck(){
+
+        }
+    }
+    void mousewheelcheck()
+    {
         if (Input.GetAxis("Mouse ScrollWheel") != 0 && is_entering_keypad_value)
         {
             Hide_text_helper();
         }
-		if (Input.GetKey (KeyCode.LeftShift)) {
-			if (Input.GetAxis ("Mouse ScrollWheel") > 0 && slider.value < 1000) {
-				slider.value += 10;
-			} else if (Input.GetAxis ("Mouse ScrollWheel") < 0 && slider.value > -1000) {
-				slider.value -= 10;
-			}
-		} else if (Input.GetKey(KeyCode.LeftAlt))
+        if (Input.GetKey(KeyCode.LeftShift))
         {
-            if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 1000)
+            if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
+            {
+                slider.value += 10;
+            }
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
+            {
+                slider.value -= 10;
+            }
+        }
+        else if (Input.GetKey(KeyCode.LeftAlt))
+        {
+            if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
             {
                 slider.value += 0.25f;
             }
-            else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -1000)
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
             {
                 slider.value -= 0.25f;
             }
         }
-        else if (Input.GetAxis ("Mouse ScrollWheel") > 0 && slider.value < 1000) {
-			slider.value += 1;
-		} else if (Input.GetAxis ("Mouse ScrollWheel") < 0 && slider.value > -1000) {
-			slider.value -= 1;
-		}
+        else if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
+        {
+            slider.value += 1;
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
+        {
+            slider.value -= 1;
+        }
         slider_realheight = SliderValue2RealHeight(slider.value);
-	}
-    //bool Check_keepShape_validity(float LDy, List <GameObject> znaczniki, float sliderheight)
-    //{
-    //    float riseby = sliderheight - LDy;
-    //    float maxheight = -Terenowanie.rayHeight;
-    //        foreach (GameObject znacznik in znaczniki)
-    //        {
-    //            if (maxheight < znacznik.transform.position.y)
-    //                maxheight = znacznik.transform.position.y;
-    //        }
-    //    return (maxheight + riseby > 9.921875 || maxheight + riseby < -10) ? false : true;
-    //}
+    }
     public static float SliderValue2RealHeight(float sliderval)
     {
-        return sliderval/5f;//(maxHeight - minHeight) * (sliderval / 255f - 1);
+        return sliderval / 5f;
     }
     public static float RealHeight2SliderValue(float realheight)
     {
-        return 5*realheight;//(byte)Mathf.RoundToInt(255*(realheight/(maxHeight-minHeight) + 1));
+        return 5 * realheight;
     }
-
-    void FormMenu_toSlider(){
+    /// <summary>
+    /// TO SLIDER button logic
+    /// </summary>
+    void FormMenu_toSlider()
+    {
         surroundings = Budowanie.get_surrounding_tiles(null, znaczniki);
         float elevateby = 0;
         float slider_realheight = SliderValue2RealHeight(slider.value);
         if (KeepShape.isOn)
             elevateby = slider_realheight - LDH;
-		if (istilemanip) {
+        if (istilemanip)
+        {
             //Aktualizuj teren
             List<int> indexes = new List<int>();
-			foreach (GameObject znacznik in znaczniki) {
-				if (znacznik.name == "on") {
-					Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
-					int index = v.x + 4 * v.z * SliderWidth.val + v.z;
+            foreach (GameObject znacznik in znaczniki)
+            {
+                if (znacznik.name == "on")
+                {
+                    Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
+                    int index = v.x + 4 * v.z * SliderWidth.val + v.z;
                     indexes.Add(index);
                     if (KeepShape.isOn)
                         Helper.current_heights[index] += elevateby;
                     else
                         Helper.current_heights[index] = slider_realheight;
-                    
-                    znacznik.transform.position = new Vector3 (znacznik.transform.position.x, Helper.current_heights[index], znacznik.transform.position.z);
+
+                    znacznik.transform.position = new Vector3(znacznik.transform.position.x, Helper.current_heights[index], znacznik.transform.position.z);
                     Helper.former_heights[index] = Helper.current_heights[index];
-				}
-			}
+                }
+            }
             UpdateMapColliders(indexes);
 
             if (current != null)
                 surroundings.Add(current);
-            Budowanie.UpdateTiles(surroundings);   
+            Budowanie.UpdateTiles(surroundings);
             surroundings.Clear();
-        } else
-			Debug.LogError ("istilemanip = false");
+        }
+        else
+            Debug.LogError("istilemanip = false");
 
         KeepShape.isOn = false;
         last_form_button = "";
     }
-	float pom(int ld, int pg, ref int x){
-		return (ld < pg) ? x++ : x--;
-	}
+    /// <summary>
+    /// Smooth terrain button logic
+    /// </summary>
+    void FormMenu_Hill()
+    {
+        if (hillDim <= 0)
+            return;
+        surroundings = Budowanie.get_surrounding_tiles(null, znaczniki);
+        if (istilemanip)
+        {
+            List<int> indexes = MarkIsolines(GetMarkedZnaczniki());
+            UpdateMapColliders(indexes);
+            if (current != null)
+                surroundings.Add(current);
+            Budowanie.UpdateTiles(surroundings);
+            surroundings.Clear();
+        }
+        else
+            Debug.LogError("istilemanip = false");
+
+        KeepShape.isOn = false;
+    }
+    /// <summary>
+    /// Returns list of red znaczniki(tags)
+    /// </summary>
+    /// <returns></returns>
+    private List<Vector3> GetMarkedZnaczniki()
+    {
+        List<Vector3> marked = new List<Vector3>();
+        foreach (var z in znaczniki)
+        {
+            if (z.name == "on")
+                marked.Add(new Vector3(z.transform.position.x, 0, z.transform.position.z));
+        }
+        return marked;
+    }
+
+    private bool IsThisZnacznikMarked(Vector3 z_pos)
+    {
+        RaycastHit hit;
+        z_pos.y = maxHeight;
+        if (Physics.SphereCast(z_pos, 0.1f, Vector3.down, out hit, rayHeight, 1 << 11) && hit.transform.name == "on")
+            return true;
+        return false;
+    }
+    /// <summary>
+    /// Goes around red znaczniki creating isolines of height (set by smoothstep). Every znacznik in isoline get red color (selected).
+    /// </summary>
+    /// <param name="top"></param>
+    /// <returns></returns>
+    private List<int> MarkIsolines(List<Vector3> top)
+    {
+        List<int> indexes = new List<int>();
+        List<Vector3> setznaczniki = new List<Vector3>();
+        Vector2Int[] moves = new Vector2Int[] { new Vector2Int(0, 1),
+                                          new Vector2Int(1,1), 
+        /*moves relative to global*/      new Vector2Int(1, 0),
+                                          new Vector2Int(1, -1),
+                                          new Vector2Int(0, -1),
+                                          new Vector2Int(-1, -1),
+                                          new Vector2Int(-1, 0),
+                                          new Vector2Int(-1, 1),
+        };
+        Vector3 LDpos = Get_LD();
+        Vector3 v = new Vector3(LDpos.x, 0, LDpos.z);
+        v.z--;
+        if (v.z < 1) // provides there is space to begin isolines
+            return null;
+        int index_of_last_move = 0;
+        //Going anti-clockwise and marking isolines
+        for (byte j = 1; j <= hillDim; j++)
+        {
+            do
+            {
+                byte lookups = 0;
+                //Look for move that can be done
+                for (int i = index_of_last_move; i < index_of_last_move + moves.Length; i++)
+                {
+                    lookups++;
+                    if (i > moves.Length - 1)
+                        i = 0;
+                    GameObject znacznik = MarkAndReturnZnacznik(new Vector3(v.x + moves[i].x, 0, v.z + moves[i].y));
+                    if (znacznik != null)
+                    {
+                        v.Set(v.x + moves[i].x, 0, v.z + moves[i].y);
+                        if (IsWithinMapBounds(v))
+                        {
+                            SetVertexInIsoline(v, j, ref top, ref znacznik);
+                            indexes.Add(Helper.PosToIndex(v));
+                            setznaczniki.Add(v);
+                            index_of_last_move = i;
+                            break;
+                        }
+                        else
+                        { // return vertices that already 've been found
+                            return indexes;
+                        }
+                    }
+                    if (lookups == moves.Length)
+                    { // havent found way - dead end - have to go back
+                        int licznik = 1;
+                        while (true)
+                        {
+                            v = setznaczniki[setznaczniki.Count - licznik];
+                            v.y = 2000;
+                            RaycastHit[] hits = Physics.SphereCastAll(v, 1.1f, Vector3.down, rayHeight, 1 << 11);
+                            bool found = false;
+                            foreach (var hit in hits)
+                            {
+                                if (hit.transform.name != "on")
+                                    found = true;
+                            }
+                            if (found)
+                                break;
+                            licznik++;
+                        }
+                    }
+                }
+                lookups = 0;
+                if (index_of_last_move < 2)
+                    index_of_last_move = moves.Length - 1 - index_of_last_move;
+                else
+                    index_of_last_move -= 2;
+            } while (!(v.x == LDpos.x && v.z == LDpos.z - j));
+            v.z--;
+            setznaczniki.Clear();
+        }
+        return indexes;
+    }
+    /// <summary>
+    /// Searches for znacznik in given pos. If found znacznik isn't marked, f. marks it and returns it.
+    /// </summary>
+    private GameObject MarkAndReturnZnacznik(Vector3 z_pos)
+    {
+        RaycastHit hit;
+        z_pos.y = maxHeight;
+        if (Physics.SphereCast(z_pos, 0.1f, Vector3.down, out hit, rayHeight, 1 << 11))
+        {
+            if (hit.transform.name == "on")
+                return null;
+            else
+            {
+                hit.transform.name = "on";
+                hit.transform.GetComponent<MeshRenderer>().material = red;
+                return hit.transform.gameObject;
+            }
+        }
+        return null;
+    }
+    /// <summary>
+    /// Handles setting proper height for vertex in isoline
+    /// </summary>
+    private void SetVertexInIsoline(Vector3 cur, byte izo_nr, ref List<Vector3> top, ref GameObject znacznik)
+    {
+        Vector3Int p_max = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+        foreach (Vector3 p in top)
+        {
+            Vector3Int point = Vector3Int.RoundToInt(new Vector3(p.x, 0, p.z));
+            if (Vector3.Distance(cur, point) < Vector3.Distance(cur, p_max))
+            {
+                p_max.Set(Mathf.RoundToInt(point.x), 0, Mathf.RoundToInt(point.z));
+            }
+        }
+        float d_max = Distance(cur, p_max);
+
+        Vector3 bisector = (cur - p_max);
+        bisector.Normalize();
+        // pozycja vertexa o wysokości względnej 0, to przybliżony do siatki punkt przesunięcia cur o wektor bisector
+        // o komplementarnej do hillDim+1 długości
+        Vector3 p_min = cur + bisector * (hillDim - izo_nr + 1);
+        float d_min = Distance(cur, p_min);
+        try
+        {
+            float max = Helper.current_heights[Helper.PosToIndex(p_max)];
+            float min = Helper.current_heights[Helper.PosToIndex(p_min)];
+            float heightdiff = max - min;
+            float newheight = min + Smootherstep(min, max, min + (1f - d_max / (d_max + d_min)) * heightdiff) * heightdiff;
+            //float newheight = min + Smootherstep(min, max, min + (1f - (float)izo_nr / (hillDim + 1)) * heightdiff) * heightdiff;
+            Helper.current_heights[Helper.PosToIndex(cur)] = newheight;
+            Helper.former_heights[Helper.PosToIndex(cur)] = newheight;
+            znacznik.transform.position = new Vector3(znacznik.transform.position.x, newheight, znacznik.transform.position.z);
+        }
+        catch
+        {
+        }
+    }
+    //private int GetCorrAngle(Vector2 step)
+    //{
+    //    if (step.x == 1 && step.y == 0)
+    //        return 0;
+    //    else if (step.x == 1 && step.y == 1)
+    //        return -45;
+    //    else if (step.x == 0 && step.y == 1)
+    //        return -90;
+    //    else if (step.x == -1 && step.y == 1)
+    //        return -135;
+    //    else if (step.x == -1 && step.y == 0)
+    //        return 180;
+    //    else if (step.x == -1 && step.y == -1)
+    //        return 135;
+    //    else if (step.x == 0 && step.y == -1)
+    //        return 90;
+    //    else if (step.x == 1 && step.y == -1)
+    //        return 45;
+    //    else
+    //        return -1;
+    //}
+
+    /// <summary>
+    /// Returns most outthrust to bottom-left highlighted vertex of selection
+    /// </summary>
+    private Vector3Int Get_LD()
+    {
+        foreach (var znacznik in znaczniki)
+        {
+            if (znacznik.name == "on")
+                return Vector3Int.RoundToInt(znacznik.transform.position);
+        }
+        return new Vector3Int();
+    }
+    /// <summary>
+    /// Used for dynamic for loops
+    /// </summary>
+    /// <param name="i"></param>
+    /// <param name="condition"></param>
+    private void Incdec(ref int i, bool condition)
+    {
+        if (condition)
+            i++;
+        else
+            i--;
+    }
+    private DuVecInt GetDimensionsOfZnaczniki(ref List<GameObject> znaczniki)
+    {
+        int minx = int.MaxValue, maxx = 0, minz = int.MaxValue, maxz = 0;
+        foreach (GameObject znacznik in znaczniki)
+        {
+            if (znacznik.name == "on")
+            {
+                Vector3Int pos = Vector3Int.RoundToInt(znacznik.transform.position);
+                if (minx > pos.x)
+                    minx = pos.x;
+                if (minz > pos.z)
+                    minz = pos.z;
+                if (maxx < pos.x)
+                    maxx = pos.x;
+                if (maxz < pos.z)
+                    maxz = pos.z;
+            }
+        }
+        return new DuVecInt(new Vector2Int(minx, minz), new Vector2Int(maxx - minx + 1, maxz - minz + 1));
+    }
+
+    float pom(int ld, int pg, ref int x)
+    {
+        return (ld < pg) ? x++ : x--;
+    }
     bool pom2(int ld, int pg, int x)
     {
         return (ld < pg) ? x <= pg : x >= pg;
     }
     int isFlatter(string nazwa)
     {
-        for(int i=0; i<EditorMenu.flatter.Count; i++)
+        for (int i = 0; i < EditorMenu.flatter.Count; i++)
         {
             if (nazwa == EditorMenu.flatter[i].nazwa)
                 return i;
         }
         return -1;
     }
-	void apply_fancy_shape(){
+    /// <summary>
+    /// Handles placing more complicated shapes.
+    /// </summary>
+    void apply_fancy_shape()
+    {
+        RaycastHit hit;
         //Flatter check
         int flatter_index = -1;
-        
         if (last_form_button == "flatter")
         {
             if (current == null)
@@ -428,26 +707,27 @@ public class Terenowanie : MonoBehaviour {
         }
         surroundings = Budowanie.get_surrounding_tiles(null, znaczniki);
         int index = 0;
-		if (waiting4LDpassed) {
+        if (waiting4LDpassed)
+        {
             //Mamy pozycję LD, szukamy PG
-            Vector3Int PG = findPG(LD);
+            Vector3Int PG = FindPG(LD);
             //Debug.Log("PG=" + PG);
             //Aktualizuj teren
             float heightdiff = slider_realheight - LDH;
             if (KeepShape.isOn)
                 heightdiff -= FindHighestY(znaczniki) - LDH;
             if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
-            { // równe powierzchnie po Z ||||
+            { // equal heights along Z axis ||||
                 float steps = Mathf.Abs(LD.x - PG.x);
                 int step = 0;
-                if(steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
+                if (steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
                 {
                     for (int x = LD.x; pom2(LD.x, PG.x, x); pom(LD.x, PG.x, ref x))
                     {
                         for (int z = LD.z; pom2(LD.z, PG.z, z); pom(LD.z, PG.z, ref z))
                         {
-                            
-                            bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight+1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+
+                            bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
                             index = x + 4 * z * SliderWidth.val + z;
                             Vector3 vertpos = Helper.IndexToPos(index);
                             if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
@@ -463,7 +743,7 @@ public class Terenowanie : MonoBehaviour {
                                     vertpos.y = LDH + 2 * (Smootherstep(LDH, slider_realheight, LDH + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
                                 else if (last_form_button == "flatter")
                                     vertpos.y = LDH - EditorMenu.flatter[flatter_index].heights[step];
-                                if(KeepShape.isOn)
+                                if (KeepShape.isOn)
                                     vertpos.y += old_Y - LDH;
                                 Helper.former_heights[index] = vertpos.y;
                                 Helper.current_heights[index] = Helper.former_heights[index];
@@ -477,28 +757,28 @@ public class Terenowanie : MonoBehaviour {
                         step += 1;
                     }
                 }
-                
+
             }
             else
-            { // |.'| równe powierzchnie po X _-_-
+            { // equal heights along X axis _-_-
                 float steps = Mathf.Abs(LD.z - PG.z);
                 //Debug.Log("steps = " + steps);
                 int step = 0;
-                if(steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
+                if (steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
                 {
                     for (int z = LD.z; pom2(LD.z, PG.z, z); pom(LD.z, PG.z, ref z))
                     {
-                        
+
                         for (int x = LD.x; pom2(LD.x, PG.x, x); pom(LD.x, PG.x, ref x))
                         {
                             //Debug.DrawLine(new Vector3(x, Terenowanie.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
-                            bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight+1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+                            bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
                             index = x + 4 * z * SliderWidth.val + z;
                             Vector3 vertpos = Helper.IndexToPos(index);
                             if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
                             {
                                 //Debug.DrawRay(new Vector3(x, Terenowanie.maxHeight+1, z), Vector3.down, Color.blue, 40);
-                                
+
                                 float old_Y = vertpos.y; // tylko do keepshape
                                 if (last_form_button == "prostry")
                                     vertpos.y = LDH + step / steps * heightdiff;
@@ -507,7 +787,7 @@ public class Terenowanie : MonoBehaviour {
                                 else if (last_form_button == "jumper")
                                     vertpos.y = LDH + 2 * Smootherstep(LDH, slider_realheight, LDH + 0.5f * step / steps * heightdiff) * heightdiff;
                                 else if (last_form_button == "jumperend")
-                                    vertpos.y = LDH + 2*(Smootherstep(LDH, slider_realheight, LDH + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
+                                    vertpos.y = LDH + 2 * (Smootherstep(LDH, slider_realheight, LDH + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
                                 else if (last_form_button == "flatter")
                                     vertpos.y = LDH - EditorMenu.flatter[flatter_index].heights[step];
                                 if (KeepShape.isOn)
@@ -521,7 +801,7 @@ public class Terenowanie : MonoBehaviour {
                         //Debug.Log(step / steps);
                         step += 1;
                     }
-                } 
+                }
             }
             //foreach(GameObject znacznik in znaczniki)
             //{
@@ -534,12 +814,16 @@ public class Terenowanie : MonoBehaviour {
             Budowanie.UpdateTiles(surroundings, znaczniki);
             surroundings.Clear();
         }
-        
+
     }
 
     bool IsWithinMapBounds(Vector3 v)
     {
         return (v.x > 0 && v.x < 4 * SliderWidth.val + 1 && v.z > 0 && v.z < 4 * SliderHeight.val + 1) ? true : false;
+    }
+    bool IsWithinMapBounds(int x, int z)
+    {
+        return (x > 0 && x < 4 * SliderWidth.val + 1 && z > 0 && z < 4 * SliderHeight.val + 1) ? true : false;
     }
     float Smootherstep(float edge0, float edge1, float x)
     {
@@ -548,13 +832,15 @@ public class Terenowanie : MonoBehaviour {
         // Scale to 0 - 1
         x = (x - edge0) / (edge1 - edge0);
         // 
-        return  (x * x * x * (x * (x * 6f - 15f) + 10f));
+        return (x * x * x * (x * (x * 6f - 15f) + 10f));
     }
-    Vector3Int findPG(Vector3 LD){
+    Vector3Int FindPG(Vector3 LD)
+    {
         //Debug.Log("LD=" + LD);
-		int lowX = 999999, hiX = -1, lowZ = 999999, hiZ = -1;
-		foreach (GameObject znacznik in znaczniki) {
-            if(znacznik.name == "on")
+        int lowX = 999999, hiX = -99999, lowZ = 999999, hiZ = -999999;
+        foreach (GameObject znacznik in znaczniki)
+        {
+            if (znacznik.name == "on")
             {
                 if (lowX > znacznik.transform.position.x)
                     lowX = Mathf.RoundToInt(znacznik.transform.position.x);
@@ -566,71 +852,91 @@ public class Terenowanie : MonoBehaviour {
                 if (hiZ < znacznik.transform.position.z)
                     hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
             }
-			
-		}
-        //Debug.Log("lowX"+lowX+ ", hiX " + hiX+ ", lowZ " + lowZ+ ", hiZ " + hiZ);
-		if (lowX < LD.x) { 
-			if (lowZ < LD.z) { 
-				return new Vector3Int (lowX, 0, lowZ);
-			} else {
-				return new Vector3Int (lowX, 0, hiZ);
-			}
-		} else { // lowX = LD.x
-            //Debug.Log("lowX = LD.x");
-			if (lowZ < LD.z) { 
-				return new Vector3Int (hiX, 0, lowZ);
-			} else {
-				return new Vector3Int (hiX, 0, hiZ);
-			}
-		}
-	}
 
-	void zaznacz_vertexy_tilesa(){
+        }
+        //Debug.Log("lowX"+lowX+ ", hiX " + hiX+ ", lowZ " + lowZ+ ", hiZ " + hiZ);
+        if (lowX < LD.x)
+        {
+            if (lowZ < LD.z)
+            {
+                return new Vector3Int(lowX, 0, lowZ);
+            }
+            else
+            {
+                return new Vector3Int(lowX, 0, hiZ);
+            }
+        }
+        else
+        { // lowX = LD.x
+          //Debug.Log("lowX = LD.x");
+            if (lowZ < LD.z)
+            {
+                return new Vector3Int(hiX, 0, lowZ);
+            }
+            else
+            {
+                return new Vector3Int(hiX, 0, hiZ);
+            }
+        }
+    }
+
+    void Zaznacz_vertexy_tilesa()
+    {
         state_help_text.text = "Marking vertices..";
-		//Zaznaczanie vertexów tylko w trybie manipulacji tilesa
-		if (Input.GetMouseButtonDown (0)) { // Rozpoczęcie zaznaczania..
-			isSelecting = true;
-			mousePosition1 = Input.mousePosition;
-		}
-		if (Input.GetMouseButtonUp (0)) { // ..i zakończenie.
-			foreach (GameObject znacznik in znaczniki) {
-				if (IsWithinSelectionBounds (znacznik)) {
-					//Debug.Log (znacznik.transform.position);
-					if (znacznik.GetComponent<MeshRenderer> ().sharedMaterial == transp) {
+        //Zaznaczanie vertexów tylko w trybie manipulacji tilesa
+        if (Input.GetMouseButtonDown(0))
+        { // Rozpoczęcie zaznaczania..
+            isSelecting = true;
+            mousePosition1 = Input.mousePosition;
+        }
+        if (Input.GetMouseButtonUp(0))
+        { // ..i zakończenie.
+            foreach (GameObject znacznik in znaczniki)
+            {
+                if (IsWithinSelectionBounds(znacznik))
+                {
+                    //Debug.Log (znacznik.transform.position);
+                    if (znacznik.GetComponent<MeshRenderer>().sharedMaterial == transp)
+                    {
                         znacznik.name = "on";
-						znacznik.GetComponent<MeshRenderer> ().sharedMaterial = red;
-					} else {
+                        znacznik.GetComponent<MeshRenderer>().sharedMaterial = red;
+                    }
+                    else
+                    {
                         znacznik.name = "off";
-                        znacznik.GetComponent<MeshRenderer> ().sharedMaterial = transp;
-					}
-				}
-			}
+                        znacznik.GetComponent<MeshRenderer>().sharedMaterial = transp;
+                    }
+                }
+            }
             isSelecting = false;
         }
-        if (last_form_button != null && isSelecting == false)
+        if (last_form_button != null && last_form_button != "" && isSelecting == false)
             waiting4LD = true;
     }
-	void OnGUI(){
-		if( isSelecting )
-		{
-			// Create a rect from both mouse positions
-			Rect rect = Utils.GetScreenRect( mousePosition1, Input.mousePosition );
-			Utils.DrawScreenRect( rect, new Color( 0.8f, 0.8f, 0.95f, 0.25f ) );
-		}
-	}
-	public bool IsWithinSelectionBounds( GameObject gameObject )
-	{
-		if(!isSelecting)
-			return false;
-		Camera camera = Camera.main;
-		Bounds viewportBounds = Utils.GetViewportBounds( camera, mousePosition1, Input.mousePosition );
-		return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
-	}
-	void czule_vertexy(bool checkTerrain){
+    void OnGUI()
+    {
+        if (isSelecting)
+        {
+            // Create a rect from both mouse positions
+            Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+            Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
+        }
+    }
+    public bool IsWithinSelectionBounds(GameObject gameObject)
+    {
+        if (!isSelecting)
+            return false;
+        Camera camera = Camera.main;
+        Bounds viewportBounds = Utils.GetViewportBounds(camera, mousePosition1, Input.mousePosition);
+        return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
+    }
+
+    void HandleVertexBoxes(bool checkTerrain)
+    {
         if (!Highlight.nad)
             return;
-		FormMenu.gameObject.SetActive (true);
-        if(current != null && !checkTerrain)
+        FormMenu.gameObject.SetActive(true);
+        if (current != null && !checkTerrain)
         {
             Mesh rmc = current.GetComponent<MeshFilter>().mesh;
             if (znaczniki.Count != 0)
@@ -642,7 +948,7 @@ public class Terenowanie : MonoBehaviour {
                 }
                 else
                 {
-                    del_znaczniki();
+                    Del_znaczniki();
                 }
             }
             for (int i = 0; i < rmc.vertexCount; i++)
@@ -651,7 +957,8 @@ public class Terenowanie : MonoBehaviour {
                 znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
                 znacznik.transform.position = current.transform.TransformPoint(rmc.vertices[i]);
                 znacznik.GetComponent<MeshRenderer>().material = transp;
-                znacznik.GetComponent<BoxCollider>().enabled = false;
+                znacznik.GetComponent<BoxCollider>().enabled = true;
+                znacznik.layer = 11;
                 if (i == 0)
                     znacznik.name = current.name + "_mrk";
                 znaczniki.Add(znacznik);
@@ -665,22 +972,22 @@ public class Terenowanie : MonoBehaviour {
                 if (znaczniki[0].name == "first")//Żądanie identycznego ustawienia wskaźników => nic nie rób
                     return;
                 else
-                    del_znaczniki();
+                    Del_znaczniki();
             }
 
-            for(int z = v.z - max_verts_visible_dim/2; z<=v.z + max_verts_visible_dim/2; z++)
+            for (int z = v.z - max_verts_visible_dim.z / 2; z <= v.z + max_verts_visible_dim.z / 2; z++)
             {
-                for(int x = v.x - max_verts_visible_dim / 2; x <= v.x + max_verts_visible_dim / 2; x++)
+                for (int x = v.x - max_verts_visible_dim.x / 2; x <= v.x + max_verts_visible_dim.x / 2; x++)
                 {
-                    if(IsWithinMapBounds(new Vector3(x,0,z)))//Nie zmieniamy vertexów na obrzeżach i poza mapą
+                    if (IsWithinMapBounds(x, z))//Nie zmieniamy vertexów na obrzeżach i poza mapą
                     {
                         GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
                         int index = x + 4 * z * SliderWidth.val + z;
                         znacznik.transform.position = Helper.IndexToPos(index);
                         znacznik.GetComponent<MeshRenderer>().material = transp;
-                        znacznik.GetComponent<BoxCollider>().enabled = false;
-                        
+                        znacznik.GetComponent<BoxCollider>().enabled = true;
+                        znacznik.layer = 11;
                         if (znaczniki.Count == 0)
                             znacznik.name = "first";
                         znaczniki.Add(znacznik);
@@ -688,11 +995,12 @@ public class Terenowanie : MonoBehaviour {
                 }
             }
         }
-		
-		istilemanip = true;
-	}
-	public static void del_znaczniki(){
-        if(znaczniki.Count != 0)
+
+        istilemanip = true;
+    }
+    public static void Del_znaczniki()
+    {
+        if (znaczniki.Count != 0)
         {
             for (int i = 0; i < znaczniki.Count; i++)
             {
@@ -701,41 +1009,59 @@ public class Terenowanie : MonoBehaviour {
             znaczniki.Clear();
             GameObject.Find("e_formPANEL").GetComponent<Terenowanie>().FormMenu.gameObject.SetActive(false);
         }
-		
-	}
-	int control(){
-		// 0 - żaden z trybów; 1 - manual; 2-menuform;
-		if (istilemanip && !waiting4LDpassed)
-			return 0;
-		if (firstFormingMode) {
+
+    }
+    /// <summary>
+    /// handles simple and advanced terrain forming
+    /// </summary>
+    /// <returns></returns>
+    int Control()
+    {
+        RaycastHit hit;
+        if (istilemanip && !waiting4LDpassed)
+            return 0;
+        if (firstFormingMode)
+        {
             current = null;
-			return 1;
-		} else if (Physics.Raycast (new Vector3 (Highlight.pos.x, Terenowanie.maxHeight+1, Highlight.pos.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 9)) {
+            return 1;
+        }
+        else if (Physics.Raycast(new Vector3(Highlight.pos.x, Terenowanie.maxHeight + 1, Highlight.pos.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 9))
+        {
             if (hit.transform.gameObject.layer == 9)
             {
                 current = hit.transform.gameObject;
                 return 2;
             }
-        } else
+        }
+        else
         {
             current = null;
             return 2;
         }
         return 0;
-	}
-	void make_elevation(){
-		if (index == 0) {
-			//Ustal początkową pozycję i ustaw tam znacznik
-			if(IsWithinMapBounds(Highlight.pos)){
-			index = Highlight.pos.x + 4*SliderWidth.val*Highlight.pos.z + Highlight.pos.z;
-				//Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
-				indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
+    }
+    /// <summary>
+    /// Handles quick rectangular selection in first form mode with RMB
+    /// </summary>
+    void Make_elevation()
+    {
+        if (index == 0)
+        {
+            //Ustal początkową pozycję i ustaw tam znacznik
+            if (IsWithinMapBounds(Highlight.pos))
+            {
+                index = Highlight.pos.x + 4 * SliderWidth.val * Highlight.pos.z + Highlight.pos.z;
+                //Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
+                indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 indicator.transform.localScale = new Vector3(.25f, 1, .25f);
-				indicator.transform.position = Highlight.pos;
-			}
-		} else {
-			//Pozycja początkowa ustalona.
-			if (IsWithinMapBounds(Highlight.pos)) {
+                indicator.transform.position = Highlight.pos;
+            }
+        }
+        else
+        {
+            //Pozycja początkowa ustalona.
+            if (IsWithinMapBounds(Highlight.pos))
+            {
                 int index2 = Highlight.pos.x + 4 * SliderWidth.val * Highlight.pos.z + Highlight.pos.z;
                 //Debug.Log("I2="+index2+" "+m.vertices[index]+" pos="+highlight.pos);
                 Vector3Int a = Vector3Int.RoundToInt(Helper.IndexToPos(index));
@@ -754,9 +1080,9 @@ public class Terenowanie : MonoBehaviour {
                     }
                     UpdateMapColliders(indexes); // Uproscic     \\\
                 }
-				Destroy (indicator);
-				index = 0;
-				RaycastHit[] hits  = Physics.BoxCastAll(new Vector3(0.5f*(a.x+b.x),Terenowanie.maxHeight+1,0.5f*(a.z+b.z)), new Vector3(0.5f*Mathf.Abs(a.x-b.x),1f,0.5f*(Mathf.Abs(a.z-b.z))), Vector3.down,Quaternion.identity,Terenowanie.rayHeight,1<<9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
+                Destroy(indicator);
+                index = 0;
+                RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Terenowanie.maxHeight + 1, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Terenowanie.rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
                 List<GameObject> to_update = new List<GameObject>();
                 foreach (RaycastHit hit in hits)
                 {
@@ -764,41 +1090,46 @@ public class Terenowanie : MonoBehaviour {
                 }
                 Budowanie.UpdateTiles(to_update);
             }
-		}
-	}
+        }
+    }
     static float GetLowestRMCPoint(GameObject rmc_o)
     {
-        float to_return = Terenowanie.maxHeight+1;
-        foreach(Vector3 vert in rmc_o.GetComponent<MeshCollider>().sharedMesh.vertices)
+        float to_return = Terenowanie.maxHeight + 1;
+        foreach (Vector3 vert in rmc_o.GetComponent<MeshCollider>().sharedMesh.vertices)
         {
             if (vert.y < to_return)
                 to_return = vert.y;
         }
         return to_return;
     }
-	void ctrl_key_works(){
-        
-        if (Input.GetKey (KeyCode.LeftControl) && Highlight.nad && !FlyCamera.over_UI && !Input.GetKey (KeyCode.LeftAlt)) {
+    void Ctrl_key_works()
+    {
+
+        if (Input.GetKey(KeyCode.LeftControl) && Highlight.nad && !FlyCamera.over_UI && !Input.GetKey(KeyCode.LeftAlt))
+        {
             if (is_entering_keypad_value)
                 Hide_text_helper();
-            
-            Vector3Int v = Highlight.pos;
-			int index = v.x + 4 * v.z * SliderWidth.val + v.z;
-            slider.value = RealHeight2SliderValue(Helper.current_heights[index]);
-		}
-	}
 
-	void single_vertex_manipulation() {
+            Vector3Int v = Highlight.pos;
+            int index = v.x + 4 * v.z * SliderWidth.val + v.z;
+            slider.value = RealHeight2SliderValue(Helper.current_heights[index]);
+        }
+    }
+    /// <summary>
+    /// Handles quick sculpting mode
+    /// </summary>
+    void Single_vertex_manipulation()
+    {
         if (Highlight.nad && !FlyCamera.over_UI && IsWithinMapBounds(Highlight.pos))
         {
             Vector3Int v = Highlight.pos;
             //Debug.DrawLine(new Vector3(v.x, Terenowanie.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, 5);
-            RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Terenowanie.maxHeight+1, v.z), 0.5f, Vector3.down, Terenowanie.rayHeight, 1 << 9);
+            RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Terenowanie.maxHeight + 1, v.z), 0.5f, Vector3.down, Terenowanie.rayHeight, 1 << 9);
             List<GameObject> to_update = new List<GameObject>();
             foreach (RaycastHit hit in hits)
                 to_update.Add(hit.transform.gameObject);
             int index = v.x + 4 * v.z * SliderWidth.val + v.z;
-            if(to_update.Count != 0)
+            if (to_update.Count != 0)
             {
                 if (AreListedObjectsHaveRMCVertexHere(to_update, index))
                 {
@@ -819,10 +1150,10 @@ public class Terenowanie : MonoBehaviour {
 
     bool AreListedObjectsHaveRMCVertexHere(List<GameObject> to_update, int index)
     {
-        foreach(GameObject rmc in to_update)
+        foreach (GameObject rmc in to_update)
         {
             bool found_matching = false;
-            foreach(Vector3 v in rmc.GetComponent<MeshCollider>().sharedMesh.vertices)
+            foreach (Vector3 v in rmc.GetComponent<MeshCollider>().sharedMesh.vertices)
             {
                 Vector3Int V = Vector3Int.RoundToInt(rmc.transform.TransformPoint(v));
                 if (V.x + 4 * V.z * SliderWidth.val + V.z == index)
@@ -836,9 +1167,12 @@ public class Terenowanie : MonoBehaviour {
         }
         return true;
     }
-
-    bool Distance(Vector3 v1, Vector3 v2){ // do porównywania punktów 1 na drugim
-		return (Mathf.Abs (v1.x - v2.x) < 0.02 && Mathf.Abs (v1.z - v2.z) < 0.02) ? true : false;
-	}
+    /// <summary>
+    /// Distance on 2D map between 3D points
+    /// </summary>
+    float Distance(Vector3 v1, Vector3 v2)
+    {
+        return Mathf.Sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.z - v2.z) * (v1.z - v2.z));
+    }
 }
 

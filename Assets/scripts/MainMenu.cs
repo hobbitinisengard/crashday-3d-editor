@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-//1. Skrypt. Menu
+//First script. Main menu
 public class MainMenu : MonoBehaviour {
     public GameObject loadScreen;
     public TextAsset flatters;
@@ -10,16 +10,17 @@ public class MainMenu : MonoBehaviour {
     public TextAsset rmcs;
     public TextAsset kategorie;
     public TextAsset dims;
+    public static int tile_limit = 4000;
     void Awake(){
-        STATIC.playgamePass = true;
-        STATIC.isloading = false;
-        STATIC.isEditing = false;
-        STATIC.flatters = flatters;
-        STATIC.pzeros = pzeros;
-        STATIC.rmcs = rmcs;
-        STATIC.kategorie = kategorie;
+        STATIC.PlaygamePass = true;
+        STATIC.Isloading = false;
+        STATIC.IsEditing = false;
+        STATIC.Flatters = flatters;
+        STATIC.Pzeros = pzeros;
+        STATIC.Rmcs = rmcs;
+        STATIC.Kategorie = kategorie;
         {//Ładowanie informacji o kategoriach
-            string[] lines = Regex.Split(STATIC.kategorie.text, "\r\n");
+            string[] lines = Regex.Split(STATIC.Kategorie.text, "\r\n");
             for (int i = 0; i < lines.Length; i++)
             {
                 string[] tab = lines[i].Split(' ');
@@ -35,11 +36,16 @@ public class MainMenu : MonoBehaviour {
             }
         }
     }
-	public void PlayGame ()
+    private void Start()
+    {
+        SliderWidth.val = 26;
+        SliderHeight.val = 25;
+    }
+    public void PlayGame ()
 	{
-        if (STATIC.playgamePass)
+        if (STATIC.PlaygamePass)
         {
-            STATIC.isEditing = true;
+            STATIC.IsEditing = true;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }    
 	}
@@ -51,10 +57,14 @@ public class MainMenu : MonoBehaviour {
 	
 	void Continue()
 	{
-		if (STATIC.isEditing == true) {
+		if (STATIC.IsEditing == true) {
 			SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex + 1);
 		}
 	}
+    public void Toggle_tileLimit()
+    {
+        tile_limit = (tile_limit == 4000) ? 8000 : 4000;
+    }
     public void CheckValidity(string val)
     {
         float multiplier = int.Parse(val);

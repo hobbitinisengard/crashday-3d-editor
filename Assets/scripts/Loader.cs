@@ -1,18 +1,18 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
+﻿using SFB;
 using System;
+using System.Collections.Generic;
 using System.DrawingCore;
 using System.DrawingCore.Drawing2D;
 using System.DrawingCore.Imaging;
-using SFB;
-using System.Text.RegularExpressions;
-//Otwiera przeglądarkę plików, ściąga ścieżkę do PNG, a następnie konwertuje go.
-public class Element{
-	public string _nazwa;
-	public byte _kategoria;
-	public int _rotacja;
-	public bool _inwersja;
+using System.IO;
+using UnityEngine;
+//Provides every function needed to load data when Heightmap Editor is started
+public class Element
+{
+    public string _nazwa;
+    public byte _kategoria;
+    public int _rotacja;
+    public bool _inwersja;
     public List<int> t_verts;
 
     public void Set(string nazwa, int rotacja, bool inwersja, byte kategoria)
@@ -38,7 +38,6 @@ public class Dimension
 {
     public string _nazwa_tilesa;
     public Vector2Int _wymiary;
-
     public Dimension(string nazwa, Vector2Int wymiar)
     {
         _nazwa_tilesa = nazwa;
@@ -46,7 +45,8 @@ public class Dimension
     }
 }
 // 2. Skrypt
-public class Loader : MonoBehaviour {
+public class Loader : MonoBehaviour
+{
     public GameObject ls; //loadscreen
     public GameObject MainMenu; //mainmenu
     public static List<Duint> loadedTilesPairsXZ = new List<Duint>();
@@ -74,15 +74,15 @@ public class Loader : MonoBehaviour {
             SliderWidth.val = STATIC.TRACK.Width;
             SliderHeight.val = STATIC.TRACK.Height;
 
-            STATIC.nazwa_trasy = path.Substring(path.LastIndexOf('\\') + 1);
+            STATIC.Nazwa_trasy = path.Substring(path.LastIndexOf('\\') + 1);
             // 2.Layout
             Zaladuj_tilesy();
 
             // 3.Run editor
             if (SliderWidth.val * SliderHeight.val <= 2500)
             {
-                STATIC.playgamePass = true;
-                STATIC.isloading = true;
+                STATIC.PlaygamePass = true;
+                STATIC.Isloading = true;
                 ls.SetActive(true);
                 string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
                 ls.transform.Find(nazwa).gameObject.SetActive(true);
@@ -92,14 +92,14 @@ public class Loader : MonoBehaviour {
             }
         }
     }
-    public static void  InitializeSTATICTiles(int width, int height)
+    public static void InitializeSTATICTiles(int width, int height)
     {
-        STATIC.tiles = new Element[width, height];
+        STATIC.Tiles = new Element[width, height];
         for (int z = 0; z < height; z++)
         {
             for (int x = 0; x < width; x++)
             {
-                STATIC.tiles[x, z] = new Element();
+                STATIC.Tiles[x, z] = new Element();
             }
         }
     }
@@ -110,11 +110,11 @@ public class Loader : MonoBehaviour {
     {
         Loader.loadedTilesPairsXZ.Clear();
         InitializeSTATICTiles(SliderWidth.val, SliderHeight.val);
-        for(int z=0; z<SliderHeight.val; z++)
+        for (int z = 0; z < SliderHeight.val; z++)
         {
-            for(int x=0; x<SliderWidth.val; x++)
+            for (int x = 0; x < SliderWidth.val; x++)
             {
-                if(STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId < STATIC.TRACK.FieldFiles.Count && STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId != 0)
+                if (STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId < STATIC.TRACK.FieldFiles.Count && STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId != 0)
                 {
                     string nazwa_tilesa = STATIC.TRACK.FieldFiles[STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId].Substring(0, STATIC.TRACK.FieldFiles[STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].FieldId].Length - 4);
 
@@ -124,15 +124,15 @@ public class Loader : MonoBehaviour {
                         rotacja = 360 - rotacja;
 
                     Vector2Int dim = GetTileDimensions(nazwa_tilesa, (rotacja == 90 || rotacja == 270) ? true : false);
-                    STATIC.tiles[x, z - dim.y + 1].Set(nazwa_tilesa, rotacja, inwersja, Budowanie.GetTileCategory(nazwa_tilesa));
+                    STATIC.Tiles[x, z - dim.y + 1].Set(nazwa_tilesa, rotacja, inwersja, Budowanie.GetTileCategory(nazwa_tilesa));
                     loadedTilesPairsXZ.Add(new Duint(x, z - dim.y + 1));
                 }
             }
-        }   
+        }
     }
     public static Vector2Int GetTileDimensions(string nazwa_tilesa, bool swap = false)
     {
-        for(int i=0; i<dims.Count; i++)
+        for (int i = 0; i < dims.Count; i++)
         {
             if (nazwa_tilesa == dims[i]._nazwa_tilesa)
             {
@@ -140,7 +140,7 @@ public class Loader : MonoBehaviour {
                     return new Vector2Int(dims[i]._wymiary.y, dims[i]._wymiary.x);
                 else
                     return dims[i]._wymiary;
-            }   
+            }
         }
         return new Vector2Int();
     }
@@ -162,7 +162,7 @@ public class Loader : MonoBehaviour {
             to_return = docs;
         return to_return;
     }
-    
+
     /// <summary>
     /// Ustala średnią wysokość z pixeli na obrzeżach
     /// </summary>
@@ -170,16 +170,17 @@ public class Loader : MonoBehaviour {
     {
         int count = 0;
         float AverageHeight = 0;
-        for(int z=0; z<track.Height; z++)
+        for (int z = 0; z < track.Height; z++)
         {
-            if(z == 0 || z == track.Height-1)
+            if (z == 0 || z == track.Height - 1)
             {
-                for(int x=0; x<track.Width; x++)
+                for (int x = 0; x < track.Width; x++)
                 {
                     AverageHeight += track.GetPixel(x, z).R;
                     count++;
                 }
-            } else
+            }
+            else
             {
                 AverageHeight += track.GetPixel(0, z).R;
                 AverageHeight += track.GetPixel(track.Width - 1, z).R;
@@ -193,7 +194,7 @@ public class Loader : MonoBehaviour {
     /// </summary>
     Bitmap SetHeightmapUp(Bitmap H)
     {
-        int newWidth = (H.Width - 1)/4, newHeight = (H.Height - 1)/4;
+        int newWidth = (H.Width - 1) / 4, newHeight = (H.Height - 1) / 4;
         if (H.Width * H.Height > 2000) // Kontrola całkowitej ilości pixelów
         {
             float Ratio = 1f * H.Width / H.Height;
@@ -227,5 +228,5 @@ public class Loader : MonoBehaviour {
 
         return destImage;
     }
-    
+
 }

@@ -1,16 +1,18 @@
-﻿using UnityEngine;
-using System.Runtime.InteropServices;
-public class FlyCamera : MonoBehaviour {
-	[DllImport("user32.dll")]
-	static extern bool SetCursorPos(int X, int Y);
-	public static bool over_UI = false;
-	public float mainSpeed;// = 25; //regular speed
-	public float shiftAdd;// = 50; //multiplied by how long shift is held.  Basically running
-	public float maxShift;// = 100 //Maximum speed when holdin gshift
-	public float camSens;// = 0.25f; //How sensitive it with mouse
-    private Vector3 lastMouse = new Vector3(0,0,0); //kind of in the middle of the screen, rather than at the top (play)
-    private float totalRun= 1.0f;
-	private int flag = 0;
+﻿using System.Runtime.InteropServices;
+using UnityEngine;
+//Logic of camera
+public class FlyCamera : MonoBehaviour
+{
+    [DllImport("user32.dll")]
+    static extern bool SetCursorPos(int X, int Y);
+    public static bool over_UI = false;
+    public float mainSpeed;// = 25; //regular speed
+    public float shiftAdd;// = 50; //multiplied by how long shift is held.  Basically running
+    public float maxShift;// = 100 //Maximum speed when holdin gshift
+    public float camSens;// = 0.25f; //How sensitive it with mouse
+    private Vector3 lastMouse = new Vector3(0, 0, 0); //kind of in the middle of the screen, rather than at the top (play)
+    private float totalRun = 1.0f;
+    private int flag = 0;
     bool isStandardCam = true;
     public GameObject SaveMenu;
     GameObject smallmap;
@@ -18,20 +20,21 @@ public class FlyCamera : MonoBehaviour {
     {
         smallmap = GameObject.Find("Map 0 0").gameObject;
     }
-    void Update () {
+    void Update()
+    {
         if (!SaveMenu.activeSelf)
         {
             over_UI = (Input.mousePosition.x < 0.232 * Screen.width) ? true : false;
             if (Input.GetKeyDown(KeyCode.PageUp))
             {
                 Vector3 pos = transform.position;
-                pos.y += 10f;
+                pos.y += 80f;
                 transform.position = pos;
             }
             if (Input.GetKeyDown(KeyCode.PageDown))
             {
                 Vector3 pos = transform.position;
-                pos.y -= 10f;
+                pos.y -= 80f;
                 transform.position = pos;
             }
             if (Input.GetKeyDown(KeyCode.Home))
@@ -43,7 +46,9 @@ public class FlyCamera : MonoBehaviour {
             {
                 isStandardCam = !isStandardCam;
                 if (!isStandardCam)
-                    transform.position = new Vector3(transform.position.x, 20, transform.position.z);
+                    transform.position = new Vector3(transform.position.x, 900, transform.position.z);
+                else
+                    transform.position = new Vector3(transform.position.x, 50, transform.position.z);
             }
 
 
@@ -56,9 +61,9 @@ public class FlyCamera : MonoBehaviour {
 
     void birdseyecamera()
     {
-        if(Input.GetKey(KeyCode.KeypadMinus) || Input.GetKey(KeyCode.PageUp))
+        if (Input.GetKey(KeyCode.PageUp))
             GetComponent<Camera>().orthographicSize += 1;
-        if (Input.GetKey(KeyCode.KeypadPlus) || Input.GetKey(KeyCode.PageDown))
+        if (Input.GetKey(KeyCode.PageDown))
         {
             if (GetComponent<Camera>().orthographicSize - 3 > 0)
                 GetComponent<Camera>().orthographicSize -= 1;
@@ -74,13 +79,13 @@ public class FlyCamera : MonoBehaviour {
             t.x = Mathf.Clamp(t.x, -0.1f, 0.1f);
             t.z = Mathf.Clamp(t.z, -0.1f, 0.1f);
         }
-        if(transform.position.x+t.x > 0 && transform.position.z+t.z > 0 && transform.position.x + t.x < 4*SliderWidth.val+1 && transform.position.z + t.z < 4*SliderHeight.val+1)
+        if (transform.position.x + t.x > 0 && transform.position.z + t.z > 0 && transform.position.x + t.x < 4 * SliderWidth.val + 1 && transform.position.z + t.z < 4 * SliderHeight.val + 1)
             transform.Translate(t, smallmap.transform);
     }
     void Ordinarycamera()
     {
         GetComponent<Camera>().orthographic = false;
-        
+
         if (Input.GetKey(KeyCode.Space))
         {
             //Debug.Log ("input:"+Input.mousePosition);
@@ -138,22 +143,23 @@ public class FlyCamera : MonoBehaviour {
         transform.Translate(p);
         //        }
     }
-    private Vector3 GetBaseInput() { 
+    private Vector3 GetBaseInput()
+    {
         Vector3 p_Velocity = new Vector3();
-        if (Input.GetKey (KeyCode.W))
-		{
-            p_Velocity += new Vector3(0, 0 , 1);
+        if (Input.GetKey(KeyCode.W))
+        {
+            p_Velocity += new Vector3(0, 0, 1);
         }
-        if (Input.GetKey (KeyCode.S))
-		{
+        if (Input.GetKey(KeyCode.S))
+        {
             p_Velocity += new Vector3(0, 0, -1);
         }
-        if (Input.GetKey (KeyCode.A))
-		{
+        if (Input.GetKey(KeyCode.A))
+        {
             p_Velocity += new Vector3(-1, 0, 0);
         }
-        if (Input.GetKey (KeyCode.D))
-		{
+        if (Input.GetKey(KeyCode.D))
+        {
             p_Velocity += new Vector3(1, 0, 0);
         }
         return p_Velocity;

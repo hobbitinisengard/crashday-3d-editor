@@ -1,45 +1,54 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
-public class Creatermcpos : MonoBehaviour {
-	RaycastHit hit;
-	void Start () {
-		List<string> nazwa_elementu = new List<string>();
-		List<float> pZero = new List<float> ();
-		Object[] prefabs = Resources.LoadAll ("prefabs/");
+using UnityEngine;
+// Isn't used in editor.
+public class Creatermcpos : MonoBehaviour
+{
+    RaycastHit hit;
+    void Start()
+    {
+        List<string> nazwa_elementu = new List<string>();
+        List<float> pZero = new List<float>();
+        Object[] prefabs = Resources.LoadAll("prefabs/");
 
-		//Object [] prefabs = new Object[1];
-		//prefabs[0] = Resources.Load("prefabs/arenaend");
-		foreach (GameObject prefab in prefabs) {
-			Mesh mesh;
-			GameObject tiles = Instantiate (prefab);
-			tiles.transform.localScale *= 0.2f;
-			if (prefab.transform.childCount != 0) {
-				mesh = prefab.transform.Find ("main").GetComponent<MeshFilter> ().sharedMesh;
-			} else {
-				mesh = prefab.GetComponent<MeshFilter> ().sharedMesh;
-			}
+        //Object [] prefabs = new Object[1];
+        //prefabs[0] = Resources.Load("prefabs/arenaend");
+        foreach (GameObject prefab in prefabs)
+        {
+            Mesh mesh;
+            GameObject tiles = Instantiate(prefab);
+            tiles.transform.localScale *= 0.2f;
+            if (prefab.transform.childCount != 0)
+            {
+                mesh = prefab.transform.Find("main").GetComponent<MeshFilter>().sharedMesh;
+            }
+            else
+            {
+                mesh = prefab.GetComponent<MeshFilter>().sharedMesh;
+            }
 
-			tiles.AddComponent<MeshCollider> ();
-			tiles.GetComponent<MeshCollider> ().sharedMesh = null;
-			tiles.GetComponent<MeshCollider> ().sharedMesh = mesh;
-			tiles.transform.localPosition = new Vector3 (2 + 2 * (int.Parse (prefab.tag.Substring (0, 1)) - 1), 0, 2 + 2 * (int.Parse (prefab.tag.Substring (2, 1)) - 1));
-			bool traf = Physics.Raycast (new Vector3 (0.01f, 15, 0.01f), Vector3.down, out hit, 30);
-			if (!traf) {
-				Debug.LogError ("Błąd!");
-			}
-			nazwa_elementu.Add (prefab.name);
-			pZero.Add (hit.point.y);
-			DestroyImmediate (tiles);
+            tiles.AddComponent<MeshCollider>();
+            tiles.GetComponent<MeshCollider>().sharedMesh = null;
+            tiles.GetComponent<MeshCollider>().sharedMesh = mesh;
+            tiles.transform.localPosition = new Vector3(2 + 2 * (int.Parse(prefab.tag.Substring(0, 1)) - 1), 0, 2 + 2 * (int.Parse(prefab.tag.Substring(2, 1)) - 1));
+            bool traf = Physics.Raycast(new Vector3(0.01f, 15, 0.01f), Vector3.down, out hit, 30);
+            if (!traf)
+            {
+                Debug.LogError("Błąd!");
+            }
+            nazwa_elementu.Add(prefab.name);
+            pZero.Add(hit.point.y);
+            DestroyImmediate(tiles);
 
-			//Debug.Log(hit.point.y);
-			//Debug.DrawLine (new Vector3 (0.01f, Terenowanie.minHeight, 0.01f), new Vector3(0.01f,hit.point.y,0.01f), Color.green, 50);
-		}
-		StreamWriter w = new StreamWriter ("Assets/Resources/pzeros.txt");
-		for (int i = 0; i < pZero.Count; i++) {
-			w.WriteLine (nazwa_elementu [i] + " " + pZero [i]);
-		}
-		w.Close ();
+            //Debug.Log(hit.point.y);
+            //Debug.DrawLine (new Vector3 (0.01f, Terenowanie.minHeight, 0.01f), new Vector3(0.01f,hit.point.y,0.01f), Color.green, 50);
+        }
+        StreamWriter w = new StreamWriter("Assets/Resources/pzeros.txt");
+        for (int i = 0; i < pZero.Count; i++)
+        {
+            w.WriteLine(nazwa_elementu[i] + " " + pZero[i]);
+        }
+        w.Close();
         //		foreach (GameObject prefab in prefabs) {
         //			List<Vector3> vertz = new List<Vector3>();
         //			GameObject newrmc = new GameObject (prefab.name + "_rmc");
@@ -123,8 +132,9 @@ public class Creatermcpos : MonoBehaviour {
         //		}
     }
 
-    bool Distance(Vector3 v1, Vector3 v2){ // do porównywania punktów 1 na drugim
-		return (Mathf.Abs (v1.x - v2.x) < 0.02 && Mathf.Abs (v1.z - v2.z) < 0.02) ? true : false;
-	}
+    bool Distance(Vector3 v1, Vector3 v2)
+    { // do porównywania punktów 1 na drugim
+        return (Mathf.Abs(v1.x - v2.x) < 0.02 && Mathf.Abs(v1.z - v2.z) < 0.02) ? true : false;
+    }
 
 }

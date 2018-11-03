@@ -1,16 +1,29 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using System.IO;
+﻿using SFB;
+using System.Collections.Generic;
 using System.DrawingCore;
 using System.DrawingCore.Imaging;
-using SFB;
 using System.Text.RegularExpressions;
-
-public class Pzero {
-	public string nazwa;
-	public float pos;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+//Handles all variables essential for editor
+public class DuVecInt
+{
+    /// <summary>
+    /// Pozycja LD
+    /// </summary>
+    public Vector2Int pos;
+    public Vector2Int dims;
+    public DuVecInt(Vector2Int POS, Vector2Int DIMZ)
+    {
+        pos = POS;
+        dims = DIMZ;
+    }
+}
+public class Pzero
+{
+    public string nazwa;
+    public float pos;
 
     public Pzero(string NAZWA, float POS)
     {
@@ -52,7 +65,8 @@ public class Krzaczor
     }
 }
 
-public class EditorMenu : MonoBehaviour {
+public class EditorMenu : MonoBehaviour
+{
     public Material floor1;
     public Shader DepthShader;
     public Shader defaultShader;
@@ -63,16 +77,19 @@ public class EditorMenu : MonoBehaviour {
     public GameObject formPANEL;
     public Button formToBuildButton;
     public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
-    public static string nazwa_tilesa = "street"; //potrzebna do częstego zmieniania trybów - żeby zapamiętywać klocek
-    public static List<Pzero> pzeros = new List<Pzero>(); // Tablica względnych poziomów 0 dla każdego elementu 267
-    public static List<Flatter> flatter = new List<Flatter>(); // Tablica elementów dla które można "spłaszczyć" 36
-    public static List<Custom> customs = new List<Custom>(); // Tablica elementów dla których trzeba dać niestandardowy rmc (nazwa_rmc) 118
+    public static string tile_name = "street"; //potrzebna do częstego zmieniania trybów - żeby zapamiętywać klocek
+    public static List<Pzero> pzeros = new List<Pzero>(); // Array of relative 0 height for every tile
+    public static List<Flatter> flatter = new List<Flatter>(); // Array of elements that can be 'flatten'
+    public static List<Custom> customs = new List<Custom>(); // Array of elements with custom RMC
     public static List<Kategoria> kategorie = new List<Kategoria>();
-    public static string[] krzaczory = new string[] { "tree1", "tree2", "tree3", "tree4", "tree5", "streetl", "alley", "cralley", "dirtalley", "zebracross", "curveb2", "plot1", "plot2", "plot3"};
+    /// <summary>
+    /// Array of tiles that have bushes on them
+    /// </summary>
+    public static string[] bushes = new string[] { "tree1", "tree2", "tree3", "tree4", "tree5", "streetl", "alley", "cralley", "dirtalley", "zebracross", "curveb2", "plot1", "plot2", "plot3" };
     void Update()
     {
         formToBuildButton.interactable = (formPANEL.activeSelf && !Terenowanie.isSelecting);
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.F5))
         {
             save.SetActive(!save.activeSelf);
         }
@@ -111,16 +128,18 @@ public class EditorMenu : MonoBehaviour {
         else
             floor1.shader = defaultShader;
     }
-    public void EditorToMenu() {
+    public void EditorToMenu()
+    {
         if (floor1.shader == DepthShader)
             floor1.shader = defaultShader;
         Debug.Log(SceneManager.GetActiveScene());
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
-    void Awake() {
+    void Awake()
+    {
         NameOfTrack.text = this.GetComponent<Helper>().nazwa_toru.text;
         {
-            string[] lines = Regex.Split(STATIC.pzeros.text, "\r\n");
+            string[] lines = Regex.Split(STATIC.Pzeros.text, "\r\n");
             for (int i = 0; i < lines.Length; i++)
             {
                 string[] tab = lines[i].Split(' ');
@@ -128,7 +147,7 @@ public class EditorMenu : MonoBehaviour {
             }
         }
         {
-            string[] lines = Regex.Split(STATIC.flatters.text, "\r\n");
+            string[] lines = Regex.Split(STATIC.Flatters.text, "\r\n");
             for (int i = 0; i < lines.Length; i++)
             {
                 string[] tab = lines[i].Split(' ');
@@ -138,7 +157,7 @@ public class EditorMenu : MonoBehaviour {
             }
         }
         {
-            string[] lines = Regex.Split(STATIC.rmcs.text, "\r\n");
+            string[] lines = Regex.Split(STATIC.Rmcs.text, "\r\n");
             for (int i = 0; i < lines.Length; i++)
             {
                 string[] tab = lines[i].Split(' ');
@@ -150,7 +169,7 @@ public class EditorMenu : MonoBehaviour {
     {
         if (!Terenowanie.isSelecting)
         {//form -> build tylko gdy nie jesteś w trakcie przeciągania
-            Terenowanie.del_znaczniki();
+            Terenowanie.Del_znaczniki();
             Terenowanie.istilemanip = false;
             formPANEL.GetComponent<Terenowanie>().state_help_text.text = "Manual forming..";
             if (Terenowanie.indicator != null)
@@ -159,19 +178,30 @@ public class EditorMenu : MonoBehaviour {
             formPANEL.gameObject.SetActive(false);
         }
     }
+
+    public void SetMarkerDimsX(string val)
+    {
+
+        Terenowanie.max_verts_visible_dim.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
+    }
+    public void SetMarkerDimsZ(string val)
+    {
+        Terenowanie.max_verts_visible_dim.z = int.Parse(val) > 5 ? int.Parse(val) : 5;
+    }
     public void BuildToFormMenu()
     {
         editorPANEL.gameObject.SetActive(false);
         formPANEL.gameObject.SetActive(true);
         if (Budowanie.obj_rmc != null)
         {
-            if(!editorPANEL.GetComponent<Budowanie>().LMBclicked || (editorPANEL.GetComponent<Budowanie>().LMBclicked && !editorPANEL.GetComponent<Budowanie>().AllowLMB))
+            if (!editorPANEL.GetComponent<Budowanie>().LMBclicked || (editorPANEL.GetComponent<Budowanie>().LMBclicked && !editorPANEL.GetComponent<Budowanie>().AllowLMB))
                 Budowanie.DelLastPrefab();
             Budowanie.nad_wczesniej = false;
         }
     }
-    
-	public void toggle_help(){
+
+    public void toggle_help()
+    {
         if (help.activeSelf)
             help.SetActive(false);
         else
@@ -186,7 +216,7 @@ public class EditorMenu : MonoBehaviour {
         return bmp;
     }
 
-    
+
     public void SaveMenu_works()
     {
         string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", Loader.LoadPath(), false);
@@ -194,14 +224,14 @@ public class EditorMenu : MonoBehaviour {
         if (path == "")
             return;
         Loader.SavePath(path);
-        STATIC.nazwa_trasy = NameOfTrack.text;
-        GetComponent<Helper>().nazwa_toru.text = STATIC.nazwa_trasy;
+        STATIC.Nazwa_trasy = NameOfTrack.text;
+        GetComponent<Helper>().nazwa_toru.text = STATIC.Nazwa_trasy;
         //SaveTerrainToBMP(path); (redundant)
         //SaveLayoutToTxt_n_Png(path); (redundant)
         SaveTerrain();
         PrepareTrackTilesArrays();
         SaveTiles();
-        MapParser.SaveMap(STATIC.TRACK, path+"\\"+STATIC.nazwa_trasy+".trk");
+        MapParser.SaveMap(STATIC.TRACK, path + "\\" + STATIC.Nazwa_trasy + ".trk");
     }
     void PrepareTrackTilesArrays()
     {
@@ -223,10 +253,10 @@ public class EditorMenu : MonoBehaviour {
         //        STATIC.TRACK.TrackTiles[STATIC.TRACK.TrackTiles.Count - 1].Add(new TrackTileSavable());
         //    }
         //}
-        for(int z=0; z<SliderHeight.val; z++)
-            for(int x=0; x<SliderWidth.val; x++)
+        for (int z = 0; z < SliderHeight.val; z++)
+            for (int x = 0; x < SliderWidth.val; x++)
                 STATIC.TRACK.TrackTiles[z][x].Set(0, 0, 0, 0);
-        
+
         STATIC.TRACK.FieldFiles.Clear();
         STATIC.TRACK.FieldFiles.Add("field.cfl");
         STATIC.TRACK.FieldFilesNumber = 1;
@@ -237,25 +267,25 @@ public class EditorMenu : MonoBehaviour {
         {
             for (int x = 0; x < SliderWidth.val; x++)
             {
-                if (STATIC.tiles[x, z]._nazwa != null)
+                if (STATIC.Tiles[x, z]._nazwa != null)
                 {
-                    ushort fieldId = SetAndGetFieldId(STATIC.tiles[x, z]._nazwa);
-                    byte inwersja = (byte)(STATIC.tiles[x, z]._inwersja ? 1 : 0);
-                    byte rotacja = (byte)(STATIC.tiles[x, z]._rotacja/90);
-                    Vector2Int dim = Loader.GetTileDimensions(STATIC.tiles[x, z]._nazwa, (rotacja == 1 || rotacja == 3) ? true : false);
+                    ushort fieldId = SetAndGetFieldId(STATIC.Tiles[x, z]._nazwa);
+                    byte inwersja = (byte)(STATIC.Tiles[x, z]._inwersja ? 1 : 0);
+                    byte rotacja = (byte)(STATIC.Tiles[x, z]._rotacja / 90);
+                    Vector2Int dim = Loader.GetTileDimensions(STATIC.Tiles[x, z]._nazwa, (rotacja == 1 || rotacja == 3) ? true : false);
                     if (inwersja == 1 && rotacja != 0)
                         rotacja = (byte)(4 - rotacja);
                     //Base part
                     STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, 0);
                     //Left Bottom
-                    if(dim.y == 2)
+                    if (dim.y == 2)
                         STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x].Set(65471, rotacja, inwersja, 0);
                     //Right top
-                    if(dim.x == 2)
-                        STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, 0);     
+                    if (dim.x == 2)
+                        STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, 0);
                     //Right bottom
-                    if(dim.x == 2 && dim.y == 2)
-                        STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x+1].Set(65470, rotacja, inwersja, 0);
+                    if (dim.x == 2 && dim.y == 2)
+                        STATIC.TRACK.TrackTiles[SliderHeight.val - 1 - z][x + 1].Set(65470, rotacja, inwersja, 0);
                 }
             }
         }
@@ -263,7 +293,7 @@ public class EditorMenu : MonoBehaviour {
     ushort SetAndGetFieldId(string nazwa_tilesa)
     {
         nazwa_tilesa = nazwa_tilesa + ".cfl";
-        for(ushort i=0; i< STATIC.TRACK.FieldFiles.Count; i++)
+        for (ushort i = 0; i < STATIC.TRACK.FieldFiles.Count; i++)
         {
             if (nazwa_tilesa == STATIC.TRACK.FieldFiles[i])
                 return i;
@@ -279,7 +309,7 @@ public class EditorMenu : MonoBehaviour {
             for (int x = 0; x < 4 * SliderWidth.val + 1; x++)
             {
                 int i = x + 4 * y * SliderWidth.val + y;
-                STATIC.TRACK.Heightmap[4 * SliderHeight.val - y][x]  = Helper.current_heights[i] * 5f;
+                STATIC.TRACK.Heightmap[4 * SliderHeight.val - y][x] = Helper.current_heights[i] * 5f;
             }
         }
     }
@@ -402,7 +432,7 @@ public class EditorMenu : MonoBehaviour {
             else
                 save.SetActive(true);
         }
-        
+
 
     }
     //public static void SaveTextureAsPNG(Texture2D _texture, string _fullPath)
