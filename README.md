@@ -1,5 +1,6 @@
 # Alternative-Crashday-Track-Editor
 Facilitates editing terrain accurately in 3D.
+Follow Steam link for more info: https://steamcommunity.com/app/508980/discussions/0/1733213724899660076/
 <img src="https://scontent.fpoz1-1.fna.fbcdn.net/v/t1.15752-9/43129844_468997280175329_6164996108218007552_n.jpg?_nc_cat=103&oh=cf208646c6fb91c698b80f85e4526828&oe=5C1B72ED"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px;" />
