@@ -1,11 +1,22 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+public class DuVec3
+{
+    public Vector3 P1;
+    public Vector3 P2;
+    public DuVec3(Vector3 p1, Vector3 p2)
+    {
+        P1 = p1;
+        P2 = p2;
+    }
+}
 //handles terrain forming (FORM mode)
 public class Terenowanie : MonoBehaviour
 {
     public GameObject FormMenu;
     public GameObject savePanel;
+    public GameObject CopyText;
     public Text state_help_text;
     public Slider slider;
     public Material transp;
@@ -18,11 +29,18 @@ public class Terenowanie : MonoBehaviour
     public Button Prostry;
     public Button JumperEnd;
     public Button Integral;
+    public Button CopyButton;
+    public Button InverseButton;
+    public Button RotateButton;
     public Toggle KeepShape;
+    public Toggle Connect;
     public Text HelperInputField; // Text for setting height by numpad
+    public Text SelectionRotation; // Helper text for showing current rotation
+    private int SelectionRotationVal = 0;
     public static GameObject indicator;
     public static List<GameObject> znaczniki = new List<GameObject>();
     public static List<GameObject> surroundings = new List<GameObject>();
+
     public static int minHeight;
     public static int maxHeight;
     public static int rayHeight;
@@ -58,6 +76,9 @@ public class Terenowanie : MonoBehaviour
         Jumper.onClick.AddListener(() => last_form_button = "jumper");
         JumperEnd.onClick.AddListener(() => last_form_button = "jumperend");
         Flatten.onClick.AddListener(() => last_form_button = "flatter");
+        CopyButton.onClick.AddListener(() => last_form_button = "copy");
+        RotateButton.onClick.AddListener(RotateClockwiseSelection);
+        InverseButton.onClick.AddListener(InverseSelection);
         state_help_text.text = "Manual forming..";
     }
 
@@ -65,6 +86,7 @@ public class Terenowanie : MonoBehaviour
     {
         if (!savePanel.activeSelf)
         {
+            ManageCopyPasteVertices();
             Numericenter();
             mousewheelcheck();
             SetFormingMode();
@@ -75,7 +97,6 @@ public class Terenowanie : MonoBehaviour
             menucontrol = Control();
             if (menucontrol == 1)
             {
-                //Caps ON
                 if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
                 {
                     if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0) && index == 0)
@@ -94,7 +115,7 @@ public class Terenowanie : MonoBehaviour
             }
             else if (menucontrol == 2)
             {
-                //Caps OFF - form Menu
+                // form Menu
                 if (indicator != null)
                 {
                     Destroy(indicator);
@@ -118,6 +139,31 @@ public class Terenowanie : MonoBehaviour
         slider.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
         HelperInputField.text = "";
         is_entering_keypad_value = false;
+    }
+    public void ManageCopyPasteVertices()
+    {
+        if (Input.GetKeyDown(KeyCode.C) && IsAnyZnacznikMarked())
+            last_form_button = "copy";
+        if (Input.GetKeyDown(KeyCode.R))
+            RotateClockwiseSelection();
+        if (Input.GetKeyDown(KeyCode.V))
+            PasteSelectionOntoTerrain();
+        if (Input.GetKeyDown(KeyCode.M))
+            InverseSelection();
+        if (Input.GetKeyDown(KeyCode.LeftAlt))
+        {
+            CopyText.SetActive(false);
+            Helper.CopyClipboard.Clear();
+        }
+    }
+    public bool IsAnyZnacznikMarked()
+    {
+        foreach (var z in znaczniki)
+        {
+            if (z.name == "on")
+                return true;
+        }
+        return false;
     }
     private void Numericenter()
     {
@@ -264,8 +310,8 @@ public class Terenowanie : MonoBehaviour
         {
             if (istilemanip)
             {
-                if (Input.GetMouseButtonDown(1))
-                { // PPM wyłącza formMenu
+                if (Input.GetMouseButtonDown(1) || Input.GetKey(KeyCode.Escape))
+                { // RMB  or ESC turns formMenu off
                     istilemanip = false;
                     Del_znaczniki();
                     state_help_text.text = "Shape forming..";
@@ -285,6 +331,8 @@ public class Terenowanie : MonoBehaviour
             {
                 if (last_form_button == "to_slider")
                     FormMenu_toSlider();
+                else if (last_form_button == "copy")
+                    CopySelectionToClipboard();
                 else
                     apply_fancy_shape();
 
@@ -293,7 +341,108 @@ public class Terenowanie : MonoBehaviour
                 KeepShape.isOn = false;
             }
         }
+    }
+    public void CopySelectionToClipboard()
+    {
+        RaycastHit hit;
+        Physics.Raycast(new Vector3(LD.x, LDH + 1, LD.z), Vector3.down, out hit, rayHeight, 1 << 11);
+        Helper.CopyClipboard.Clear();
+        Helper.CopyClipboard.Add(Vector3.zero);
+        foreach (var mrk in znaczniki)
+        {
+            if (mrk.name == "on")
+            {
+                Vector3 pom = mrk.transform.position - hit.transform.position;
+                if (pom == Vector3.zero)
+                    continue;
+                pom.y = mrk.transform.position.y;
+                Helper.CopyClipboard.Add(pom);
+            }
+        }
+        SelectionRotationVal = 0;
+        CopyText.GetComponent<Text>().text = SelectionRotationVal.ToString();
+        CopyText.SetActive(true);
+    }
 
+    public void RotateClockwiseSelection()
+    {
+        if (Helper.CopyClipboard.Count == 0)
+            return;
+        SelectionRotationVal = SelectionRotationVal == 270 ? 0 : SelectionRotationVal + 90;
+        for (int i = 1; i < Helper.CopyClipboard.Count; i++)
+        {
+            Helper.CopyClipboard[i] = RotatePointAroundPivot(Helper.CopyClipboard[i], Helper.CopyClipboard[0], new Vector3(0, 90, 0));
+        }
+        CopyText.GetComponent<Text>().text = SelectionRotationVal.ToString();
+    }
+
+    public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
+    {
+        Vector3 dir = point - pivot; // get point direction relative to pivot
+        dir = Quaternion.Euler(angles) * dir; // rotate it
+        point = dir + pivot; // calculate rotated point
+        return new Vector3(Mathf.RoundToInt(point.x), point.y, Mathf.RoundToInt(point.z)); // return it
+    }
+    /// <summary>
+    /// Mirrors selection always along Z axis
+    /// </summary>
+    public void InverseSelection()
+    {
+        if (Helper.CopyClipboard.Count < 2)
+            return;
+    
+        for(int i=0; i<Helper.CopyClipboard.Count; i++)
+        {
+            Helper.CopyClipboard[i] = Vector3.Scale(Helper.CopyClipboard[i], new Vector3(-1,1,1));
+        }
+        CopyText.GetComponent<Text>().text = "Inversed.";
+        Invoke("RefreshCopyText", 1);
+    }
+    /// <summary>
+    /// used to change text after certain time with Invoke() method
+    /// </summary>
+    public void RefreshCopyText()
+    {
+        CopyText.GetComponent<Text>().text = SelectionRotationVal.ToString();
+    }
+    public void PasteSelectionOntoTerrain()
+    {
+        if (Helper.CopyClipboard.Count == 0)
+            return;
+
+        //Indexes of vertices for UpdateMapColliders()
+        List<int> indexes = new List<int>();
+
+        // List of tiles lying onto vertices that are now being pasted
+        List<GameObject> to_update = new List<GameObject>();
+
+        foreach (var mrk in Helper.CopyClipboard)
+        {
+            if (IsWithinMapBounds(Highlight.pos + mrk))
+            {
+                // Update arrays of vertex heights
+                indexes.Add(Helper.PosToIndex(Highlight.pos + mrk));
+                Helper.current_heights[indexes[indexes.Count - 1]] = mrk.y;
+                Helper.former_heights[indexes[indexes.Count - 1]] = mrk.y;
+
+                Vector3 pom = Highlight.pos + mrk;
+
+                // Mark pasted vertices
+                GameObject zn = MarkAndReturnZnacznik(pom);
+                if (zn != null)
+                    zn.transform.position = new Vector3(zn.transform.position.x, mrk.y, zn.transform.position.z);
+
+                // Look for tiles lying here
+                {
+                    RaycastHit tile;
+                    pom.y = maxHeight;
+                    if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, rayHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
+                        to_update.Add(tile.transform.gameObject);
+                }
+            }
+        }
+        UpdateMapColliders(indexes);
+        Budowanie.UpdateTiles(to_update);
     }
 
     void waiting4LD_state()
@@ -555,10 +704,10 @@ public class Terenowanie : MonoBehaviour
     {
         RaycastHit hit;
         z_pos.y = maxHeight;
-        if (Physics.SphereCast(z_pos, 0.1f, Vector3.down, out hit, rayHeight, 1 << 11))
+        if (Physics.Raycast(z_pos, Vector3.down, out hit, rayHeight, 1 << 11))
         {
             if (hit.transform.name == "on")
-                return null;
+                return hit.transform.gameObject;
             else
             {
                 hit.transform.name = "on";
@@ -671,16 +820,22 @@ public class Terenowanie : MonoBehaviour
         }
         return new DuVecInt(new Vector2Int(minx, minz), new Vector2Int(maxx - minx + 1, maxz - minz + 1));
     }
-
-    float pom(int ld, int pg, ref int x)
+    /// <summary>
+    /// Returns x++ if low < high; else returns x--
+    /// </summary>
+    float Go2High(int low, int high, ref int x)
     {
-        return (ld < pg) ? x++ : x--;
+        return (low < high) ? x++ : x--;
     }
-    bool pom2(int ld, int pg, int x)
+    /// <summary>
+    /// helper function ensuring that:
+    /// x goes from bottom left pos (considering rotation of selection; see: bottom-left vertex) to (upper)-right pos
+    /// </summary>
+    bool Ld_aims4_pg(int ld, int pg, int x)
     {
         return (ld < pg) ? x <= pg : x >= pg;
     }
-    int isFlatter(string nazwa)
+    int IsFlatter(string nazwa)
     {
         for (int i = 0; i < EditorMenu.flatter.Count; i++)
         {
@@ -688,6 +843,141 @@ public class Terenowanie : MonoBehaviour
                 return i;
         }
         return -1;
+    }
+
+    /// <summary>
+    /// Returns List of vertices contains their global position (x or z, depending on bottom-left v-x) and height  
+    /// var going shows where u need to go (in global coords) to get into next height-level line
+    /// </summary>
+    public List<DuVec3> GetOpposingVerticesForConnect(Vector3Int LD, Vector3Int PG)
+    {
+        List<DuVec3> Extremes = new List<DuVec3>();
+        if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
+        { // equal heights along Z axis ||||
+            //string going = (LD.x < PG.x && LD.z > PG.z) ? "right" : "left";
+
+            for (int z = LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
+            {
+                Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
+                Vector3 P2 = new Vector3(float.MinValue, 0, 0);
+                foreach (var mrk in znaczniki)
+                {
+                    if (mrk.name == "on" && mrk.transform.position.z == z)
+                    {
+                        if (mrk.transform.position.x < P1.x)
+                            P1 = mrk.transform.position;
+                        if (mrk.transform.position.x > P2.x)
+                            P2 = mrk.transform.position;
+                    }
+                }
+                if (P1.x == LD.x)
+                    Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
+                else
+                    Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
+                {
+                    //bool traf = Physics.Raycast(new Vector3(LD.x, Terenowanie.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+                    //if (traf && hit.transform.gameObject.name == "on")
+                    //{
+                    //    //Get outlying extreme position
+                    //    RaycastHit[] verts = Physics.BoxCastAll(hit.transform.position, new Vector3(1, rayHeight, 0.4f), going == "left" ? Vector3.left : Vector3.right, Quaternion.identity, Mathf.Infinity, 1 << 11);
+                    //    for (int i = verts.Length - 1; i > 0; i--)
+                    //    {
+                    //        if (verts[i].transform.name == "on")
+                    //        {
+                    //            Extremes[Extremes.Count - 1].y2 = verts[i].transform.position.y;
+                    //            break;
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    bool foundLine = false;
+                    //    for (int x = LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x)) // going Z, (X loop)
+                    //    {
+                    //        //Check for any markups in this Z line
+                    //        traf = Physics.Raycast(new Vector3(x, hit.transform.position.y, z), going == "right" ? Vector3.back : Vector3.forward, out hit, Terenowanie.rayHeight, 1 << 11);
+                    //        if (traf)
+                    //        {
+                    //            LD.x = x;
+                    //            z = (int)hit.transform.position.z;
+                    //            if (hit.transform.gameObject.name == "on")
+                    //            {
+                    //                z = (int)Go2High(PG.z, LD.z, ref z);
+                    //                foundLine = true;
+                    //                break;
+                    //            }
+                    //        }
+                    //    }
+                    //    if (!foundLine)
+                    //        break;
+                    //}\
+                }
+
+            }
+        }
+        else
+        {
+            //equal heights along X axis _---
+            //string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
+            for (int x = LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
+            {
+                Vector3 P1 = new Vector3(0, 0, float.MaxValue);
+                Vector3 P2 = new Vector3(0, 0, float.MinValue);
+                foreach (var mrk in znaczniki)
+                {
+                    if (mrk.name == "on" && mrk.transform.position.x == x)
+                    {
+                        if (mrk.transform.position.z < P1.z)
+                            P1 = mrk.transform.position;
+                        if (mrk.transform.position.z > P2.z)
+                            P2 = mrk.transform.position;
+                    }
+                }
+                if (P1.z == LD.z)
+                    Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
+                else
+                    Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
+                {
+                    //bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+                    //if (traf && hit.transform.gameObject.name == "on")
+                    //{
+                    //    //Add base position vertex to list
+                    //    Extremes.Add(new DuVec3(x, hit.transform.position.y, -1));
+
+                    //    // Get the most outlying marked vertex in given 'line'
+                    //    RaycastHit[] verts = Physics.RaycastAll(hit.transform.position, going == "forward" ? Vector3.forward : Vector3.back, Terenowanie.rayHeight, 1 << 11);
+                    //    for (int i = verts.Length - 1; i > 0; i--)
+                    //    { 
+                    //        if (verts[i].transform.name == "on")
+                    //        {
+                    //            Extremes[Extremes.Count - 1].y2 = verts[i].transform.position.y;
+                    //            break;
+                    //        }
+                    //    }
+                    //} else
+                    //{
+                    //    bool foundLine = false;
+                    //    for(int z=LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z)) // going X, (Z loop)
+                    //    {
+                    //        traf = Physics.Raycast(new Vector3(x, hit.transform.position.y, z), going == "forward" ? Vector3.right : Vector3.left, out hit, Terenowanie.rayHeight, 1 << 11);
+                    //        if (traf)
+                    //        {
+                    //            LD.z = z;
+
+                    //            x = (int)hit.transform.position.x;
+                    //            x = (int)Go2High(PG.x, LD.x, ref x);
+
+                    //            foundLine = true;
+                    //            break;
+                    //        }
+                    //    }
+                    //    if (!foundLine)
+                    //        break;
+                    //}\
+                }
+            }
+        }
+        return Extremes;
     }
     /// <summary>
     /// Handles placing more complicated shapes.
@@ -701,7 +991,7 @@ public class Terenowanie : MonoBehaviour
         {
             if (current == null)
                 return;
-            flatter_index = isFlatter(Budowanie.GetRMCname(current));
+            flatter_index = IsFlatter(Budowanie.GetRMCname(current));
             if (flatter_index == -1)
                 return;
         }
@@ -709,24 +999,31 @@ public class Terenowanie : MonoBehaviour
         int index = 0;
         if (waiting4LDpassed)
         {
-            //Mamy pozycję LD, szukamy PG
+            //We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
             Vector3Int PG = FindPG(LD);
-            //Debug.Log("PG=" + PG);
-            //Aktualizuj teren
+            List<DuVec3> extremes = new List<DuVec3>();
             float heightdiff = slider_realheight - LDH;
             if (KeepShape.isOn)
                 heightdiff -= FindHighestY(znaczniki) - LDH;
-            if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
+            if (Connect.isOn)
+                extremes = GetOpposingVerticesForConnect(LD, PG);
+            if ((LD.x < PG.x && LD.z >= PG.z) || (LD.x > PG.x && LD.z <= PG.z))
             { // equal heights along Z axis ||||
                 float steps = Mathf.Abs(LD.x - PG.x);
                 int step = 0;
                 if (steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
                 {
-                    for (int x = LD.x; pom2(LD.x, PG.x, x); pom(LD.x, PG.x, ref x))
+                    for (int x = LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
                     {
-                        for (int z = LD.z; pom2(LD.z, PG.z, z); pom(LD.z, PG.z, ref z))
+                        for (int z = LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
                         {
-
+                            if (Connect.isOn)
+                            {
+                                heightdiff = extremes[Mathf.Abs(z - LD.z)].P2.y - extremes[Mathf.Abs(z - LD.z)].P1.y;
+                                steps = Mathf.Abs(extremes[Mathf.Abs(z - LD.z)].P1.x - extremes[Mathf.Abs(z - LD.z)].P2.x);
+                                slider_realheight = extremes[Mathf.Abs(z - LD.z)].P2.y;
+                                LDH = extremes[Mathf.Abs(z - LD.z)].P1.y;
+                            }
                             bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
                             index = x + 4 * z * SliderWidth.val + z;
                             Vector3 vertpos = Helper.IndexToPos(index);
@@ -751,11 +1048,14 @@ public class Terenowanie : MonoBehaviour
                                 znacznik.transform.position = new Vector3(znacznik.transform.position.x, vertpos.y, znacznik.transform.position.z);
 
                             }
-
+                            //if (Connect.isOn)
+                            //    step += 1;
                         }
                         //Debug.Log(x + " "+ LDH +" "+ slider_realheight + " "+ LDH + step / steps * heightdiff + "HEIGHT="+ verts[index].y);
+                        //if (!Connect.isOn)
                         step += 1;
                     }
+
                 }
 
             }
@@ -766,11 +1066,17 @@ public class Terenowanie : MonoBehaviour
                 int step = 0;
                 if (steps != 0 && (heightdiff != 0 || last_form_button == "flatter"))
                 {
-                    for (int z = LD.z; pom2(LD.z, PG.z, z); pom(LD.z, PG.z, ref z))
+                    for (int z = LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
                     {
-
-                        for (int x = LD.x; pom2(LD.x, PG.x, x); pom(LD.x, PG.x, ref x))
+                        for (int x = LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
                         {
+                            if (Connect.isOn)
+                            {
+                                heightdiff = extremes[Mathf.Abs(x - LD.x)].P2.y - extremes[Mathf.Abs(x - LD.x)].P1.y;
+                                steps = Mathf.Abs(extremes[Mathf.Abs(x - LD.x)].P1.z - extremes[Mathf.Abs(x - LD.x)].P2.z);
+                                slider_realheight = extremes[Mathf.Abs(x - LD.x)].P2.y;
+                                LDH = extremes[Mathf.Abs(x - LD.x)].P1.y;
+                            }
                             //Debug.DrawLine(new Vector3(x, Terenowanie.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
                             bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
                             index = x + 4 * z * SliderWidth.val + z;
@@ -797,10 +1103,13 @@ public class Terenowanie : MonoBehaviour
                                 GameObject znacznik = hit.transform.gameObject;
                                 znacznik.transform.position = new Vector3(znacznik.transform.position.x, vertpos.y, znacznik.transform.position.z);
                             }
+                            //if (Connect.isOn)
+                            //    step += 1;
                         }
-                        //Debug.Log(step / steps);
+                        //if (!Connect.isOn)
                         step += 1;
                     }
+
                 }
             }
             //foreach(GameObject znacznik in znaczniki)
@@ -819,11 +1128,11 @@ public class Terenowanie : MonoBehaviour
 
     bool IsWithinMapBounds(Vector3 v)
     {
-        return (v.x > 0 && v.x < 4 * SliderWidth.val + 1 && v.z > 0 && v.z < 4 * SliderHeight.val + 1) ? true : false;
+        return (v.x > 0 && v.x < 4 * SliderWidth.val && v.z > 0 && v.z < 4 * SliderHeight.val) ? true : false;
     }
     bool IsWithinMapBounds(int x, int z)
     {
-        return (x > 0 && x < 4 * SliderWidth.val + 1 && z > 0 && z < 4 * SliderHeight.val + 1) ? true : false;
+        return (x > 0 && x < 4 * SliderWidth.val && z > 0 && z < 4 * SliderHeight.val) ? true : false;
     }
     float Smootherstep(float edge0, float edge1, float x)
     {

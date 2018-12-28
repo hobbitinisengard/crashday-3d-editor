@@ -13,6 +13,10 @@ public class Helper : MonoBehaviour
     public GameObject editorPanel;
     public static float[] former_heights;
     public static float[] current_heights;
+    /// <summary>
+    /// Local coordinates of copied vertices. Put here to live when switching form-build tabs
+    /// </summary>
+    public static List<Vector3> CopyClipboard = new List<Vector3>();
     public static float multiplier = 1;
     int fx = 0, fz = 0;
 
@@ -110,6 +114,10 @@ public class Helper : MonoBehaviour
     public static int PosToIndex(Vector3 v)
     {
         return Mathf.RoundToInt(v.x + 4 * v.z * SliderWidth.val + v.z);
+    }
+    public static int PosToIndex(int x,int z)
+    {
+        return Mathf.RoundToInt(x + 4 * z * SliderWidth.val + z);
     }
     //static GameObject CreatePlane(int pnx, int pny, Material feedmaterial)
     //{
