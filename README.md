@@ -1,15 +1,15 @@
 # Alternative-Crashday-Track-Editor
 Facilitates editing terrain accurately in 3D.
 Follow Steam link for more info: https://steamcommunity.com/app/508980/discussions/0/1733213724899660076/
-<img src="https://scontent.fpoz1-1.fna.fbcdn.net/v/t1.15752-9/43129844_468997280175329_6164996108218007552_n.jpg?_nc_cat=103&oh=cf208646c6fb91c698b80f85e4526828&oe=5C1B72ED"
+<img src="https://drive.google.com/open?id=1dEttixfwj8_WruNEpsJ_tGyqAWQ40OKl"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px;" />
-<img src="https://scontent.fpoz1-1.fna.fbcdn.net/v/t1.15752-9/43184442_673593226360500_7168664776279588864_n.jpg?_nc_cat=102&oh=7361f4a1a69266739c808811f4a50b13&oe=5C51ACBB"
+<img src="https://drive.google.com/open?id=1SMuwqltlHZMpvYYiVg190SMVxV03Mzj2"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px;" />
-<img src="https://scontent.fpoz1-1.fna.fbcdn.net/v/t1.15752-9/43128593_1911934908923641_5540472558748434432_n.jpg?_nc_cat=104&oh=2feffc657d77b2f83ffba4755550d3e1&oe=5C181B53"
+<img src="https://drive.google.com/open?id=14H7w90FXyPZwJQ46oQssoJtlGLbA8KWw"
 alt="Markdown Monster icon"
 style="float: left; margin-right: 10px;" />
-<img src="https://scontent.fpoz1-1.fna.fbcdn.net/v/t1.15752-9/43217199_2371192159783566_2692040412566126592_n.jpg?_nc_cat=106&oh=79a7a5415a98932f0a9d6053fe4ac534&oe=5C16218C"
+<img src="https://drive.google.com/open?id=1iPFpGDFK8AZy1QnW-di-wS_hNYUaS95s"
 alt="Markdown Monster icon"
 style="float: left; margin-right: 10px;" />
