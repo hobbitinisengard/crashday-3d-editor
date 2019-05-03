@@ -1,0 +1,1 @@
+make3ds -in D:\Unity Projects\HE2.0\Assets\models\p3d\4sjumper.p3d -out D:\Unity Projects\HE2.0\Assets\models\p3d\4sjumper.3ds

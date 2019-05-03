@@ -1,0 +1,262 @@
+fileFormatVersion: 2
+guid: 737f99cc34653f243b958ba77db2a0cb
+timeCreated: 1531139018
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: main
+    100004: main.3
+    100006: main.4
+    100008: metl_f1
+    100010: metl_f1.0
+    100012: metl_f2
+    100014: metl_f3
+    100016: metl_f3.0
+    100018: metl_f4
+    100020: metl_f4.0
+    100022: metl_g1
+    100024: metl_g2
+    100026: metl_s
+    400000: //RootNode
+    400002: main
+    400004: main.3
+    400006: main.4
+    400008: metl_f1
+    400010: metl_f1.0
+    400012: metl_f2
+    400014: metl_f3
+    400016: metl_f3.0
+    400018: metl_f4
+    400020: metl_f4.0
+    400022: metl_g1
+    400024: metl_g2
+    400026: metl_s
+    2100000: cncret10
+    2100002: concflr
+    2100004: concret4
+    2100006: entry
+    2100008: fence3
+    2100010: floor17
+    2100012: mothertr
+    2100014: mtlrust5
+    2100016: mtlrust7
+    2100018: pavement
+    2100020: pavestrp
+    2100022: roof2
+    2100024: rust
+    2100026: signs1
+    2100028: signs6
+    2100030: street3
+    2100032: transp
+    2100034: wirfen
+    2300000: main
+    2300002: main.3
+    2300004: main.4
+    2300006: metl_f1
+    2300008: metl_f1.0
+    2300010: metl_f2
+    2300012: metl_f3
+    2300014: metl_f3.0
+    2300016: metl_f4
+    2300018: metl_f4.0
+    2300020: metl_g1
+    2300022: metl_g2
+    2300024: metl_s
+    3300000: main
+    3300002: main.3
+    3300004: main.4
+    3300006: metl_f1
+    3300008: metl_f1.0
+    3300010: metl_f2
+    3300012: metl_f3
+    3300014: metl_f3.0
+    3300016: metl_f4
+    3300018: metl_f4.0
+    3300020: metl_g1
+    3300022: metl_g2
+    3300024: metl_s
+    4300000: main
+    4300002: main.3
+    4300004: main.4
+    4300006: metl_f1
+    4300008: metl_f1.0
+    4300010: metl_f2
+    4300012: metl_f3
+    4300014: metl_f3.0
+    4300016: metl_f4
+    4300018: metl_f4.0
+    4300020: metl_g1
+    4300022: metl_g2
+    4300024: metl_s
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cncret10
+    second: {fileID: 2100000, guid: a901c16153245a044b4fff18d82e5aea, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: concflr
+    second: {fileID: 2100000, guid: 183cdaf2c0152eb44ad5b2990ac4a5ff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: concret4
+    second: {fileID: 2100000, guid: ca48dc2c4f8042d409bae5af41735704, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: entry
+    second: {fileID: 2100000, guid: 6df269bb24d8ae248a0c9576bfc57a43, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: fence3
+    second: {fileID: 2100000, guid: 44d7a26ef1b6c4943b33ef4cf6445e17, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor17
+    second: {fileID: 2100000, guid: c77c869ae1e43d24a92a91456dfdd108, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mothertr
+    second: {fileID: 2100000, guid: 89b72ddb35a980343a4a33b6f34fbaff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust5
+    second: {fileID: 2100000, guid: f219d98406a416440963d276160f7b7f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust7
+    second: {fileID: 2100000, guid: 0068ba92c6cfa5f43be690b8c5227a7a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pavement
+    second: {fileID: 2100000, guid: a6f8138efd91ffa45b4e83007aa56496, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pavestrp
+    second: {fileID: 2100000, guid: c906dd83ddd61b94282275d9bef44ce3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: roof2
+    second: {fileID: 2100000, guid: 391f3cfe8acef63499251d385c3c35e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: rust
+    second: {fileID: 2100000, guid: 2eeab9c237b62b745bb509e12fcf71b1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs1
+    second: {fileID: 2100000, guid: 3a8d9079be2850e40a39580f6a1f699f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs6
+    second: {fileID: 2100000, guid: 81e1734d9e02a9e49b67318d8ec4b42b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street3
+    second: {fileID: 2100000, guid: e50180df9ba50f24aafbb36caec7e5c0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: transp
+    second: {fileID: 2100000, guid: e67ad06b060b86846aa7acc603c22d35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wirfen
+    second: {fileID: 2100000, guid: efdfaf441e244d24f8c456898744753d, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

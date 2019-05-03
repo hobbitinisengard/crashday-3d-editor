@@ -1,0 +1,236 @@
+fileFormatVersion: 2
+guid: a4ab4f7e20477a04ea68667732157ea8
+timeCreated: 1531139026
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: dest_11
+    100002: dest_12
+    100004: dest_13
+    100006: dest_2
+    100008: dest_3
+    100010: dest_9
+    100012: expl_1
+    100014: expl_10
+    100016: expl_11
+    100018: expl_12
+    100020: expl_13
+    100022: expl_14
+    100024: expl_2
+    100026: expl_3
+    100028: expl_4
+    100030: expl_5
+    100032: expl_6
+    100034: expl_7
+    100036: expl_9
+    100038: //RootNode
+    100040: main
+    100042: metl_1
+    400000: dest_11
+    400002: dest_12
+    400004: dest_13
+    400006: dest_2
+    400008: dest_3
+    400010: dest_9
+    400012: expl_1
+    400014: expl_10
+    400016: expl_11
+    400018: expl_12
+    400020: expl_13
+    400022: expl_14
+    400024: expl_2
+    400026: expl_3
+    400028: expl_4
+    400030: expl_5
+    400032: expl_6
+    400034: expl_7
+    400036: expl_9
+    400038: //RootNode
+    400040: main
+    400042: metl_1
+    2100000: barrel1
+    2100002: burnt
+    2100004: concflr
+    2100006: metal3
+    2100008: pallets
+    2100010: signs1
+    2100012: signs6
+    2300000: dest_11
+    2300002: dest_12
+    2300004: dest_13
+    2300006: dest_2
+    2300008: dest_3
+    2300010: dest_9
+    2300012: expl_1
+    2300014: expl_10
+    2300016: expl_11
+    2300018: expl_12
+    2300020: expl_13
+    2300022: expl_14
+    2300024: expl_2
+    2300026: expl_3
+    2300028: expl_4
+    2300030: expl_5
+    2300032: expl_6
+    2300034: expl_7
+    2300036: expl_9
+    2300038: main
+    2300040: metl_1
+    3300000: dest_11
+    3300002: dest_12
+    3300004: dest_13
+    3300006: dest_2
+    3300008: dest_3
+    3300010: dest_9
+    3300012: expl_1
+    3300014: expl_10
+    3300016: expl_11
+    3300018: expl_12
+    3300020: expl_13
+    3300022: expl_14
+    3300024: expl_2
+    3300026: expl_3
+    3300028: expl_4
+    3300030: expl_5
+    3300032: expl_6
+    3300034: expl_7
+    3300036: expl_9
+    3300038: main
+    3300040: metl_1
+    4300000: dest_11
+    4300002: dest_12
+    4300004: dest_13
+    4300006: dest_2
+    4300008: dest_3
+    4300010: dest_9
+    4300012: expl_1
+    4300014: expl_10
+    4300016: expl_11
+    4300018: expl_12
+    4300020: expl_13
+    4300022: expl_14
+    4300024: expl_2
+    4300026: expl_3
+    4300028: expl_4
+    4300030: expl_5
+    4300032: expl_6
+    4300034: expl_7
+    4300036: expl_9
+    4300038: main
+    4300040: metl_1
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: barrel1
+    second: {fileID: 2100000, guid: 1b3fd98aca1535a488abd9e1d74c6d5e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: burnt
+    second: {fileID: 2100000, guid: 7feb63d9bd4a6ef429f105a9fc5f6ad1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: concflr
+    second: {fileID: 2100000, guid: 183cdaf2c0152eb44ad5b2990ac4a5ff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal3
+    second: {fileID: 2100000, guid: 1cd8bda57463a054a92f2cc577b3da56, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pallets
+    second: {fileID: 2100000, guid: cb4dc33470a9d184992440218ef957cd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs1
+    second: {fileID: 2100000, guid: 3a8d9079be2850e40a39580f6a1f699f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs6
+    second: {fileID: 2100000, guid: 81e1734d9e02a9e49b67318d8ec4b42b, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

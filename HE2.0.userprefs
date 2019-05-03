@@ -1,0 +1,25 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\terenowanie.cs">
+    <Files>
+      <File FileName="Assets\budowanie2.cs" Line="75" Column="46" />
+      <File FileName="Assets\terenowanie.cs" Line="26" Column="10" />
+      <File FileName="Assets\Utils.cs" Line="1" Column="1" />
+      <File FileName="Assets\EditorMenu.cs" Line="1" Column="1" />
+      <File FileName="Assets\highlight.cs" Line="1" Column="1" />
+      <File FileName="Assets\fileexplorer.cs" Line="1" Column="1" />
+      <File FileName="Assets\poka_nazwe_tilesa.cs" Line="1" Column="1" />
+      <File FileName="Assets\helper.cs" Line="1" Column="1" />
+      <File FileName="Assets\creatermcpos.cs" Line="1" Column="1" />
+      <File FileName="Assets\Editor\DeleteUnwanted.cs" Line="1" Column="1" />
+      <File FileName="Assets\SliderCase.cs" Line="1" Column="1" />
+      <File FileName="Assets\VertexHeight.cs" Line="1" Column="1" />
+      <File FileName="Assets\FlyCamera.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MultiItemStartupConfigurations />
+</Properties>

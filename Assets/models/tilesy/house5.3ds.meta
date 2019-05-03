@@ -1,0 +1,197 @@
+fileFormatVersion: 2
+guid: afb8d6b70cfc86e44ac04f49b40f4b93
+timeCreated: 1531139028
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: main
+    100004: main.4
+    100006: metl_01
+    100008: metl_02
+    100010: metl_an
+    100012: metl_ch
+    400000: //RootNode
+    400002: main
+    400004: main.4
+    400006: metl_01
+    400008: metl_02
+    400010: metl_an
+    400012: metl_ch
+    2100000: amp
+    2100002: cncret24
+    2100004: colblck
+    2100006: fence3
+    2100008: floor17
+    2100010: hsdetail
+    2100012: metal1
+    2100014: metal3
+    2100016: pavement
+    2100018: platte1
+    2100020: platte2
+    2100022: platte3
+    2100024: roof
+    2300000: main
+    2300002: main.4
+    2300004: metl_01
+    2300006: metl_02
+    2300008: metl_an
+    2300010: metl_ch
+    3300000: main
+    3300002: main.4
+    3300004: metl_01
+    3300006: metl_02
+    3300008: metl_an
+    3300010: metl_ch
+    4300000: main
+    4300002: main.4
+    4300004: metl_01
+    4300006: metl_02
+    4300008: metl_an
+    4300010: metl_ch
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: amp
+    second: {fileID: 2100000, guid: 1227549adbac84a408940adee3140b5a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cncret24
+    second: {fileID: 2100000, guid: 85eb3290e5fecd14d9bd9dbd173d7be0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: colblck
+    second: {fileID: 2100000, guid: e857a224e6107b04585bb92d5eeb9b63, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: fence3
+    second: {fileID: 2100000, guid: 44d7a26ef1b6c4943b33ef4cf6445e17, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor17
+    second: {fileID: 2100000, guid: c77c869ae1e43d24a92a91456dfdd108, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hsdetail
+    second: {fileID: 2100000, guid: b111bce5e51d6004e90d0b9141195994, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal1
+    second: {fileID: 2100000, guid: 31f8d4e1c02316846af0f09a08dfb4ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal3
+    second: {fileID: 2100000, guid: 1cd8bda57463a054a92f2cc577b3da56, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pavement
+    second: {fileID: 2100000, guid: a6f8138efd91ffa45b4e83007aa56496, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: platte1
+    second: {fileID: 2100000, guid: ff8798714a0610d4898a7e308c1d0903, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: platte2
+    second: {fileID: 2100000, guid: a3c6def46f8340949a9e11522f7bff44, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: platte3
+    second: {fileID: 2100000, guid: 5d62dcc8802adde4cb66c9c396580528, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: roof
+    second: {fileID: 2100000, guid: 4bae7b58bbe5a1143809249cf9909a16, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

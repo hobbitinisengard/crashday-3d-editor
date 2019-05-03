@@ -1,0 +1,225 @@
+fileFormatVersion: 2
+guid: 6d77d7e34c94e4640b1293bcc93b7839
+timeCreated: 1531139017
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: dest_g1
+    100002: dest_g2
+    100004: gls_win1
+    100006: gls_win2
+    100008: gls_win3
+    100010: gls_win4
+    100012: main
+    100014: main.3
+    100016: main.4
+    100018: metl_g1
+    100020: metl_g2
+    100022: metl_g3
+    100024: metl_g4
+    100026: metl_g5
+    100028: //RootNode
+    400000: dest_g1
+    400002: dest_g2
+    400004: gls_win1
+    400006: gls_win2
+    400008: gls_win3
+    400010: gls_win4
+    400012: main
+    400014: main.3
+    400016: main.4
+    400018: metl_g1
+    400020: metl_g2
+    400022: metl_g3
+    400024: metl_g4
+    400026: metl_g5
+    400028: //RootNode
+    2100000: ccplate3
+    2100002: colblck
+    2100004: concflr
+    2100006: door4
+    2100008: factory
+    2100010: metal1
+    2100012: plank
+    2100014: roof
+    2100016: street5
+    2100018: strut
+    2100020: window
+    2300000: dest_g1
+    2300002: dest_g2
+    2300004: gls_win1
+    2300006: gls_win2
+    2300008: gls_win3
+    2300010: gls_win4
+    2300012: main
+    2300014: main.3
+    2300016: main.4
+    2300018: metl_g1
+    2300020: metl_g2
+    2300022: metl_g3
+    2300024: metl_g4
+    2300026: metl_g5
+    3300000: dest_g1
+    3300002: dest_g2
+    3300004: gls_win1
+    3300006: gls_win2
+    3300008: gls_win3
+    3300010: gls_win4
+    3300012: main
+    3300014: main.3
+    3300016: main.4
+    3300018: metl_g1
+    3300020: metl_g2
+    3300022: metl_g3
+    3300024: metl_g4
+    3300026: metl_g5
+    4300000: dest_g1
+    4300002: dest_g2
+    4300004: gls_win1
+    4300006: gls_win2
+    4300008: gls_win3
+    4300010: gls_win4
+    4300012: main
+    4300014: main.3
+    4300016: main.4
+    4300018: metl_g1
+    4300020: metl_g2
+    4300022: metl_g3
+    4300024: metl_g4
+    4300026: metl_g5
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ccplate3
+    second: {fileID: 2100000, guid: c058ab8c4ec290743b00301e9fb1bf1d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: colblck
+    second: {fileID: 2100000, guid: e857a224e6107b04585bb92d5eeb9b63, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: concflr
+    second: {fileID: 2100000, guid: 183cdaf2c0152eb44ad5b2990ac4a5ff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: door4
+    second: {fileID: 2100000, guid: 7d8b0c7566fab00459416f2c96c4ce63, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: factory
+    second: {fileID: 2100000, guid: 90736057bae353442b84196bc6d7dd7b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal1
+    second: {fileID: 2100000, guid: 31f8d4e1c02316846af0f09a08dfb4ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: plank
+    second: {fileID: 2100000, guid: 8ec562013e7bb9f4595a72da3f843b47, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: roof
+    second: {fileID: 2100000, guid: 4bae7b58bbe5a1143809249cf9909a16, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street5
+    second: {fileID: 2100000, guid: 289a845b603b6754fa332c531b59d584, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: strut
+    second: {fileID: 2100000, guid: be5482cebbca7204daa958e5ed5c24a1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: window
+    second: {fileID: 2100000, guid: 508823e17ee18304698050ab9b680982, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,201 @@
+fileFormatVersion: 2
+guid: 7fe71b9ce14f87d489304343c9d2cc38
+timeCreated: 1531139021
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: main
+    100004: main.3
+    100006: plas_1
+    100008: plas_2
+    100010: plas_3
+    100012: plas_4
+    100014: plas_5
+    100016: plas_6
+    400000: //RootNode
+    400002: main
+    400004: main.3
+    400006: plas_1
+    400008: plas_2
+    400010: plas_3
+    400012: plas_4
+    400014: plas_5
+    400016: plas_6
+    2100000: bldside
+    2100002: cncret13
+    2100004: cncret16
+    2100006: cncret17
+    2100008: floor4
+    2100010: mtlrust4
+    2100012: mtlrust5
+    2100014: mtlrust6
+    2100016: railings
+    2100018: street4
+    2100020: transp
+    2100022: warnhat
+    2300000: main
+    2300002: main.3
+    2300004: plas_1
+    2300006: plas_2
+    2300008: plas_3
+    2300010: plas_4
+    2300012: plas_5
+    2300014: plas_6
+    3300000: main
+    3300002: main.3
+    3300004: plas_1
+    3300006: plas_2
+    3300008: plas_3
+    3300010: plas_4
+    3300012: plas_5
+    3300014: plas_6
+    4300000: main
+    4300002: main.3
+    4300004: plas_1
+    4300006: plas_2
+    4300008: plas_3
+    4300010: plas_4
+    4300012: plas_5
+    4300014: plas_6
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bldside
+    second: {fileID: 2100000, guid: f4c583f15e9d1fb4682f68ec3f9dfcbf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cncret13
+    second: {fileID: 2100000, guid: 7bef121a89a515f429a8d76ddc9d78c1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cncret16
+    second: {fileID: 2100000, guid: 83d3bc19f21e6e243b7ab7d20c092ced, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cncret17
+    second: {fileID: 2100000, guid: 7ca93f1b6c3a4d44d874ab7b5c2cde70, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor4
+    second: {fileID: 2100000, guid: c98df39605852654f960aa2be3a4a8db, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust4
+    second: {fileID: 2100000, guid: 3ee1f219d47c7df4c8f183cfc7f1bb9d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust5
+    second: {fileID: 2100000, guid: f219d98406a416440963d276160f7b7f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust6
+    second: {fileID: 2100000, guid: 787cdf03d1ca08342bb7b9710a6695d8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: railings
+    second: {fileID: 2100000, guid: 74b6a7782d54f3e43bbc98c843f0d60a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street4
+    second: {fileID: 2100000, guid: ae7587277555804458814d9fa1353b6e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: transp
+    second: {fileID: 2100000, guid: e67ad06b060b86846aa7acc603c22d35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: warnhat
+    second: {fileID: 2100000, guid: b5b4bae0ac45c354298b74b9aa2240f8, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,342 @@
+fileFormatVersion: 2
+guid: 61d25fc770ec164479e97ddf3347b447
+timeCreated: 1531139015
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: B_int
+    100002: gls_2
+    100004: gls_2.2
+    100006: gls_3
+    100008: gls_3.2
+    100010: gls_4
+    100012: gls_4.2
+    100014: gls_5
+    100016: gls_5.2
+    100018: main
+    100020: main.0
+    100022: main.2
+    100024: main.3
+    100026: main.4
+    100028: //RootNode
+    100030: metl_f1
+    100032: metl_f1.2
+    100034: metl_f2
+    100036: metl_f2.2
+    100038: metl_f3
+    100040: metl_f3.2
+    100042: vents
+    100044: vents.2
+    100046: vents.3
+    400000: B_int
+    400002: gls_2
+    400004: gls_2.2
+    400006: gls_3
+    400008: gls_3.2
+    400010: gls_4
+    400012: gls_4.2
+    400014: gls_5
+    400016: gls_5.2
+    400018: main
+    400020: main.0
+    400022: main.2
+    400024: main.3
+    400026: main.4
+    400028: //RootNode
+    400030: metl_f1
+    400032: metl_f1.2
+    400034: metl_f2
+    400036: metl_f2.2
+    400038: metl_f3
+    400040: metl_f3.2
+    400042: vents
+    400044: vents.2
+    400046: vents.3
+    2100000: Material#0
+    2100002: ccbrder2
+    2100004: ccplate5
+    2100006: fence2
+    2100008: floor4
+    2100010: mdoor1
+    2100012: mdoor2
+    2100014: metal1
+    2100016: metal3
+    2100018: metal6
+    2100020: mside1
+    2100022: mside2
+    2100024: mside3
+    2100026: mtlrust1
+    2100028: mwndw1
+    2100030: pavement
+    2100032: plaster1
+    2100034: shngles1
+    2100036: signs2
+    2100038: street1
+    2100040: street14
+    2100042: wood3
+    2100044: ylwblck2
+    2300000: B_int
+    2300002: gls_2
+    2300004: gls_2.2
+    2300006: gls_3
+    2300008: gls_3.2
+    2300010: gls_4
+    2300012: gls_4.2
+    2300014: gls_5
+    2300016: gls_5.2
+    2300018: main
+    2300020: main.0
+    2300022: main.2
+    2300024: main.3
+    2300026: main.4
+    2300028: metl_f1
+    2300030: metl_f1.2
+    2300032: metl_f2
+    2300034: metl_f2.2
+    2300036: metl_f3
+    2300038: metl_f3.2
+    2300040: vents
+    2300042: vents.2
+    2300044: vents.3
+    3300000: B_int
+    3300002: gls_2
+    3300004: gls_2.2
+    3300006: gls_3
+    3300008: gls_3.2
+    3300010: gls_4
+    3300012: gls_4.2
+    3300014: gls_5
+    3300016: gls_5.2
+    3300018: main
+    3300020: main.0
+    3300022: main.2
+    3300024: main.3
+    3300026: main.4
+    3300028: metl_f1
+    3300030: metl_f1.2
+    3300032: metl_f2
+    3300034: metl_f2.2
+    3300036: metl_f3
+    3300038: metl_f3.2
+    3300040: vents
+    3300042: vents.2
+    3300044: vents.3
+    4300000: B_int
+    4300002: gls_2
+    4300004: gls_2.2
+    4300006: gls_3
+    4300008: gls_3.2
+    4300010: gls_4
+    4300012: gls_4.2
+    4300014: gls_5
+    4300016: gls_5.2
+    4300018: main
+    4300020: main.0
+    4300022: main.2
+    4300024: main.3
+    4300026: main.4
+    4300028: metl_f1
+    4300030: metl_f1.2
+    4300032: metl_f2
+    4300034: metl_f2.2
+    4300036: metl_f3
+    4300038: metl_f3.2
+    4300040: vents
+    4300042: vents.2
+    4300044: vents.3
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material#0
+    second: {fileID: 2100000, guid: c2f7a567c5185654e9b988009b779f8d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ccbrder2
+    second: {fileID: 2100000, guid: 61fb237df7257ec4c9a0c7db392b1bc8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ccplate5
+    second: {fileID: 2100000, guid: a3a498dbb52ed0141b6e60dfb826947b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: fence2
+    second: {fileID: 2100000, guid: a401e3530c10a474eb1e21b898d501e3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor4
+    second: {fileID: 2100000, guid: c98df39605852654f960aa2be3a4a8db, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mdoor1
+    second: {fileID: 2100000, guid: e4d84ae963269d14e9964c7f7b1b4758, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mdoor2
+    second: {fileID: 2100000, guid: cd1fb6092250f044cac4fd25702f4a2a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal1
+    second: {fileID: 2100000, guid: 31f8d4e1c02316846af0f09a08dfb4ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal3
+    second: {fileID: 2100000, guid: 1cd8bda57463a054a92f2cc577b3da56, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal6
+    second: {fileID: 2100000, guid: a126a2591a5e4184e85ddd3f19b11d94, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mside1
+    second: {fileID: 2100000, guid: 3a1c71b70ccceae49bbec75ccac64054, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mside2
+    second: {fileID: 2100000, guid: c2091f5dab2e83c4ab8c28cc81cd0986, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mside3
+    second: {fileID: 2100000, guid: 4bf404865314b464e840a70de9ed07c7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust1
+    second: {fileID: 2100000, guid: 3c45f8b01b51d6d4db68e6f93a7a5354, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mwndw1
+    second: {fileID: 2100000, guid: 7bb4174158b18854aabe639a2fe6a479, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pavement
+    second: {fileID: 2100000, guid: a6f8138efd91ffa45b4e83007aa56496, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: plaster1
+    second: {fileID: 2100000, guid: dbf8376268612a54ea90ebadf530b573, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: shngles1
+    second: {fileID: 2100000, guid: d76b9a9e5a2912848be1da4743157639, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs2
+    second: {fileID: 2100000, guid: 4997a3846c6abd047bc8dfeed86bc96c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street1
+    second: {fileID: 2100000, guid: f14e70bd1cc3abd4ca10d03df44c8fc8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street14
+    second: {fileID: 2100000, guid: 794110b08ecd93347a8fa1a9505ef425, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wood3
+    second: {fileID: 2100000, guid: db85ffa87fd67ea4fb3e1cc1b0fe5665, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ylwblck2
+    second: {fileID: 2100000, guid: 2bef18ce1afccc747b90521d4086fb07, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

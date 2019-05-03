@@ -1,0 +1,232 @@
+fileFormatVersion: 2
+guid: d255347017889444289f725d62ac5e13
+timeCreated: 1531139031
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: main
+    100002: main.3
+    100004: main.4
+    100006: metl_1
+    100008: metl_2
+    100010: metl_s1
+    100012: metl_s2
+    100014: metl_s3
+    100016: metl_s4
+    100018: metl_s5
+    100020: metl_s6
+    100022: rnd50_1
+    100024: rnd50_2
+    100026: //RootNode
+    400000: main
+    400002: main.3
+    400004: main.4
+    400006: metl_1
+    400008: metl_2
+    400010: metl_s1
+    400012: metl_s2
+    400014: metl_s3
+    400016: metl_s4
+    400018: metl_s5
+    400020: metl_s6
+    400022: rnd50_1
+    400024: rnd50_2
+    400026: //RootNode
+    2100000: concret9
+    2100002: decals1
+    2100004: decals2
+    2100006: floor1
+    2100008: floor17
+    2100010: metal3
+    2100012: mtlrust1
+    2100014: redwht1
+    2100016: redwht2
+    2100018: signs1
+    2100020: street2
+    2100022: transp
+    2100024: tunwall
+    2300000: main
+    2300002: main.3
+    2300004: main.4
+    2300006: metl_1
+    2300008: metl_2
+    2300010: metl_s1
+    2300012: metl_s2
+    2300014: metl_s3
+    2300016: metl_s4
+    2300018: metl_s5
+    2300020: metl_s6
+    2300022: rnd50_1
+    2300024: rnd50_2
+    3300000: main
+    3300002: main.3
+    3300004: main.4
+    3300006: metl_1
+    3300008: metl_2
+    3300010: metl_s1
+    3300012: metl_s2
+    3300014: metl_s3
+    3300016: metl_s4
+    3300018: metl_s5
+    3300020: metl_s6
+    3300022: rnd50_1
+    3300024: rnd50_2
+    4300000: main
+    4300002: main.3
+    4300004: main.4
+    4300006: metl_1
+    4300008: metl_2
+    4300010: metl_s1
+    4300012: metl_s2
+    4300014: metl_s3
+    4300016: metl_s4
+    4300018: metl_s5
+    4300020: metl_s6
+    4300022: rnd50_1
+    4300024: rnd50_2
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: concret9
+    second: {fileID: 2100000, guid: fd3d28f4e360c9e419d6f56e90c8e956, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: decals1
+    second: {fileID: 2100000, guid: 0a0a54db4c778f94a8d64fb8fc99943d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: decals2
+    second: {fileID: 2100000, guid: f1a81ed94a75a0e428bc355cdffe46ca, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor1
+    second: {fileID: 2100000, guid: f64802276aab9a84f9916238b47ae92e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: floor17
+    second: {fileID: 2100000, guid: c77c869ae1e43d24a92a91456dfdd108, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal3
+    second: {fileID: 2100000, guid: 1cd8bda57463a054a92f2cc577b3da56, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mtlrust1
+    second: {fileID: 2100000, guid: 3c45f8b01b51d6d4db68e6f93a7a5354, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: redwht1
+    second: {fileID: 2100000, guid: 8f5cf8f00d758944fbb2e261274cb54f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: redwht2
+    second: {fileID: 2100000, guid: 011f694561096694f8290f1599e40658, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: signs1
+    second: {fileID: 2100000, guid: 3a8d9079be2850e40a39580f6a1f699f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: street2
+    second: {fileID: 2100000, guid: dacd8bdeb51f42744aa359c3855c1840, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: transp
+    second: {fileID: 2100000, guid: e67ad06b060b86846aa7acc603c22d35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tunwall
+    second: {fileID: 2100000, guid: c5fe268f3a07d824eb2c574a16bcb863, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
