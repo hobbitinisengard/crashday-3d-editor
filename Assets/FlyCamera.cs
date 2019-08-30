@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
-//Logic of camera
+//Logic of camera movements
 public class FlyCamera : MonoBehaviour
 {
     [DllImport("user32.dll")]

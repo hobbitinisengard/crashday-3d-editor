@@ -545,3 +545,7 @@ C:\Unity Projects\HE2.1\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
 C:\Unity Projects\HE2.1\obj\Debug\Assembly-CSharp.csproj.CopyComplete
 C:\Unity Projects\HE2.1\obj\Debug\Assembly-CSharp.dll
 C:\Unity Projects\HE2.1\obj\Debug\Assembly-CSharp.pdb
+C:\Users\Żyrafa\Desktop\Alternative-Crashday-Track-Editor\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+C:\Users\Żyrafa\Desktop\Alternative-Crashday-Track-Editor\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+C:\Users\Żyrafa\Desktop\Alternative-Crashday-Track-Editor\obj\Debug\Assembly-CSharp.dll
+C:\Users\Żyrafa\Desktop\Alternative-Crashday-Track-Editor\obj\Debug\Assembly-CSharp.pdb

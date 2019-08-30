@@ -8,7 +8,7 @@ public class FormSlider : MonoBehaviour
 
     void Update()
     {
-        // Ktoś wcisnął F
+        // When somebody pressed F
         if (text.text == "Manual forming..")
             slider.value = 1;
         if (text.text == "Shape forming..")
@@ -16,6 +16,6 @@ public class FormSlider : MonoBehaviour
     }
     void OnValueChanged()
     {
-        Terenowanie.firstFormingMode = !Terenowanie.firstFormingMode;
+        Terraining.firstFormingMode = !Terraining.firstFormingMode;
     }
 }

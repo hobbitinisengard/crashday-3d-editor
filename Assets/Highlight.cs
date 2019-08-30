@@ -58,7 +58,7 @@ public class Highlight : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Delete))
         {
-            if (Physics.Raycast(pos, Vector3.down, out hit, Terenowanie.rayHeight, 1 << 12))
+            if (Physics.Raycast(pos, Vector3.down, out hit, Terraining.rayHeight, 1 << 12))
             {
                 StreamWriter writer = new StreamWriter("Assets/Resources/flatters.txt", true);
                 writer.Write(hit.transform.name.Substring(0, hit.transform.name.IndexOf('(')) + " ");
@@ -69,7 +69,7 @@ public class Highlight : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Insert))
         {
             RaycastHit hit1;
-            if (Physics.Raycast(r.origin, r.direction, out hit1, Terenowanie.rayHeight, 1 << 12) && Physics.Raycast(new Vector3(Mathf.Round(pos.x), hit1.point.y + 0.5f, Mathf.Round(pos.z)), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 12) && Mathf.Round(hit.point.z) != Mathf.Round(last_z))
+            if (Physics.Raycast(r.origin, r.direction, out hit1, Terraining.rayHeight, 1 << 12) && Physics.Raycast(new Vector3(Mathf.Round(pos.x), hit1.point.y + 0.5f, Mathf.Round(pos.z)), Vector3.down, out hit, Terraining.rayHeight, 1 << 12) && Mathf.Round(hit.point.z) != Mathf.Round(last_z))
             {
                 StreamWriter writer = new StreamWriter("Assets/Resources/flatters.txt", true);
                 writer.Write(hit.point.y + " ");
@@ -82,7 +82,7 @@ public class Highlight : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            if (Physics.Raycast(r.origin, r.direction, out hit, Terenowanie.rayHeight, 1 << 12))
+            if (Physics.Raycast(r.origin, r.direction, out hit, Terraining.rayHeight, 1 << 12))
                 Debug.Log("free Y=" + hit.point.y);
         }
     }
