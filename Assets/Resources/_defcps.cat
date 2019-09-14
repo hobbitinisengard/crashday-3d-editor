@@ -1,0 +1,21 @@
+CHECKPOINTS				# Category type; one of FIELDS, DYNAMICS, CHECKPOINTS
+1						# Number of categories
+						# CFL file / PositionX / PositionY / Rotation in display
+Next:						#
+Checkpoints			# Name
+14						# Objects per category
+0                       # Automatic position
+chkfield.cfl 1 1 0 $ID trkdata/editor/cps.cat chkfield.cfl.TrackPiece			# CP GRASS 0M
+chkpoint2.cfl 2 1 0 $ID trkdata/editor/cps.cat chkpoint2.cfl.TrackPiece		# CP GRASS 5M
+chkpoint3.cfl 3 1 0 $ID trkdata/editor/cps.cat chkpoint3.cfl.TrackPiece		# CP GRASS 15M
+chkpoint4.cfl 4 1 0 $ID trkdata/editor/cps.cat chkpoint4.cfl.TrackPiece		# CP GRASS 25M
+chkind.cfl 5 1 0 $ID trkdata/editor/cps.cat chkind.cfl.TrackPiece			# CP CONCRETE
+chkarena.cfl 6 1 0 $ID trkdata/editor/cps.cat chkarena.cfl.TrackPiece			# CP ARENA
+chkpoint.cfl 1 2 0 $ID trkdata/editor/cps.cat chkpoint.cfl.TrackPiece			# CP STREET
+chkcr.cfl 2 2 0 $ID trkdata/editor/cps.cat chkcr.cfl.TrackPiece 		# CP COUNTRY ROAD
+chkdr.cfl 3 2 0 $ID trkdata/editor/cps.cat chkdr.cfl.TrackPiece			# CP DIRT ROAD
+chkhw.cfl 4 2 0 $ID trkdata/editor/cps.cat chkhw.cfl.TrackPiece 			# CP HIGHWAY
+rwstart.cfl 5 2 0 $ID trkdata/editor/cps.cat rwstart.cfl.TrackPiece			# CP RACE TRACK STARTING GRID
+rwcp.cfl 6 2 0 $ID trkdata/editor/cps.cat rwcp.cfl.TrackPiece    		# CP RACE TRACK
+chkbrg.cfl 1 3 0 $ID trkdata/editor/cps.cat chkbrg.cfl.TrackPiece 			# CP STREET ELEVATED
+chksubtun.cfl 2 3 0 $ID trkdata/editor/cps.cat chksubtun.cfl.TrackPiece 			# CP TUNNEL

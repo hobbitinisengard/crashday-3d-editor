@@ -1,0 +1,308 @@
+FIELDS				    # Category type; one of FIELDS, DYNAMICS, CHECKPOINTS
+12						# Number of categories
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Roads						# Name
+27						# Objects per category
+0                       # Automatic position
+street.cfl 1 1 0 $ID trkdata/editor/fields.cat street.cfl.TrackPiece			# Gerade
+alley.cfl 2 1 0 $ID trkdata/editor/fields.cat alley.cfl.TrackPiece			# Gerade|Allee
+tcurve.cfl 3 1 0 $ID trkdata/editor/fields.cat tcurve.cfl.TrackPiece			# T-Kreuzung
+crossing.cfl 4 1 0 $ID trkdata/editor/fields.cat crossing.cfl.TrackPiece			# Kreuzung
+curve2.cfl 5 1 0 $ID trkdata/editor/fields.cat curve2.cfl.TrackPiece			# Kurve scharf
+curve1.cfl 6 1 0 $ID trkdata/editor/fields.cat curve1.cfl.TrackPiece 			# Kurve klein
+streetl.cfl 1 2 0 $ID trkdata/editor/fields.cat streetl.cfl.TrackPiece			# Gerade 			mit Strassenlaterne
+plot3.cfl 2 2 0 $ID trkdata/editor/fields.cat plot3.cfl.TrackPiece			# Parkbucht 			mit Strassenlaterne
+crossing3.cfl 3 2 0 $ID trkdata/editor/fields.cat crossing3.cfl.TrackPiece		# T-Kreuzung in Einfahrt 	mit Strassenlaterne
+crossing2.cfl 4 2 0 $ID trkdata/editor/fields.cat crossing2.cfl.TrackPiece		# Gerade in Einfahrten		mit Strassenlaterne
+tcurve2.cfl 5 2 0 $ID trkdata/editor/fields.cat tcurve2.cfl.TrackPiece		# Gerade in Einfahrt 		mit Strassenlaterne
+tcurve3.cfl 6 2 0 $ID trkdata/editor/fields.cat tcurve3.cfl.TrackPiece		# Kurve klein in Einfahrt 	mit Strassenlaterne
+crvdiag.cfl 1 3 0 $ID trkdata/editor/fields.cat crvdiag.cfl.TrackPiece			# 45° Kurve 						(1x2)
+strdiag.cfl 2 3 0 $ID trkdata/editor/fields.cat strdiag.cfl.TrackPiece		# 45° Gerade
+strdiag2.cfl 3 3 0 $ID trkdata/editor/fields.cat strdiag2.cfl.TrackPiece		# 45° in Einfahrt 		mit Strassenlaterne
+zebracross.cfl 4 3 1 $ID trkdata/editor/fields.cat zebracross.cfl.TrackPiece		# Zebrastreifen|Verkehrsinsel 	mit Strassenlaterne	(2x1)
+deadend.cfl 6 3 0 $ID trkdata/editor/fields.cat deadend.cfl.TrackPiece			# Kreisel  			mit Strassenlaterne
+tcrvdiag.cfl 2 4 0 $ID trkdata/editor/fields.cat tcrvdiag.cfl.TrackPiece		# 45° in T-Kreuzung
+tcrvdiag2.cfl 3 4 0 $ID trkdata/editor/fields.cat tcrvdiag2.cfl.TrackPiece		# T-Kreuzung in 45
+bldside.cfl 4 4 0 $ID trkdata/editor/fields.cat bldside.cfl.TrackPiece			# Baustelle
+stroil.cfl 5 4 0 $ID trkdata/editor/fields.cat stroil.cfl.TrackPiece			# Ölspur
+strend.cfl 6 4 0 $ID trkdata/editor/fields.cat strend.cfl.TrackPiece		# Ende Übergang in Rasen
+curve3.cfl 1 5 0 $ID trkdata/editor/fields.cat curve3.cfl.TrackPiece			# Kurve gross 						(2x2)
+curve4.cfl 3 5 0 $ID trkdata/editor/fields.cat curve4.cfl.TrackPiece		# Kurve gross geneigt 					(2x2)
+plot1.cfl 5 5 0 $ID trkdata/editor/fields.cat plot1.cfl.TrackPiece			# Parkplatz 1 						(2x1)
+plot2.cfl 5 6 0 $ID trkdata/editor/fields.cat plot2.cfl.TrackPiece			# Parkplatz 2 						(2x1)
+tcurveb.cfl 1 7 3 $ID trkdata/editor/fields.cat tcurveb.cfl.TrackPiece		# Kurve gross Abzweigung 				(2x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Rural roads		# Name
+26						# Objects per category
+0                       # Automatic position
+streetb1.cfl 1 1 0 $ID trkdata/editor/fields.cat streetb1.cfl.TrackPiece			# Gerade
+cralley.cfl 2 1 0 $ID trkdata/editor/fields.cat cralley.cfl.TrackPiece		# Gerade Allee
+crtcurve.cfl 3 1 2 $ID trkdata/editor/fields.cat crtcurve.cfl.TrackPiece		# T-Kreuzung
+crcrossing.cfl 4 1 0 $ID trkdata/editor/fields.cat crcrossing.cfl.TrackPiece		# Kreuzung
+croil.cfl 5 1 0 $ID trkdata/editor/fields.cat croil.cfl.TrackPiece 			# Gerade mit Öl
+barreltrailer.cfl 6 1 0 $ID trkdata/editor/fields.cat barreltrailer.cfl.TrackPiece	# LKW-Anhänger mit explosiven Fässern auf Gerade
+crcrvdiag.cfl 1 2 0 $ID trkdata/editor/fields.cat crcrvdiag.cfl.TrackPiece		# 45° Kurve						(1x2)
+crdiag.cfl 2 2 0 $ID trkdata/editor/fields.cat crdiag.cfl.TrackPiece		# 45° Gerade
+crtcrvdiag.cfl 2 3 0 $ID trkdata/editor/fields.cat crtcrvdiag.cfl.TrackPiece	# 45° in T-Kreuzung
+crtcurvestr.cfl 4 2 2 $ID trkdata/editor/fields.cat crtcurvestr.cfl.TrackPiece 	# T-Kreuzung mit Übergang auf Strasse
+strtostrb.cfl 5 2 2 $ID trkdata/editor/fields.cat strtostrb.cfl.TrackPiece 	# Übergang auf Strasse
+crend.cfl 6 2 2 $ID trkdata/editor/fields.cat crend.cfl.TrackPiece		# Ende -Übergang in Rasen
+crtcrvdiag2.cfl 3 2 0 $ID trkdata/editor/fields.cat crtcrvdiag2.cfl.TrackPiece	# T-Kreuzung in 45°
+curveb1.cfl 3 3 0 $ID trkdata/editor/fields.cat curveb1.cfl.TrackPiece 			# Kurve gross	 					(2x2)
+curveb2.cfl 5 3 0 $ID trkdata/editor/fields.cat curveb2.cfl.TrackPiece 			# Kurve gross geneigt 					(2x2)
+hwwall2.cfl 1 4 0 $ID trkdata/editor/fields.cat hwwall2.cfl.TrackPiece 	# Geräuschschutz Wand Anfangs- und Endteil
+hwwall1.cfl 2 4 0 $ID trkdata/editor/fields.cat hwwall1.cfl.TrackPiece 	# Geräuschschutz Wand Mittelteil
+hwexit.cfl 1 6 1 $ID trkdata/editor/fields.cat hwexit.cfl.TrackPiece 		# Ausfahrt						(2x2)
+hwend.cfl 3 6 3 $ID trkdata/editor/fields.cat hwend.cfl.TrackPiece		# Ende -Übergang in Rasen
+hwtocr.cfl 4 6 3 $ID trkdata/editor/fields.cat hwtocr.cfl.TrackPiece 	# Übergang auf Landstrasse				(1x2)
+highway2.cfl 3 7 1 $ID trkdata/editor/fields.cat highway2.cfl.TrackPiece			# Gerade
+highway.cfl 4 7 1 $ID trkdata/editor/fields.cat highway.cfl.TrackPiece			# Gerade doppelt					(1x2)
+hwdamage.cfl 5 7 1 $ID trkdata/editor/fields.cat hwdamage.cfl.TrackPiece 		# Gerade doppelt Leitplanke beschädigt			(2x2)
+hwsign2.cfl 1 8 3 $ID trkdata/editor/fields.cat hwsign2.cfl.TrackPiece 				# Gerade mit Geschwindigkeitskontrolle
+hwsign3.cfl 2 8 3 $ID trkdata/editor/fields.cat hwsign3.cfl.TrackPiece 				# Gerade mit Schildern über der Fahrbahn
+hwsign.cfl 3 8 3 $ID trkdata/editor/fields.cat hwsign.cfl.TrackPiece 				# Gerade mit Schild an der Seite
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Dirt roads					# Name
+21						# Objects per category
+0                       # Automatic position
+dirtroad.cfl 1 1 0 $ID trkdata/editor/fields.cat dirtroad.cfl.TrackPiece			# Gerade
+dirtalley.cfl 2 1 0 $ID trkdata/editor/fields.cat dirtalley.cfl.TrackPiece 			# Gerade Allee
+dirttcurve.cfl 3 1 0 $ID trkdata/editor/fields.cat dirttcurve.cfl.TrackPiece		# T-Kreuzung
+dirtcrossing.cfl 4 1 0 $ID trkdata/editor/fields.cat dirtcrossing.cfl.TrackPiece		# Kreuzung
+dirt4sjumper.cfl 5 1 0 $ID trkdata/editor/fields.cat dirt4sjumper.cfl.TrackPiece	# Kreuzung Hügel
+dirtcurve1.cfl 6 1 0 $ID trkdata/editor/fields.cat dirtcurve1.cfl.TrackPiece 		# Kurve klein
+drcrvdiag.cfl 1 2 0 $ID trkdata/editor/fields.cat drcrvdiag.cfl.TrackPiece 		# 45° Kurve						(1x2)
+drdiag.cfl 2 2 0 $ID trkdata/editor/fields.cat drdiag.cfl.TrackPiece	 		# 45° Gerade
+dirtroad2.cfl 3 2 0 $ID trkdata/editor/fields.cat dirtroad2.cfl.TrackPiece			# Gerade -Baumstämme an der Seite
+dirtsunken.cfl 4 2 0 $ID trkdata/editor/fields.cat dirtsunken.cfl.TrackPiece 			# Mulde -Stämme an der Seite
+dirttostr.cfl 5 2 2 $ID trkdata/editor/fields.cat dirttostr.cfl.TrackPiece		# Übergang auf Strasse
+crtodirt.cfl 6 2 0  $ID trkdata/editor/fields.cat crtodirt.cfl.TrackPiece	# Übergang auf Landstrasse
+dirttunnel.cfl 2 3 0 $ID trkdata/editor/fields.cat dirttunnel.cfl.TrackPiece 		# Tunnel unter Holzrampe				(1x2)
+dirtjump1.cfl 3 3 0 $ID trkdata/editor/fields.cat dirtjump1.cfl.TrackPiece 		# Motorcross Hügel					(1x2)
+dirtjump3.cfl 4 3 0 $ID trkdata/editor/fields.cat dirtjump3.cfl.TrackPiece 	# Motorcross Sprung lang				(1x2)
+dirtjump2.cfl 5 3 0 $ID trkdata/editor/fields.cat dirtjump2.cfl.TrackPiece 		# Motorcross Sprung kurz
+crtcurvedirt.cfl 6 3 1 $ID trkdata/editor/fields.cat crtcurvedirt.cfl.TrackPiece	# T-Kreuzung mit Übergang auf Schotterstrasse		(1x2)
+dirtend.cfl 1 4 2 $ID trkdata/editor/fields.cat dirtend.cfl.TrackPiece 		# Ende -Übergang in Rasen
+dirtjump4.cfl 5 4 0 $ID trkdata/editor/fields.cat dirtjump4.cfl.TrackPiece			# Holzrampe
+dirtcurve2.cfl 1 5 0 $ID trkdata/editor/fields.cat dirtcurve2.cfl.TrackPiece 			# Kurve gross	 					(2x2)
+dirtcurve3.cfl 3 5 0 $ID trkdata/editor/fields.cat dirtcurve3.cfl.TrackPiece 		# Kurve gross geneigt 					(2x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Racetrack				# Name
+22						# Objects per category
+0                       # Automatic position
+rwstreet.cfl 1 1 0 $ID trkdata/editor/fields.cat rwstreet.cfl.TrackPiece			# Gerade
+rwdist50.cfl 2 1 0 $ID trkdata/editor/fields.cat rwdist50.cfl.TrackPiece 		# Gerade 50M
+rwdist100.cfl 3 1 0 $ID trkdata/editor/fields.cat rwdist100.cfl.TrackPiece 		# Gerade 100M
+rwdist200.cfl 4 1 0 $ID trkdata/editor/fields.cat rwdist200.cfl.TrackPiece 		# Gerade 200M
+rwbanner1.cfl 5 1 0 $ID trkdata/editor/fields.cat rwbanner1.cfl.TrackPiece			# Gerade mit Banner über Rennstrecke
+rwoil.cfl 6 1 0 $ID trkdata/editor/fields.cat rwoil.cfl.TrackPiece 			# Gerade mit Öl
+rwchicl.cfl 1 2 2 $ID trkdata/editor/fields.cat rwchicl.cfl.TrackPiece 		# einfache Chicane					(2x2)
+rwchic.cfl 3 2 3 $ID trkdata/editor/fields.cat rwchic.cfl.TrackPiece			# schwere Chicane					(2x2)
+rwstrwl3.cfl 5 2 0 $ID trkdata/editor/fields.cat rwstrwl3.cfl.TrackPiece 	# Gerade zweiseitig Wand -Endteil
+rwstrwl4.cfl 6 2 0 $ID trkdata/editor/fields.cat rwstrwl4.cfl.TrackPiece 	# Gerade einseitig Wand -Endteil
+rwstrwl1.cfl 5 3 0 $ID trkdata/editor/fields.cat rwstrwl1.cfl.TrackPiece	# Gerade zweiseitig Wand -Mittelteil
+rwstrwl2.cfl 6 3 0 $ID trkdata/editor/fields.cat rwstrwl2.cfl.TrackPiece	# Gerade einseitig Wand -Mittelteil
+rwtostr2.cfl 1 4 0 $ID trkdata/editor/fields.cat rwtostr2.cfl.TrackPiece		# einfache Chicane mit Seitenausgang			(2x2)
+rwcurve2.cfl 3 4 0 $ID trkdata/editor/fields.cat rwcurve2.cfl.TrackPiece			# Kurve gross						(2x2)
+rwtostr.cfl 5 4 2 $ID trkdata/editor/fields.cat rwtostr.cfl.TrackPiece		        # Boxengasse Ein- Ausgang				(2x2)
+rwdiago.cfl 1 6 3 $ID trkdata/editor/fields.cat rwdiago.cfl.TrackPiece		# einfache Diagonale					(2x2)
+rwcurve3.cfl 3 6 0 $ID trkdata/editor/fields.cat rwcurve3.cfl.TrackPiece 			# Kurve gross mit Verengung				(2x2)
+rwcurve1.cfl 5 6 0 $ID trkdata/editor/fields.cat rwcurve1.cfl.TrackPiece			# Kurve klein
+rwend.cfl 5 7 0 $ID trkdata/editor/fields.cat rwend.cfl.TrackPiece				# Uebergang in Rasen
+rwpit.cfl 6 6 2 $ID trkdata/editor/fields.cat rwpit.cfl.TrackPiece			        # Boxengasse
+rwdiago1.cfl 1 8 2 $ID trkdata/editor/fields.cat rwdiago1.cfl.TrackPiece		# Diagonal Anfang-Ende 					(1x2)
+rwdiago2.cfl 3 8 2 $ID trkdata/editor/fields.cat rwdiago2.cfl.TrackPiece		# Diagonal Gerade					(1x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Arena					# Name
+15						# Objects per category
+0                       # Automatic position
+arenafloor.cfl 1 1 0 $ID trkdata/editor/fields.cat arenafloor.cfl.TrackPiece 			# Arenaboden
+rwtoarenafloor.cfl 2 1 0 $ID trkdata/editor/fields.cat rwtoarenafloor.cfl.TrackPiece		# Übergang Arenaboden-Rennstrecke
+arenacurve.cfl 3 1 0 $ID trkdata/editor/fields.cat arenacurve.cfl.TrackPiece 			# Arenakurve						(2x2)
+arenacurvec.cfl 5 1 0 $ID trkdata/editor/fields.cat arenacurvec.cfl.TrackPiece 		# Arenakurve überdacht					(2x2)
+arenaend.cfl 1 2 0 $ID trkdata/editor/fields.cat arenaend.cfl.TrackPiece  			# Arenaendteil						(1x2)
+rwtoarena.cfl 1 3 0 $ID trkdata/editor/fields.cat rwtoarena.cfl.TrackPiece		# Übergang Arenagerade-Rennstrecke			(2x2)
+arenastr.cfl 3 3 0 $ID trkdata/editor/fields.cat arenastr.cfl.TrackPiece			# Arenagerade						(1x2)
+arenastrc.cfl 5 3 0 $ID trkdata/editor/fields.cat arenastrc.cfl.TrackPiece		# Arenaerade überdacht					(1x2)
+arenaentry.cfl 3 4 0 $ID trkdata/editor/fields.cat arenaentry.cfl.TrackPiece		# Arenaeingang						(1x2)
+arenaentryc.cfl 5 4 0 $ID trkdata/editor/fields.cat arenaentryc.cfl.TrackPiece # Arenaeingang überdacht				(1x2)
+arenacurve2.cfl 3 5 1 $ID trkdata/editor/fields.cat arenacurve2.cfl.TrackPiece		# Arenakurve umgekehrt					(2x2)
+arenapillar.cfl 5 5 0 $ID trkdata/editor/fields.cat arenapillar.cfl.TrackPiece			# Arenadach						(2x2)
+rwtribune1.cfl 1 5 1 $ID trkdata/editor/fields.cat rwtribune1.cfl.TrackPiece		# Tribüne überdacht					(2x2)
+rwtribune2.cfl 3 7 1 $ID trkdata/editor/fields.cat rwtribune2.cfl.TrackPiece		# Tribüne unüberdacht					(2x2)
+rwtribune1b.cfl 1 7 2 $ID trkdata/editor/fields.cat rwtribune1b.cfl.TrackPiece	# Tribüne unüberdacht Ecke				(2x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Elevated				# Name
+16						# Objects per category
+0                       # Automatic position
+bridge1.cfl 1 1 0 $ID trkdata/editor/fields.cat bridge1.cfl.TrackPiece		# Normale Strasse über Rasen
+bridge2.cfl 2 1 0 $ID trkdata/editor/fields.cat bridge2.cfl.TrackPiece		# Normale Strasse über Normale Strasse	
+bridge5.cfl 3 1 0 $ID trkdata/editor/fields.cat bridge5.cfl.TrackPiece	# Normale Strasse über Landstrasse	
+bridge6.cfl 4 1 0 $ID trkdata/editor/fields.cat bridge6.cfl.TrackPiece		# Normale Strasse über Schotterstrasse	
+bridge4.cfl 5 1 1 $ID trkdata/editor/fields.cat bridge4.cfl.TrackPiece		# Normale Strasse über Rennstrecke	
+bridge3.cfl 6 1 1 $ID trkdata/editor/fields.cat bridge3.cfl.TrackPiece		# Normale Strasse über Autobahn				(1x2)
+str2brg1.cfl 1 2 0 $ID trkdata/editor/fields.cat str2brg1.cfl.TrackPiece		# Normale Strasse Auffahrt				(1x2)
+curvbrg2.cfl 2 2 0 $ID trkdata/editor/fields.cat curvbrg2.cfl.TrackPiece		# Normale Strasse Kurvenauffahrt			(2x2)
+curvbrg1.cfl 4 2 0 $ID trkdata/editor/fields.cat curvbrg1.cfl.TrackPiece		# Normale Strasse Kurve hoch				(2x2)		
+brgdamage.cfl 6 3 0 $ID trkdata/editor/fields.cat brgdamage.cfl.TrackPiece		# Normale Strasse zerstöte Brücke lang			(1x2)
+brgjump2.cfl 3 4 0 $ID trkdata/editor/fields.cat brgjump2.cfl.TrackPiece		# Normale Strasse Zugbrücke
+brgjump3.cfl 4 4 0 $ID trkdata/editor/fields.cat brgjump3.cfl.TrackPiece			# Normale Strasse Schanze
+brgjump.cfl 5 4 2 $ID trkdata/editor/fields.cat brgjump.cfl.TrackPiece		# Normale Strasse zerstöte Brücke kurz
+rwupwards.cfl 1 4 0 $ID trkdata/editor/fields.cat rwupwards.cfl.TrackPiece 	        # Rennstrecke Auffahrt					(1x2)
+rwoverrw.cfl 2 5 0 $ID trkdata/editor/fields.cat rwoverrw.cfl.TrackPiece	# Rennstrecke über Rennstrecke
+rwbridge.cfl 1 5 0 $ID trkdata/editor/fields.cat rwbridge.cfl.TrackPiece		# Rennstrecke hoch
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Tunnels					# Name
+23						# Objects per category
+0                       # Automatic position
+subtun.cfl 1 1 0 $ID trkdata/editor/fields.cat subtun.cfl.TrackPiece 		# Tunnelgerade
+subtun2.cfl 2 1 0 $ID trkdata/editor/fields.cat subtun2.cfl.TrackPiece		# Tunnelgerade mit Fenster
+subtcurve.cfl 3 1 0 $ID trkdata/editor/fields.cat subtcurve.cfl.TrackPiece	# Tunnel T-Kreuzung mit Fenster
+subtuncross.cfl 4 1 0 $ID trkdata/editor/fields.cat subtuncross.cfl.TrackPiece	# Tunnel Kreuzung mit Fenster
+subtundeadend.cfl 5 1 0 $ID trkdata/editor/fields.cat subtundeadend.cfl.TrackPiece		# Tunnelgerade Tunnelende
+subtundamage.cfl 6 1 0 $ID trkdata/editor/fields.cat subtundamage.cfl.TrackPiece	# Tunnel Ausgang zerstört
+subtunstr.cfl 1 2 0 $ID trkdata/editor/fields.cat subtunstr.cfl.TrackPiece	# Tunnel unter Strasse
+subtuncr.cfl 2 2 0 $ID trkdata/editor/fields.cat subtuncr.cfl.TrackPiece	# Tunnel unter Landstrasse
+subtundi.cfl 3 2 0 $ID trkdata/editor/fields.cat subtundi.cfl.TrackPiece	# Tunnel unter Schotterstrasse
+subtunhw.cfl 4 2 0 $ID trkdata/editor/fields.cat subtunhw.cfl.TrackPiece	# Tunnel unter Autobahn
+subtunrw.cfl 5 2 0 $ID trkdata/editor/fields.cat subtunrw.cfl.TrackPiece	# Tunnel unter Rennstrecke
+subtunbrg.cfl 6 2 0 $ID trkdata/editor/fields.cat subtunbrg.cfl.TrackPiece	# Tunnel unter Strassenbrücke
+subcurve.cfl 1 3 0 $ID trkdata/editor/fields.cat subcurve.cfl.TrackPiece			# Tunnel Kurve						(2x2)
+wsubtuntosubtun.cfl 3 3 1 $ID trkdata/editor/fields.cat wsubtuntosubtun.cfl.TrackPiece	# Tunnel breit zu Tunnel normal				(2x2)
+wsubtcurve.cfl 5 3 0 $ID trkdata/editor/fields.cat wsubtcurve.cfl.TrackPiece	# Tunnel breit T-Kreuzung				(2x2)
+subtcurve2.cfl 1 5 0 $ID trkdata/editor/fields.cat subtcurve2.cfl.TrackPiece	# Tunnel breit T-Kreuzung Kurve				(2x2)
+wsubcurve.cfl 3 5 0 $ID trkdata/editor/fields.cat wsubcurve.cfl.TrackPiece		# Tunnel breit Kurve					(2x2)
+wsubtuncross.cfl 5 5 0 $ID trkdata/editor/fields.cat wsubtuncross.cfl.TrackPiece	# Tunnel breit Kreuzung					(2x2)
+subentry.cfl 1 7 0 $ID trkdata/editor/fields.cat subentry.cfl.TrackPiece			# Tunnel Eingang					(1x2)
+wsubtunsplit.cfl 2 7 1 $ID trkdata/editor/fields.cat wsubtunsplit.cfl.TrackPiece		# Tunnel Teilung 1<2					(1x2)
+wsubtuntohw.cfl 3 7 0 $ID trkdata/editor/fields.cat wsubtuntohw.cfl.TrackPiece	# Tunnel breit Eingang					(2x2)
+wsubtun.cfl 5 7 0 $ID trkdata/editor/fields.cat wsubtun.cfl.TrackPiece			# Tunnel breit						(1x2)
+wsubtun2.cfl 5 8 0 $ID trkdata/editor/fields.cat wsubtun2.cfl.TrackPiece		# Tunnel breit mit Pfeiler in der Mitte			(1x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Tunnels 2			# Name
+2						# Objects per category
+0                       # Automatic position
+wsubtundamage.cfl 1 1 0 $ID trkdata/editor/fields.cat wsubtundamage.cfl.TrackPiece	# Tunnel breit Eingang zerstört				(1x2)
+subtunarena.cfl 3 1 0 $ID trkdata/editor/fields.cat subtunarena.cfl.TrackPiece	# Tunnel breit unter Arena				(1x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Ramps				# Name
+23						# Objects per category
+0                       # Automatic position
+minijump.cfl 1 1 0 $ID trkdata/editor/fields.cat minijump.cfl.TrackPiece 			# kleine Schanze auf einer Spur (Strasse)
+bigjump.cfl 2 1 0 $ID trkdata/editor/fields.cat bigjump.cfl.TrackPiece  			# Big Jump (Strasse)
+bigwave.cfl 3 1 0 $ID trkdata/editor/fields.cat bigwave.cfl.TrackPiece  		# Bodenwelle in der mitte (Strasse)
+holejump.cfl 4 1 0 $ID trkdata/editor/fields.cat holejump.cfl.TrackPiece 		# durch die Schanze (Strasse)
+ringjump.cfl 1 2 0 $ID trkdata/editor/fields.cat ringjump.cfl.TrackPiece   			# Quader Sprung
+drivway2.cfl 2 2 0 $ID trkdata/editor/fields.cat drivway2.cfl.TrackPiece 		# Schanze gerade hoch Teil 2/2
+spike.cfl 3 2 0 $ID trkdata/editor/fields.cat spike.cfl.TrackPiece  			# Spike
+spike2.cfl 4 2 0 $ID trkdata/editor/fields.cat spike2.cfl.TrackPiece  		# Extreme Spike
+4sjumper.cfl 1 3 0 $ID trkdata/editor/fields.cat 4sjumper.cfl.TrackPiece 			# 4-Seiten Schanze
+drivway1.cfl 2 3 0 $ID trkdata/editor/fields.cat drivway1.cfl.TrackPiece		# Schanze gerade hoch Teil 1/2
+extreme.cfl 3 3 0 $ID trkdata/editor/fields.cat extreme.cfl.TrackPiece  		# "DIe große Krankheit"
+crjump1.cfl 1 4 0 $ID trkdata/editor/fields.cat crjump1.cfl.TrackPiece 		# Doppel Holzschanze auf Landstrasse
+crjump2.cfl 1 5 0 $ID trkdata/editor/fields.cat crjump2.cfl.TrackPiece 		# zerstörte Landstrasse
+crjump3.cfl 2 4 0 $ID trkdata/editor/fields.cat crjump3.cfl.TrackPiece 	# Sprungschanze gross (Landstrasse)			(1x2)
+qjump.cfl 3 4 0 $ID trkdata/editor/fields.cat qjump.cfl.TrackPiece 			# Korkenzieher Schanze					(1x2)
+corkscrew.cfl 4 4 0 $ID trkdata/editor/fields.cat corkscrew.cfl.TrackPiece 		# Korkenzieher						(1x2)
+tube1.cfl 5 1 2 $ID trkdata/editor/fields.cat tube1.cfl.TrackPiece 			# Rohr Eingang						(1x2)
+tube2.cfl 5 2 2 $ID trkdata/editor/fields.cat tube2.cfl.TrackPiece			# Rohr							(2x2)
+tube3.cfl 5 4 2 $ID trkdata/editor/fields.cat tube3.cfl.TrackPiece		# Rohr mit Loch						(2x2)
+looping.cfl 5 6 0 $ID trkdata/editor/fields.cat looping.cfl.TrackPiece 			# Looping
+hwjump.cfl 6 6 0 $ID trkdata/editor/fields.cat hwjump.cfl.TrackPiece 			# Autobahn Schanze
+looping2.cfl 1 6 0 $ID trkdata/editor/fields.cat looping2.cfl.TrackPiece 			# Grosse Looping					(2x2)
+brgloop.cfl 3 6 0 $ID trkdata/editor/fields.cat brgloop.cfl.TrackPiece 	# Grosse Looping endet auf Brücke			(2x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Industrial					# Name
+25						# Objects per category
+0                       # Automatic position
+indgate.cfl 1 1 0 $ID trkdata/editor/fields.cat indgate.cfl.TrackPiece  		# Industrie Eingang
+indfenc1.cfl 2 1 3 $ID trkdata/editor/fields.cat indfenc1.cfl.TrackPiece  			# Mauerlinie
+indfenc2.cfl 3 1 0 $ID trkdata/editor/fields.cat indfenc2.cfl.TrackPiece  		# MauerPfeiler
+indfenc3.cfl 4 1 3 $ID trkdata/editor/fields.cat indfenc3.cfl.TrackPiece 		# Mauerecke
+containers1.cfl 5 1 0 $ID trkdata/editor/fields.cat containers1.cfl.TrackPiece  		# Container
+containers2.cfl 6 1 0 $ID trkdata/editor/fields.cat containers2.cfl.TrackPiece  		# Container mit Container offen
+concrete.cfl 1 2 0 $ID trkdata/editor/fields.cat concrete.cfl.TrackPiece      		# Industrieboden
+stripes.cfl 2 2 0 $ID trkdata/editor/fields.cat stripes.cfl.TrackPiece		# Industrieboden rot/weiss
+barricade1.cfl 3 2 0 $ID trkdata/editor/fields.cat barricade1.cfl.TrackPiece		# Industrieboden rot/weiss Zaun
+barricade2.cfl 4 2 0 $ID trkdata/editor/fields.cat barricade2.cfl.TrackPiece		# Industrieboden rot/weiss Zaun Ecke
+contjump.cfl 5 2 0 $ID trkdata/editor/fields.cat contjump.cfl.TrackPiece  		# Container Schanze
+truck.cfl 6 2 1 $ID trkdata/editor/fields.cat truck.cfl.TrackPiece  		# LKW mit Containern
+contcrane.cfl 1 3 0 $ID trkdata/editor/fields.cat contcrane.cfl.TrackPiece 		# Containerkran						(1x2)
+coolingtower.cfl 3 3 0 $ID trkdata/editor/fields.cat coolingtower.cfl.TrackPiece  		# Kühlturm						(2x2)
+fueldepot.cfl 5 3 0 $ID trkdata/editor/fields.cat fueldepot.cfl.TrackPiece			# Treibstoff Depot
+fueltank.cfl 6 3 0 $ID trkdata/editor/fields.cat fueltank.cfl.TrackPiece  			# Tanks mit Schanze
+office.cfl 1 4 2 $ID trkdata/editor/fields.cat office.cfl.TrackPiece 		# Bürogebäude						(1x2)
+smokestack.cfl 5 4 0 $ID trkdata/editor/fields.cat smokestack.cfl.TrackPiece  		# Schornstein
+powerplant2.cfl 6 4 0 $ID trkdata/editor/fields.cat powerplant2.cfl.TrackPiece 		# Kühleiheit
+factory.cfl 1 5 0 $ID trkdata/editor/fields.cat factory.cfl.TrackPiece 		# Fabrik Gebäude					(1x2)
+belt1.cfl 3 5 0 $ID trkdata/editor/fields.cat belt1.cfl.TrackPiece 			# Fliessband						(1x2)
+belt2.cfl 5 5 0 $ID trkdata/editor/fields.cat belt2.cfl.TrackPiece 		# Fliessband Rampe					(1x2)
+warehouse3.cfl 1 6 0 $ID trkdata/editor/fields.cat warehouse3.cfl.TrackPiece 		# Lagerhalle mit Schanze				(2x2)
+warehouse2.cfl 3 6 0 $ID trkdata/editor/fields.cat warehouse2.cfl.TrackPiece  	# Lagerhalle						(2x2)
+warehouse1.cfl 5 6 2 $ID trkdata/editor/fields.cat warehouse1.cfl.TrackPiece    	# Lagerhalle Eingang					(2x2)
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Buildings				# Name
+13						# Objects per category
+0                       # Automatic position
+market.cfl 1 1 1 $ID trkdata/editor/fields.cat market.cfl.TrackPiece 			# Supermarkt						(2x2)
+house1.cfl 1 3 0 $ID trkdata/editor/fields.cat house1.cfl.TrackPiece  			# Haus klein mit rotem Dach
+house2.cfl 2 4 0 $ID trkdata/editor/fields.cat house2.cfl.TrackPiece  			# Haus Mittel mit schwarzem Dach
+house4.cfl 3 1 0 $ID trkdata/editor/fields.cat house4.cfl.TrackPiece 			# Haus gross mit rotem Dach
+desbuild.cfl 4 1 0 $ID trkdata/editor/fields.cat desbuild.cfl.TrackPiece 		# Haus gross mit schwarzem Dach (zerstört)		(1x2)
+diner.cfl 5 1 1 $ID trkdata/editor/fields.cat diner.cfl.TrackPiece				# Dönermann						(1x2)
+greenhouse.cfl 6 1 1 $ID trkdata/editor/fields.cat greenhouse.cfl.TrackPiece			# Gewächshaus						(1x2)
+house3.cfl 2 3 0 $ID trkdata/editor/fields.cat house3.cfl.TrackPiece  			# Haus klein mit schwarzem Dach
+house5.cfl 3 2 0 $ID trkdata/editor/fields.cat house5.cfl.TrackPiece 		# Haus gross mit schwarzem Dach
+gasstation.cfl 3 3 0 $ID trkdata/editor/fields.cat gasstation.cfl.TrackPiece 		# Tankstelle						(2x2)
+church.cfl 5 3 0 $ID trkdata/editor/fields.cat church.cfl.TrackPiece  			# Kirche						(2x2)
+farm1.cfl 1 5 0 $ID trkdata/editor/fields.cat farm1.cfl.TrackPiece 				# Farm Silo
+farm2.cfl 1 4 0 $ID trkdata/editor/fields.cat farm2.cfl.TrackPiece 				# Farm Haus
+
+Next:						# CFL file / PositionX / PositionY / Rotation in display
+Nature					# Name
+33						# Objects per category
+0                       # Automatic position
+buildpit.cfl 1 1 0 $ID trkdata/editor/fields.cat buildpit.cfl.TrackPiece 		# Baustelle						(2x2)
+crane2.cfl 3 1 0 $ID trkdata/editor/fields.cat crane2.cfl.TrackPiece  		# Baustelle mit Kran					(2x2)
+crane1.cfl 5 1 0 $ID trkdata/editor/fields.cat crane1.cfl.TrackPiece  			# Kran
+powerpole.cfl 5 2 0 $ID trkdata/editor/fields.cat powerpole.cfl.TrackPiece   		# Strommast
+powerpole2.cfl 6 1 1 $ID trkdata/editor/fields.cat powerpole2.cfl.TrackPiece  	# Strommast zerstört					(1x2)
+billboard.cfl 1 3 0 $ID trkdata/editor/fields.cat billboard.cfl.TrackPiece  		# Werbeschild (weiß grün)
+billboard2.cfl 2 3 0 $ID trkdata/editor/fields.cat billboard2.cfl.TrackPiece  	# Werbeschild (rot)
+mbslogo.cfl 3 3 0 $ID trkdata/editor/fields.cat mbslogo.cfl.TrackPiece  		# Moon Byte Schild
+rplogo.cfl 4 3 0 $ID trkdata/editor/fields.cat rplogo.cfl.TrackPiece  			# Replay Studios Schild
+windgenerator.cfl 5 3 2 $ID trkdata/editor/fields.cat windgenerator.cfl.TrackPiece  	# Windrad
+fldlight.cfl 6 3 0 $ID trkdata/editor/fields.cat fldlight.cfl.TrackPiece 		# Flutlicht
+deathwall.cfl 1 4 2 $ID trkdata/editor/fields.cat deathwall.cfl.TrackPiece  		# "Todes" Wand
+logjump.cfl 2 4 0 $ID trkdata/editor/fields.cat logjump.cfl.TrackPiece			# Baumstämme gestapelt
+woodfence1.cfl 3 4 0 $ID trkdata/editor/fields.cat woodfence1.cfl.TrackPiece		# Holzzaun
+woodfence2.cfl 4 4 0 $ID trkdata/editor/fields.cat woodfence2.cfl.TrackPiece		# Holzzaun Ecke
+tirerow.cfl 5 4 1 $ID trkdata/editor/fields.cat tirerow.cfl.TrackPiece 			# Reifenstapel gerade
+tirerow2.cfl 6 4 0 $ID trkdata/editor/fields.cat tirerow2.cfl.TrackPiece			# Reifenstapel diagonal
+treerow3.cfl 1 5 2 $ID trkdata/editor/fields.cat treerow3.cfl.TrackPiece 			# Wald Ecke						(2x2)
+treerow1.cfl 3 5 0 $ID trkdata/editor/fields.cat treerow1.cfl.TrackPiece 		# Wald lang						(2x2)
+treerow4.cfl 5 5 0 $ID trkdata/editor/fields.cat treerow4.cfl.TrackPiece  		# Wald kurz						(1x2)
+treerow2.cfl 6 5 0 $ID trkdata/editor/fields.cat treerow2.cfl.TrackPiece 			# Wald Ende						(1x2)
+tree3.cfl 1 7 0 $ID trkdata/editor/fields.cat tree3.cfl.TrackPiece 			# Eichen Baum gross
+tree1.cfl 2 7 0 $ID trkdata/editor/fields.cat tree1.cfl.TrackPiece 			# Eichen Bäume
+tree2.cfl 3 7 0 $ID trkdata/editor/fields.cat tree2.cfl.TrackPiece 			# Pappel Bäume
+tree4.cfl 4 7 0 $ID trkdata/editor/fields.cat tree4.cfl.TrackPiece 			# Birken Bäume
+tree5.cfl 5 7 0 $ID trkdata/editor/fields.cat tree5.cfl.TrackPiece			# Kiefern Bäume
+sgncurvl.cfl 1 8 0 $ID trkdata/editor/fields.cat sgncurvl.cfl.TrackPiece  			# Pfeil links
+sgncurvr.cfl 2 8 0 $ID trkdata/editor/fields.cat sgncurvr.cfl.TrackPiece  			# Pfeil rechts
+sgnstr.cfl 3 8 0 $ID trkdata/editor/fields.cat sgnstr.cfl.TrackPiece 			# Pfeil geradeaus
+mast.cfl 6 7 0 $ID trkdata/editor/fields.cat mast.cfl.TrackPiece				# Mast (z.B. für Absprung)
+camera1.cfl 4 8 0 $ID trkdata/editor/fields.cat camera1.cfl.TrackPiece            # Camera 1m
+camera2.cfl 5 8 0 $ID trkdata/editor/fields.cat camera2.cfl.TrackPiece            # Camera 5m
+camera3.cfl 6 8 0 $ID trkdata/editor/fields.cat camera3.cfl.TrackPiece            # Camera 10m
