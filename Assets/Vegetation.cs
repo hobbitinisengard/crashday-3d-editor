@@ -3,8 +3,8 @@
 // and cfl files
 public class Vegetation
 {
-  public string VegName;
-  public Vector3 VegPos;
+  public string Name;
+  public Vector3 Position;
   public bool AutoHeight;
   /// <summary>
   /// Simple vegetation file constructor
@@ -15,17 +15,17 @@ public class Vegetation
   /// <param name="y">auto or string with float number</param>
   public Vegetation(string name, float x, float z, string y)
   {
-    VegName = name;
+    Name = name;
     AutoHeight = (y == "Auto") ? true : false;
     if (y == "auto")
     {
       AutoHeight = true;
-      VegPos = new Vector3(x, z, 0);
+      Position = new Vector3(x, z, 0);
     }
     else
     {
       AutoHeight = false;
-      VegPos = new Vector3(x, z, float.Parse(y));
+      Position = new Vector3(x, z, float.Parse(y, System.Globalization.CultureInfo.InvariantCulture));
     }
   }
 }

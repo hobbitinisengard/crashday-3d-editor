@@ -6,12 +6,15 @@ public class TilePlacement
   public string Name;
   public int Rotation;
   public bool Inversion;
-  public List<int> t_verts;
-
+  /// <summary>
+  /// terrain vertices = list of vertices' indexes that this element contains
+  /// </summary>
+  public int [] t_verts;
   public void Set(string nazwa, int rotacja, bool inwersja)
   {
     this.Name = nazwa;
     this.Inversion = inwersja;
     this.Rotation = rotacja;
   }
+
 }

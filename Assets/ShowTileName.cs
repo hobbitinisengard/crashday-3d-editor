@@ -8,11 +8,10 @@ public class ShowTileName : MonoBehaviour
     void Start()
     {
         buton = GetComponent<Button>();
-        buton.onClick.AddListener(poka_nazwe);
+        buton.onClick.AddListener(Poka_nazwe);
     }
-    void poka_nazwe()
+    void Poka_nazwe()
     {
-        image = buton.transform.GetChild(0).GetComponent<Image>();
-        EditorMenu.tile_name = image.sprite.name;
+        EditorMenu.tile_name = this.name;
     }
 }

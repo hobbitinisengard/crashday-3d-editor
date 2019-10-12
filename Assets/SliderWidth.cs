@@ -14,18 +14,18 @@ public class SliderWidth : MonoBehaviour
 
   public void updateWidth(float value)
   {
-    if (value * SliderHeight.val > MainMenu.tile_limit)
+    if (value * SliderHeight.val > Data.TrackTileLimit)
     {
       SliderHeight.trackHeight.color = Color.red;
       trackWidth.color = Color.red;
       Data.TRACK.Width = (ushort)SliderWidth.val;
-      MainMenu. = false;
+      MainMenu.CanCreateTrack = false;
     }
     else
     {
       trackWidth.color = orange;
       SliderHeight.trackHeight.color = orange;
-      Data.PlaygamePass = true;
+      MainMenu.CanCreateTrack = true;
     }
     val = (int)value;
     trackWidth.text = value.ToString();

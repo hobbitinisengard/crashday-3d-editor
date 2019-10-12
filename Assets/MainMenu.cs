@@ -1,34 +1,93 @@
 ﻿using SFB;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
+using System.Linq;
 // First launched script
-// MainMenu.cs -> Helper.cs
-
+// MainMenu.cs -> Loader.cs
 // Loads mods, handles menu and loads .trk file pointed by player
 public class MainMenu : MonoBehaviour
 {
+  public Text LoadingScreen_text_logo;
   public GameObject loadScreen;
-
+  public GameObject UnpackScreen;
+  public Button ManageTilesets_button;
+  public GameObject ManageTilesets_content;
   /// <summary>Whether new track dimensions don't exceed STATIC.TrackTileLimit</summary>
-  public bool CanCreateTrack = true;
-
+  public static bool CanCreateTrack = true;
   void Awake()
   {
     Data.Isloading = false;
+    // if we running this for the first time
+    if(TileManager.TileListInfo.Count == 0)
+    {
+      TileManager.LoadTiles();
+      Populate_Manage_Tilesets_Menu();
+      UnpackScreen.SetActive(false);
+    }
   }
-  private void Start()
+
+  private void Populate_Manage_Tilesets_Menu()
   {
-    // load default tiles and information about them from .cfl files in crashday folder
-    string cdPath = IO.GetCrashdayPath();
-    TileManager.LoadTiles();
+    // if there is any custom tileset (with workshopId)
+    if (TileManager.TileListInfo.Where(t => t.Value.Custom_tileset_id != null).Any())
+    {
+      ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+      ManageTilesets_button.interactable = true;
+
+      GameObject manage_entry_template = ManageTilesets_content.transform.GetChild(0).gameObject;
+
+      foreach (var mod_id in TileManager.TileListInfo.Select(t => t.Value.Custom_tileset_id).Distinct())
+      {
+        if(mod_id != null)
+        {
+          GameObject NewEntry = Instantiate(manage_entry_template, manage_entry_template.transform.parent);
+          NewEntry.transform.Find("Id").GetComponent<Text>().text = mod_id;
+          NewEntry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Value.TilesetName).ToArray());
+
+          // entry gameobject's name is workshopId
+          NewEntry.name = mod_id;
+          NewEntry.SetActive(true);
+        }
+      }
+    }
   }
-  public void PlayGame()
+  public void RemoveTileset(GameObject Id_GO)
+  {
+    string Mod_id = Id_GO.GetComponent<Text>().text;
+
+    //remove custom tiles of this tileset
+    string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == Mod_id).Select(t => t.Key).ToArray();
+    foreach (var name in to_remove_names)
+      TileManager.TileListInfo.Remove(name);
+
+    //remove entry in tilesets.txt
+    string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "tilesets.txt").Where(line => line != Mod_id).ToArray();
+    File.WriteAllLines(Application.streamingAssetsPath + "tilesets.txt", lines_to_keep);
+
+    //remove folder in moddata
+    Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\");
+
+    // remove entry in menu
+    Destroy(ManageTilesets_content.transform.Find(Mod_id));
+  }
+  public void ToggleMirror(bool val)
+  {
+    Data.LoadMirrored = val;
+  }
+  private void ChangeSceneToEditor()
   {
     if (CanCreateTrack)
     {
       SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
+  }
+  public void CreateNewTrack()
+  {
+    StartCoroutine("EnableLoadingScreen");
+    ChangeSceneToEditor();
   }
   public void QuitGame()
   {
@@ -37,98 +96,36 @@ public class MainMenu : MonoBehaviour
   public void LoadTrackToVariablesAndRunEditor()
   {
     string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", LoadTrackPath(), "trk", false);
-    string path = sourcepath[0];
-    if (path.Length > 0) // player hasnt clicked 'cancel' button
+    if (sourcepath.Length == 0)
+      return;
+    else// player hasnt clicked 'cancel' button
     {
+      string path = sourcepath[0];
       //Path can't have .trk suffix
       path = path.Substring(0, path.Length - 4);
-
+      Data.UpperBarTrackName = path.Substring(path.LastIndexOf('\\') + 1);
       SaveTrackPath(path);
-
       Data.TRACK = MapParser.ReadMap(path + ".trk");
 
-      Data.UpperBarTrackName = path.Substring(path.LastIndexOf('\\') + 1);
-
-      // Allocate memory for TilePlacementArray
-      Data.TilePlacementArray = new TilePlacement[Data.TRACK.Width, Data.TRACK.Height];
-      for (int z = 0; z < Data.TRACK.Height; z++)
-      {
-        for (int x = 0; x < Data.TRACK.Width; x++)
-        {
-          Data.TilePlacementArray[x, z] = new TilePlacement();
-        }
-      }
-
-      // Load tiles layout from TRACK to TilePlacementArray
-      for (int z = 0; z < Data.TRACK.Height; z++)
-      {
-        for (int x = 0; x < Data.TRACK.Width; x++)
-        {
-          //  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as empty grass fields (FieldId = 0)  
-          if (Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x].FieldId < Data.TRACK.FieldFiles.Count && Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x].FieldId != 0)
-          {
-            // assignment for clarity
-            TrackTileSavable tile = Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x];
-
-            // without .cfl suffix
-            string TileName = Data.TRACK.FieldFiles[tile.FieldId].Substring(0, Data.TRACK.FieldFiles[tile.FieldId].Length - 4);
-
-            int Rotation = tile.Rotation * 90;
-            bool Inversion = tile.IsMirrored == 0 ? false : true;
-            if (Inversion && Rotation != 0)
-              Rotation = 360 - Rotation;
-
-            Vector2Int dim = GetTileDimensions(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
-            // given tile isn't modded, else don't place it
-            if (dim.x != -1 && dim.y != -1)
-            {
-              Data.TilePlacementArray[x, z - dim.y + 1].Set(TileName, Rotation, Inversion);
-              //loadedTilesPairsXZ.Add(new Vector2Int(x, z - dim.y + 1));
-            }
-            else
-            {
-              Data.TilePlacementArray[x, z - dim.y + 1].Set(TileName, Rotation, Inversion, 255);
-            }
-          }
-        }
-      }
-
-      // 3.Run editor
+      //Set isLoading flag to true
       Data.Isloading = true;
-      string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
-      loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
+      StartCoroutine("EnableLoadingScreen");
 
-      PlayGame();
-      //Next script is Helper.Awake()
-
+      ChangeSceneToEditor();
     }
   }
-  /// <summary>
-  /// LoadPath()+.txt loads to S.tiles and  loadedTilesPairsXZ info.
-  /// </summary>
-  void LoadTilesToList()
-  {
 
-  }
-  /// <summary>
-  /// Returns dimensions of tile. If specified tile hasn't been found, returns -1, -1 vector2Int.
-  /// </summary>
-  public static Vector2Int GetTileDimensions(string nazwa_tilesa, bool swap = false)
+  IEnumerator EnableLoadingScreen()
   {
-    for (int i = 0; i < dims.Count; i++)
-    {
-      if (nazwa_tilesa == dims[i].TileName)
-      {
-        if (swap)
-          return new Vector2Int(dims[i].DimVector.y, dims[i].DimVector.x);
-        else
-          return dims[i].DimVector;
-      }
-    }
-    return new Vector2Int(-1, -1);
+    LoadingScreen_text_logo.text = "3D Editor " + Data.VERSION;
+    string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
+    loadScreen.SetActive(true);
+    loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
+    yield return null;
   }
+
   /// <summary>
-  /// Zapisuje informacje do pliku w Assets/Resources/path.txt
+  /// Saves latest path to StreamingAssets/Path.txt
   /// </summary>
   public static void SaveTrackPath(string path)
   {
@@ -136,6 +133,10 @@ public class MainMenu : MonoBehaviour
     w.WriteLine(path);
     w.Close();
   }
+  /// <summary>
+  /// Loads latest path from StreamingAssets/Path.txt
+  /// </summary>
+  /// <returns></returns>
   public static string LoadTrackPath()
   {
     StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");

@@ -1,0 +1,20 @@
+# Crashday environmental vegetation piece
+
+grass.p3d		# P3D file
+0.8			# Scaling min
+1.8			# Scaling max
+random			# "random", "random90deg" or specific angle value
+0.1			# downshift into the ground
+vegetat/veg2d2.tga	# 2D bitmap replacement
+0 0.05 1.0 0.5		# U1, V1, U2, V2 - mapping coords in texture above
+1			# general bitmap scale
+groundcol		# vegetation rendering color ("bright" or "dark")
+0			# Min. number of copies
+10			# Max. number of copies
+70			# distance to display bitmap
+140			# distance to hide object
+0			# force to always render object
+0			# cast shadows on track
+1			# orientate to ground
+1			# max. degrees to bend with wind, 0 if static
+1.5 #2			# Max. wind bending speed, 0 if static

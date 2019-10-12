@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using UnityEngine;
-using System.Security.AccessControl;
+using System.Linq;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 public static class PackageManager
@@ -13,7 +13,7 @@ public static class PackageManager
       LoadCPK(IO.GetCrashdayPath() + "\\data\\" + s);
   }
 
-  public static void LoadCPK(string filePath, bool isMod = false)
+  public static void LoadCPK(string filePath, string Tileset_id = null)
   {
     if (File.Exists(filePath) == false)
       return;
@@ -32,8 +32,11 @@ public static class PackageManager
 
     string path = IO.GetCrashdayPath();
 
-    if (isMod) path += "\\moddata\\";
-    else path += "\\data\\";
+    if (Tileset_id != null)
+      path += "\\moddata\\" + Tileset_id + "\\";
+    else
+      path += "\\data\\";
+
 
     Directory.CreateDirectory(path);
 
@@ -63,7 +66,7 @@ public static class PackageManager
           //dont load already unpacked files
           if (File.Exists(path + entryFileName))
           {
-            Debug.Log(entryFileName + " was already unpacked, assuming CPK is unpacked.");
+            //Debug.Log("Assuming " + path + " is unpacked");
             break;
           }
 

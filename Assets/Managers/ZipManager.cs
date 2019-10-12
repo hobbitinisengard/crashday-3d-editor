@@ -13,10 +13,13 @@ public static class ZipManager
       zf = new ZipFile(fs);
       foreach (ZipEntry zipEntry in zf)
       {
+
         if (!zipEntry.IsFile)
         {
           continue;     // Ignore directories
         }
+
+
         string entryFileName = zipEntry.Name;
         // to remove the folder from the entry:- entryFileName = Path.GetFileName(entryFileName);
         // Optionally match entrynames against a selection list here to skip as desired.

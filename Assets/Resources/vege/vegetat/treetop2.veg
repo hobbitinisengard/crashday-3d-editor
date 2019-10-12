@@ -1,0 +1,20 @@
+# Crashday environmental vegetation piece - tree top, but smaller than treetop1
+
+treetop.p3d		# P3D file
+0.8			# Scaling min
+1.2			# Scaling max
+random			# "random", "random90deg" or specific angle value
+0			# downshift into the ground
+vegetat/veg2d.tga		# 2D bitmap replacement
+0.51 0.00 0.74 0.92	# U1, V1, U2, V2 - mapping coords in texture above
+1			# general bitmap scale
+dark			# vegetation rendering color ("bright" or "dark")
+2			# Min. number of copies
+2			# Max. number of copies
+200			# distance to display bitmap
+400			# distance to hide object
+1			# force to always render object
+1			# cast shadows on track
+0			# orientate to ground
+1			# max. degrees to bend with wind
+1.0			# Max. wind bending speed

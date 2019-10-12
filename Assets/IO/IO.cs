@@ -1,44 +1,49 @@
-﻿using System.IO;
+﻿using System.DrawingCore;
+using System.IO;
 using SFB;
 using UnityEngine;
 
 public class IO
 {
-    public static string GetCrashdayPath()
+  public static string GetCrashdayPath()
+  {
+    string crashdayPath;
+
+    if (PlayerPrefs.HasKey("crashpath"))
     {
-        string crashdayPath;
-
-        if (PlayerPrefs.HasKey("crashpath"))
-        {
-	        crashdayPath = PlayerPrefs.GetString("crashpath");
-            if (!Directory.Exists(crashdayPath))
-            {
-	            crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
-                PlayerPrefs.SetString("crashpath", crashdayPath);
-            }
-        }
-        else
-        {
-	        crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
-            PlayerPrefs.SetString("crashpath", crashdayPath);
-        }
-
-        if (!File.Exists(crashdayPath + "/crashday.exe"))
-        {
-            PlayerPrefs.DeleteKey("crashpath");
-	        crashdayPath = GetCrashdayPath();
-        }
-
-        return crashdayPath;
+      crashdayPath = PlayerPrefs.GetString("crashpath");
+      if (!Directory.Exists(crashdayPath))
+      {
+        crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
+        PlayerPrefs.SetString("crashpath", crashdayPath);
+      }
+    }
+    else
+    {
+      crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
+      PlayerPrefs.SetString("crashpath", crashdayPath);
     }
 
-	/// <summary>
-	/// Remove a comment in a file and remove all trailing spaces
-	/// </summary>
-	/// <param name="input">String to be edited</param>
-	/// <returns>new string with removed comments and spaces</returns>
-	public static string RemoveComment(string input)
-	{
-		return input.IndexOf('#') > 0 ? input.Remove (input.IndexOf ('#')).Trim () : input.Trim ();
-	}
+    if (!File.Exists(crashdayPath + "/crashday.exe"))
+    {
+      PlayerPrefs.DeleteKey("crashpath");
+      crashdayPath = GetCrashdayPath();
+    }
+
+    return crashdayPath;
+  }
+
+  /// <summary>
+  /// Remove a comment in a file and remove all trailing spaces
+  /// </summary>
+  /// <param name="input">String to be edited</param>
+  /// <returns>new string with removed comments and spaces</returns>
+  public static string RemoveComment(string input)
+  {
+    return input.IndexOf('#') > 0 ? input.Remove(input.IndexOf('#')).Trim() : input.Trim();
+  }
+
+  
+
+  
 }

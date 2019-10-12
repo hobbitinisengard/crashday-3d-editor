@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public class DuVec3
@@ -40,14 +41,14 @@ public class Terraining : MonoBehaviour
   public static GameObject indicator;
   public static List<GameObject> znaczniki = new List<GameObject>();
   public static List<GameObject> surroundings = new List<GameObject>();
-
-  public static int minHeight;
-  public static int maxHeight;
-  public static int rayHeight;
+  public static int rayHeight = Data.maxHeight - Data.minHeight + 5;
   int index = 0; //Indexy do meshow dla vertexa
   public static Vector3Int max_verts_visible_dim = new Vector3Int(60, 0, 60); // Vector3 of visible vertices in second form mode
   float slider_realheight;
-  GameObject current; // Ostatnio zaznaczony element
+  /// <summary>
+  /// Currently selected tile in terraining mode
+  /// </summary>
+  GameObject current;
 
   public static bool firstFormingMode = true; //  F - toggles forming mode
   public static bool istilemanip = false;
@@ -103,7 +104,7 @@ public class Terraining : MonoBehaviour
             Single_vertex_manipulation(); // single-action :)
           else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0) && index == 0)
             Single_vertex_manipulation(); //auto-fire >:)
-          else if (Input.GetMouseButtonDown(1) && Highlight.nad)
+          else if (Input.GetMouseButtonDown(1) && Highlight.over)
             Make_elevation();
           if (Input.GetKeyDown(KeyCode.Escape))
           {//ESC toggles off Make_Elevation()
@@ -153,7 +154,7 @@ public class Terraining : MonoBehaviour
     if (Input.GetKeyDown(KeyCode.LeftAlt))
     {
       CopyText.SetActive(false);
-      Helper.CopyClipboard.Clear();
+      Data.CopyClipboard.Clear();
     }
   }
   public bool IsAnyZnacznikMarked()
@@ -206,7 +207,7 @@ public class Terraining : MonoBehaviour
       foreach (GameObject znacznik in mcs)
       {
         Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
-        indexes.Add(v.x + 4 * v.z * SliderWidth.val + v.z);
+        indexes.Add(v.x + 4 * v.z * Data.TRACK.Width + v.z);
       }
       UpdateMapColliders(indexes, IsRecoveringTerrain);
 
@@ -221,11 +222,11 @@ public class Terraining : MonoBehaviour
           Vector3Int v = Vector3Int.RoundToInt(mc.transform.TransformPoint(verts[i]));
           if (IsRecoveringTerrain)
           {
-            verts[i].y = Helper.former_heights[v.x + 4 * v.z * SliderWidth.val + v.z];
-            Helper.current_heights[v.x + 4 * v.z * SliderWidth.val + v.z] = Helper.former_heights[v.x + 4 * v.z * SliderWidth.val + v.z];
+            verts[i].y = Loader.former_heights[v.x + 4 * v.z * Data.TRACK.Width + v.z];
+            Loader.current_heights[v.x + 4 * v.z * Data.TRACK.Width + v.z] = Loader.former_heights[v.x + 4 * v.z * Data.TRACK.Width + v.z];
           }
           else
-            verts[i].y = Helper.current_heights[v.x + 4 * v.z * SliderWidth.val + v.z];
+            verts[i].y = Loader.current_heights[v.x + 4 * v.z * Data.TRACK.Width + v.z];
         }
         mc.GetComponent<MeshCollider>().sharedMesh.vertices = verts;
         mc.GetComponent<MeshCollider>().sharedMesh.RecalculateBounds();
@@ -246,9 +247,9 @@ public class Terraining : MonoBehaviour
     List<GameObject> mcs = new List<GameObject>();
     foreach (int i in indexes)
     {
-      Vector3Int v = Vector3Int.RoundToInt(Helper.IndexToPos(i));
-      v.y = Terraining.maxHeight + 1;
-      RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Terraining.rayHeight, 1 << 8);
+      Vector3Int v = Vector3Int.RoundToInt(Loader.IndexToPos(i));
+      v.y = Data.maxHeight + 1;
+      RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, rayHeight, 1 << 8);
       foreach (RaycastHit hit in hits)
         if (!mcs.Contains(hit.transform.gameObject))
         {
@@ -260,8 +261,8 @@ public class Terraining : MonoBehaviour
   }
   public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
   {
-    rmc_pos.y = Terraining.maxHeight + 1;
-    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, Terraining.rayHeight, 1 << 8);
+    rmc_pos.y = Data.maxHeight + 1;
+    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, rayHeight, 1 << 8);
     List<GameObject> mcs = new List<GameObject>();
     foreach (RaycastHit hit in hits)
     {
@@ -317,7 +318,7 @@ public class Terraining : MonoBehaviour
           state_help_text.text = "Shape forming..";
         }
         else
-          Zaznacz_vertexy_tilesa();
+          MarkVerticesOfSelectedTile();
       }
     }
   }
@@ -334,7 +335,7 @@ public class Terraining : MonoBehaviour
         else if (last_form_button == "copy")
           CopySelectionToClipboard();
         else
-          apply_fancy_shape();
+          ApplyFanceShape();
 
         waiting4LDpassed = false;
         last_form_button = null;
@@ -346,8 +347,8 @@ public class Terraining : MonoBehaviour
   {
     RaycastHit hit;
     Physics.Raycast(new Vector3(LD.x, LDH + 1, LD.z), Vector3.down, out hit, rayHeight, 1 << 11);
-    Helper.CopyClipboard.Clear();
-    Helper.CopyClipboard.Add(Vector3.zero);
+    Data.CopyClipboard.Clear();
+    Data.CopyClipboard.Add(Vector3.zero);
     foreach (var mrk in znaczniki)
     {
       if (mrk.name == "on")
@@ -356,7 +357,7 @@ public class Terraining : MonoBehaviour
         if (pom == Vector3.zero)
           continue;
         pom.y = mrk.transform.position.y;
-        Helper.CopyClipboard.Add(pom);
+        Data.CopyClipboard.Add(pom);
       }
     }
     SelectionRotationVal = 0;
@@ -366,12 +367,12 @@ public class Terraining : MonoBehaviour
 
   public void RotateClockwiseSelection()
   {
-    if (Helper.CopyClipboard.Count == 0)
+    if (Data.CopyClipboard.Count == 0)
       return;
     SelectionRotationVal = SelectionRotationVal == 270 ? 0 : SelectionRotationVal + 90;
-    for (int i = 1; i < Helper.CopyClipboard.Count; i++)
+    for (int i = 1; i < Data.CopyClipboard.Count; i++)
     {
-      Helper.CopyClipboard[i] = RotatePointAroundPivot(Helper.CopyClipboard[i], Helper.CopyClipboard[0], new Vector3(0, 90, 0));
+      Data.CopyClipboard[i] = RotatePointAroundPivot(Data.CopyClipboard[i], Data.CopyClipboard[0], new Vector3(0, 90, 0));
     }
     CopyText.GetComponent<Text>().text = SelectionRotationVal.ToString();
   }
@@ -388,12 +389,12 @@ public class Terraining : MonoBehaviour
   /// </summary>
   public void InverseSelection()
   {
-    if (Helper.CopyClipboard.Count < 2)
+    if (Data.CopyClipboard.Count < 2)
       return;
 
-    for (int i = 0; i < Helper.CopyClipboard.Count; i++)
+    for (int i = 0; i < Data.CopyClipboard.Count; i++)
     {
-      Helper.CopyClipboard[i] = Vector3.Scale(Helper.CopyClipboard[i], new Vector3(-1, 1, 1));
+      Data.CopyClipboard[i] = Vector3.Scale(Data.CopyClipboard[i], new Vector3(-1, 1, 1));
     }
     CopyText.GetComponent<Text>().text = "Inversed.";
     Invoke("RefreshCopyText", 1);
@@ -407,7 +408,7 @@ public class Terraining : MonoBehaviour
   }
   public void PasteSelectionOntoTerrain()
   {
-    if (Helper.CopyClipboard.Count == 0)
+    if (Data.CopyClipboard.Count == 0)
       return;
 
     //Indexes of vertices for UpdateMapColliders()
@@ -416,14 +417,14 @@ public class Terraining : MonoBehaviour
     // List of tiles lying onto vertices that are now being pasted
     List<GameObject> to_update = new List<GameObject>();
 
-    foreach (var mrk in Helper.CopyClipboard)
+    foreach (var mrk in Data.CopyClipboard)
     {
       if (IsWithinMapBounds(Highlight.pos + mrk))
       {
         // Update arrays of vertex heights
-        indexes.Add(Helper.PosToIndex(Highlight.pos + mrk));
-        Helper.current_heights[indexes[indexes.Count - 1]] = mrk.y;
-        Helper.former_heights[indexes[indexes.Count - 1]] = mrk.y;
+        indexes.Add(Loader.PosToIndex(Highlight.pos + mrk));
+        Loader.current_heights[indexes[indexes.Count - 1]] = mrk.y;
+        Loader.former_heights[indexes[indexes.Count - 1]] = mrk.y;
 
         Vector3 pom = Highlight.pos + mrk;
 
@@ -435,7 +436,7 @@ public class Terraining : MonoBehaviour
         // Look for tiles lying here
         {
           RaycastHit tile;
-          pom.y = maxHeight;
+          pom.y = Data.maxHeight;
           if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, rayHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
             to_update.Add(tile.transform.gameObject);
         }
@@ -459,7 +460,7 @@ public class Terraining : MonoBehaviour
 
       if (Input.GetMouseButtonDown(0)) //Pierwszy klik
       {
-        if (Physics.Raycast(new Vector3(Highlight.pos.x, 100, Highlight.pos.z), Vector3.down, out hit, Terraining.maxHeight + 1, 1 << 11) && hit.transform.gameObject.name == "on")
+        if (Physics.Raycast(new Vector3(Highlight.pos.x, 100, Highlight.pos.z), Vector3.down, out hit, Data.maxHeight + 1, 1 << 11) && hit.transform.gameObject.name == "on")
         {
           LD = Vector3Int.RoundToInt(hit.transform.position);
           LDH = hit.transform.position.y;
@@ -530,7 +531,7 @@ public class Terraining : MonoBehaviour
   /// </summary>
   void FormMenu_toSlider()
   {
-    surroundings = Building.get_surrounding_tiles(null, znaczniki);
+    surroundings = Building.Get_surrounding_tiles(null, znaczniki);
     float elevateby = 0;
     float slider_realheight = SliderValue2RealHeight(slider.value);
     if (KeepShape.isOn)
@@ -544,15 +545,15 @@ public class Terraining : MonoBehaviour
         if (znacznik.name == "on")
         {
           Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
-          int index = v.x + 4 * v.z * SliderWidth.val + v.z;
+          int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
           indexes.Add(index);
           if (KeepShape.isOn)
-            Helper.current_heights[index] += elevateby;
+            Loader.current_heights[index] += elevateby;
           else
-            Helper.current_heights[index] = slider_realheight;
+            Loader.current_heights[index] = slider_realheight;
 
-          znacznik.transform.position = new Vector3(znacznik.transform.position.x, Helper.current_heights[index], znacznik.transform.position.z);
-          Helper.former_heights[index] = Helper.current_heights[index];
+          znacznik.transform.position = new Vector3(znacznik.transform.position.x, Loader.current_heights[index], znacznik.transform.position.z);
+          Loader.former_heights[index] = Loader.current_heights[index];
         }
       }
       UpdateMapColliders(indexes);
@@ -575,7 +576,7 @@ public class Terraining : MonoBehaviour
   {
     if (hillDim <= 0)
       return;
-    surroundings = Building.get_surrounding_tiles(null, znaczniki);
+    surroundings = Building.Get_surrounding_tiles(null, znaczniki);
     if (istilemanip)
     {
       List<int> indexes = MarkIsolines(GetMarkedZnaczniki());
@@ -608,7 +609,7 @@ public class Terraining : MonoBehaviour
   private bool IsThisZnacznikMarked(Vector3 z_pos)
   {
     RaycastHit hit;
-    z_pos.y = maxHeight;
+    z_pos.y = Data.maxHeight;
     if (Physics.SphereCast(z_pos, 0.1f, Vector3.down, out hit, rayHeight, 1 << 11) && hit.transform.name == "on")
       return true;
     return false;
@@ -656,7 +657,7 @@ public class Terraining : MonoBehaviour
             if (IsWithinMapBounds(v))
             {
               SetVertexInIsoline(v, j, ref top, ref znacznik);
-              indexes.Add(Helper.PosToIndex(v));
+              indexes.Add(Loader.PosToIndex(v));
               setznaczniki.Add(v);
               index_of_last_move = i;
               break;
@@ -703,7 +704,7 @@ public class Terraining : MonoBehaviour
   private GameObject MarkAndReturnZnacznik(Vector3 z_pos)
   {
     RaycastHit hit;
-    z_pos.y = maxHeight;
+    z_pos.y = Data.maxHeight;
     if (Physics.Raycast(z_pos, Vector3.down, out hit, rayHeight, 1 << 11))
     {
       if (hit.transform.name == "on")
@@ -741,13 +742,13 @@ public class Terraining : MonoBehaviour
     float d_min = Distance(cur, p_min);
     try
     {
-      float max = Helper.current_heights[Helper.PosToIndex(p_max)];
-      float min = Helper.current_heights[Helper.PosToIndex(p_min)];
+      float max = Loader.current_heights[Loader.PosToIndex(p_max)];
+      float min = Loader.current_heights[Loader.PosToIndex(p_min)];
       float heightdiff = max - min;
       float newheight = min + Smootherstep(min, max, min + (1f - d_max / (d_max + d_min)) * heightdiff) * heightdiff;
       //float newheight = min + Smootherstep(min, max, min + (1f - (float)izo_nr / (hillDim + 1)) * heightdiff) * heightdiff;
-      Helper.current_heights[Helper.PosToIndex(cur)] = newheight;
-      Helper.former_heights[Helper.PosToIndex(cur)] = newheight;
+      Loader.current_heights[Loader.PosToIndex(cur)] = newheight;
+      Loader.former_heights[Loader.PosToIndex(cur)] = newheight;
       znacznik.transform.position = new Vector3(znacznik.transform.position.x, newheight, znacznik.transform.position.z);
     }
     catch
@@ -835,15 +836,6 @@ public class Terraining : MonoBehaviour
   {
     return (ld < pg) ? x <= pg : x >= pg;
   }
-  int IsFlatter(string nazwa)
-  {
-    for (int i = 0; i < EditorMenu.flatter.Count; i++)
-    {
-      if (nazwa == EditorMenu.flatter[i].nazwa)
-        return i;
-    }
-    return -1;
-  }
 
   /// <summary>
   /// Returns List of vertices contains their global position (x or z, depending on bottom-left v-x) and height  
@@ -875,7 +867,7 @@ public class Terraining : MonoBehaviour
         else
           Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
         {
-          //bool traf = Physics.Raycast(new Vector3(LD.x, Terenowanie.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+          //bool traf = Physics.Raycast(new Vector3(LD.x, Terenowanie.Data.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
           //if (traf && hit.transform.gameObject.name == "on")
           //{
           //    //Get outlying extreme position
@@ -938,7 +930,7 @@ public class Terraining : MonoBehaviour
         else
           Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
         {
-          //bool traf = Physics.Raycast(new Vector3(x, Terenowanie.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
+          //bool traf = Physics.Raycast(new Vector3(x, Terenowanie.Data.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
           //if (traf && hit.transform.gameObject.name == "on")
           //{
           //    //Add base position vertex to list
@@ -982,20 +974,17 @@ public class Terraining : MonoBehaviour
   /// <summary>
   /// Handles placing more complicated shapes.
   /// </summary>
-  void apply_fancy_shape()
+  void ApplyFanceShape()
   {
     RaycastHit hit;
+
     //Flatter check
-    int flatter_index = -1;
     if (last_form_button == "flatter")
     {
-      if (current == null)
-        return;
-      flatter_index = IsFlatter(Building.GetRMCname(current));
-      if (flatter_index == -1)
-        return;
+      if (current == null || !IsFlatter(current.name))
+      return;
     }
-    surroundings = Building.get_surrounding_tiles(null, znaczniki);
+    surroundings = Building.Get_surrounding_tiles(null, znaczniki);
     int index = 0;
     if (waiting4LDpassed)
     {
@@ -1024,9 +1013,9 @@ public class Terraining : MonoBehaviour
                 slider_realheight = extremes[Mathf.Abs(z - LD.z)].P2.y;
                 LDH = extremes[Mathf.Abs(z - LD.z)].P1.y;
               }
-              bool traf = Physics.Raycast(new Vector3(x, Terraining.maxHeight + 1, z), Vector3.down, out hit, Terraining.rayHeight, 1 << 11);
-              index = x + 4 * z * SliderWidth.val + z;
-              Vector3 vertpos = Helper.IndexToPos(index);
+              bool traf = Physics.Raycast(new Vector3(x, Data.maxHeight + 1, z), Vector3.down, out hit, rayHeight, 1 << 11);
+              index = x + 4 * z * Data.TRACK.Width + z;
+              Vector3 vertpos = Loader.IndexToPos(index);
               if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
               {
                 float old_Y = vertpos.y; // tylko do keepshape
@@ -1039,11 +1028,11 @@ public class Terraining : MonoBehaviour
                 else if (last_form_button == "jumperend")
                   vertpos.y = LDH + 2 * (Smootherstep(LDH, slider_realheight, LDH + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
                 else if (last_form_button == "flatter")
-                  vertpos.y = LDH - EditorMenu.flatter[flatter_index].heights[step];
+                  vertpos.y = LDH - TileManager.TileListInfo[current.name].FlatterPoints[step];
                 if (KeepShape.isOn)
                   vertpos.y += old_Y - LDH;
-                Helper.former_heights[index] = vertpos.y;
-                Helper.current_heights[index] = Helper.former_heights[index];
+                Loader.former_heights[index] = vertpos.y;
+                Loader.current_heights[index] = Loader.former_heights[index];
                 GameObject znacznik = hit.transform.gameObject;
                 znacznik.transform.position = new Vector3(znacznik.transform.position.x, vertpos.y, znacznik.transform.position.z);
 
@@ -1077,13 +1066,13 @@ public class Terraining : MonoBehaviour
                 slider_realheight = extremes[Mathf.Abs(x - LD.x)].P2.y;
                 LDH = extremes[Mathf.Abs(x - LD.x)].P1.y;
               }
-              //Debug.DrawLine(new Vector3(x, Terenowanie.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
-              bool traf = Physics.Raycast(new Vector3(x, Terraining.maxHeight + 1, z), Vector3.down, out hit, Terraining.rayHeight, 1 << 11);
-              index = x + 4 * z * SliderWidth.val + z;
-              Vector3 vertpos = Helper.IndexToPos(index);
+              //Debug.DrawLine(new Vector3(x, Terenowanie.Data.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
+              bool traf = Physics.Raycast(new Vector3(x, Data.maxHeight + 1, z), Vector3.down, out hit, rayHeight, 1 << 11);
+              index = x + 4 * z * Data.TRACK.Width + z;
+              Vector3 vertpos = Loader.IndexToPos(index);
               if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
               {
-                //Debug.DrawRay(new Vector3(x, Terenowanie.maxHeight+1, z), Vector3.down, Color.blue, 40);
+                //Debug.DrawRay(new Vector3(x, Terenowanie.Data.maxHeight+1, z), Vector3.down, Color.blue, 40);
 
                 float old_Y = vertpos.y; // tylko do keepshape
                 if (last_form_button == "prostry")
@@ -1095,11 +1084,11 @@ public class Terraining : MonoBehaviour
                 else if (last_form_button == "jumperend")
                   vertpos.y = LDH + 2 * (Smootherstep(LDH, slider_realheight, LDH + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
                 else if (last_form_button == "flatter")
-                  vertpos.y = LDH - EditorMenu.flatter[flatter_index].heights[step];
+                  vertpos.y = LDH - TileManager.TileListInfo[current.name].FlatterPoints[step];
                 if (KeepShape.isOn)
                   vertpos.y += old_Y - LDH;
-                Helper.former_heights[index] = vertpos.y;
-                Helper.current_heights[index] = Helper.former_heights[index];
+                Loader.former_heights[index] = vertpos.y;
+                Loader.current_heights[index] = Loader.former_heights[index];
                 GameObject znacznik = hit.transform.gameObject;
                 znacznik.transform.position = new Vector3(znacznik.transform.position.x, vertpos.y, znacznik.transform.position.z);
               }
@@ -1120,23 +1109,28 @@ public class Terraining : MonoBehaviour
       UpdateMapColliders(znaczniki);
       if (current != null)
         Building.UpdateTiles(new List<GameObject> { current });
-      Building.UpdateTiles(surroundings, znaczniki);
+      Building.UpdateTiles(surroundings);
       surroundings.Clear();
     }
 
   }
 
+  private bool IsFlatter(string Name)
+  {
+    return TileManager.TileListInfo[Name].FlatterPoints.Length != 0 ? true : false;
+  }
+
   bool IsWithinMapBounds(Vector3 v)
   {
-    return (v.x > 0 && v.x < 4 * SliderWidth.val && v.z > 0 && v.z < 4 * SliderHeight.val) ? true : false;
+    return (v.x > 0 && v.x < 4 * Data.TRACK.Width && v.z > 0 && v.z < 4 * SliderHeight.val) ? true : false;
   }
   bool IsWithinMapBounds(int x, int z)
   {
-    return (x > 0 && x < 4 * SliderWidth.val && z > 0 && z < 4 * SliderHeight.val) ? true : false;
+    return (x > 0 && x < 4 * Data.TRACK.Width && z > 0 && z < 4 * SliderHeight.val) ? true : false;
   }
   float Smootherstep(float edge0, float edge1, float x)
   {
-    if (edge1 - edge0 == 0)
+    if (edge1 == edge0)
       return 0;
     // Scale to 0 - 1
     x = (x - edge0) / (edge1 - edge0);
@@ -1145,8 +1139,7 @@ public class Terraining : MonoBehaviour
   }
   Vector3Int FindPG(Vector3 LD)
   {
-    //Debug.Log("LD=" + LD);
-    int lowX = 999999, hiX = -99999, lowZ = 999999, hiZ = -999999;
+    int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
     foreach (GameObject znacznik in znaczniki)
     {
       if (znacznik.name == "on")
@@ -1189,7 +1182,7 @@ public class Terraining : MonoBehaviour
     }
   }
 
-  void Zaznacz_vertexy_tilesa()
+  void MarkVerticesOfSelectedTile()
   {
     state_help_text.text = "Marking vertices..";
     //Zaznaczanie vertexów tylko w trybie manipulacji tilesa
@@ -1242,7 +1235,7 @@ public class Terraining : MonoBehaviour
 
   void HandleVertexBoxes(bool checkTerrain)
   {
-    if (!Highlight.nad)
+    if (!Highlight.over)
       return;
     FormMenu.gameObject.SetActive(true);
     if (current != null && !checkTerrain)
@@ -1292,8 +1285,8 @@ public class Terraining : MonoBehaviour
           {
             GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
             znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-            int index = x + 4 * z * SliderWidth.val + z;
-            znacznik.transform.position = Helper.IndexToPos(index);
+            int index = x + 4 * z * Data.TRACK.Width + z;
+            znacznik.transform.position = Loader.IndexToPos(index);
             znacznik.GetComponent<MeshRenderer>().material = transp;
             znacznik.GetComponent<BoxCollider>().enabled = true;
             znacznik.layer = 11;
@@ -1334,7 +1327,7 @@ public class Terraining : MonoBehaviour
       current = null;
       return 1;
     }
-    else if (Physics.Raycast(new Vector3(Highlight.pos.x, Terraining.maxHeight + 1, Highlight.pos.z), Vector3.down, out hit, Terraining.rayHeight, 1 << 9))
+    else if (Physics.Raycast(new Vector3(Highlight.pos.x, Data.maxHeight + 1, Highlight.pos.z), Vector3.down, out hit, rayHeight, 1 << 9))
     {
       if (hit.transform.gameObject.layer == 9)
       {
@@ -1359,7 +1352,7 @@ public class Terraining : MonoBehaviour
       //Ustal początkową pozycję i ustaw tam znacznik
       if (IsWithinMapBounds(Highlight.pos))
       {
-        index = Highlight.pos.x + 4 * SliderWidth.val * Highlight.pos.z + Highlight.pos.z;
+        index = Highlight.pos.x + 4 * Data.TRACK.Width * Highlight.pos.z + Highlight.pos.z;
         //Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
         indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
         indicator.transform.localScale = new Vector3(.25f, 1, .25f);
@@ -1371,27 +1364,27 @@ public class Terraining : MonoBehaviour
       //Pozycja początkowa ustalona.
       if (IsWithinMapBounds(Highlight.pos))
       {
-        int index2 = Highlight.pos.x + 4 * SliderWidth.val * Highlight.pos.z + Highlight.pos.z;
+        int index2 = Highlight.pos.x + 4 * Data.TRACK.Width * Highlight.pos.z + Highlight.pos.z;
         //Debug.Log("I2="+index2+" "+m.vertices[index]+" pos="+highlight.pos);
-        Vector3Int a = Vector3Int.RoundToInt(Helper.IndexToPos(index));
-        Vector3Int b = Vector3Int.RoundToInt(Helper.IndexToPos(index2));
+        Vector3Int a = Vector3Int.RoundToInt(Loader.IndexToPos(index));
+        Vector3Int b = Vector3Int.RoundToInt(Loader.IndexToPos(index2));
         {
           List<int> indexes = new List<int>();
           for (int z = Mathf.Min(a.z, b.z); z <= Mathf.Max(a.z, b.z); z++)
           {
             for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
             {
-              int idx = x + 4 * z * SliderWidth.val + z;
-              Helper.former_heights[idx] = SliderValue2RealHeight(slider.value);
-              Helper.current_heights[idx] = Helper.former_heights[idx];
+              int idx = x + 4 * z * Data.TRACK.Width + z;
+              Loader.former_heights[idx] = SliderValue2RealHeight(slider.value);
+              Loader.current_heights[idx] = Loader.former_heights[idx];
               indexes.Add(idx);
             }
           }
-          UpdateMapColliders(indexes); // Uproscic     \\\
+          UpdateMapColliders(indexes);
         }
         Destroy(indicator);
         index = 0;
-        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Terraining.maxHeight + 1, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Terraining.rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
+        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Data.maxHeight + 1, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
         List<GameObject> to_update = new List<GameObject>();
         foreach (RaycastHit hit in hits)
         {
@@ -1403,7 +1396,7 @@ public class Terraining : MonoBehaviour
   }
   static float GetLowestRMCPoint(GameObject rmc_o)
   {
-    float to_return = Terraining.maxHeight + 1;
+    float to_return = Data.maxHeight + 1;
     foreach (Vector3 vert in rmc_o.GetComponent<MeshCollider>().sharedMesh.vertices)
     {
       if (vert.y < to_return)
@@ -1414,14 +1407,14 @@ public class Terraining : MonoBehaviour
   void Ctrl_key_works()
   {
 
-    if (Input.GetKey(KeyCode.LeftControl) && Highlight.nad && !FlyCamera.over_UI && !Input.GetKey(KeyCode.LeftAlt))
+    if (Input.GetKey(KeyCode.LeftControl) && Highlight.over && !FlyCamera.over_UI && !Input.GetKey(KeyCode.LeftAlt))
     {
       if (is_entering_keypad_value)
         Hide_text_helper();
 
       Vector3Int v = Highlight.pos;
-      int index = v.x + 4 * v.z * SliderWidth.val + v.z;
-      slider.value = RealHeight2SliderValue(Helper.current_heights[index]);
+      int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
+      slider.value = RealHeight2SliderValue(Loader.current_heights[index]);
     }
   }
   /// <summary>
@@ -1429,20 +1422,20 @@ public class Terraining : MonoBehaviour
   /// </summary>
   void Single_vertex_manipulation()
   {
-    if (Highlight.nad && !FlyCamera.over_UI && IsWithinMapBounds(Highlight.pos))
+    if (Highlight.over && !FlyCamera.over_UI && IsWithinMapBounds(Highlight.pos))
     {
       Vector3Int v = Highlight.pos;
-      //Debug.DrawLine(new Vector3(v.x, Terenowanie.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, 5);
-      RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Terraining.maxHeight + 1, v.z), 0.5f, Vector3.down, Terraining.rayHeight, 1 << 9);
+      //Debug.DrawLine(new Vector3(v.x, Terenowanie.Data.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, 5);
+      RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Data.maxHeight + 1, v.z), 0.5f, Vector3.down, rayHeight, 1 << 9);
       List<GameObject> to_update = new List<GameObject>();
       foreach (RaycastHit hit in hits)
         to_update.Add(hit.transform.gameObject);
-      int index = v.x + 4 * v.z * SliderWidth.val + v.z;
+      int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
       if (to_update.Count != 0)
       {
         if (AreListedObjectsHaveRMCVertexHere(to_update, index))
         {
-          Helper.current_heights[index] = SliderValue2RealHeight(slider.value);
+          Loader.current_heights[index] = SliderValue2RealHeight(slider.value);
           //Helper.current_heights[index] = Helper.former_heights[index];
           UpdateMapColliders(new List<int> { index });
           Building.UpdateTiles(to_update);
@@ -1450,8 +1443,8 @@ public class Terraining : MonoBehaviour
       }
       else
       {
-        Helper.former_heights[index] = SliderValue2RealHeight(slider.value);
-        Helper.current_heights[index] = Helper.former_heights[index];
+        Loader.former_heights[index] = SliderValue2RealHeight(slider.value);
+        Loader.current_heights[index] = Loader.former_heights[index];
         UpdateMapColliders(new List<int> { index });
       }
     }
@@ -1465,7 +1458,7 @@ public class Terraining : MonoBehaviour
       foreach (Vector3 v in rmc.GetComponent<MeshCollider>().sharedMesh.vertices)
       {
         Vector3Int V = Vector3Int.RoundToInt(rmc.transform.TransformPoint(v));
-        if (V.x + 4 * V.z * SliderWidth.val + V.z == index)
+        if (V.x + 4 * V.z * Data.TRACK.Width + V.z == index)
         {
           found_matching = true;
           break;
