@@ -80,6 +80,7 @@ public class MainMenu : MonoBehaviour
       // disable menu
       ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
       ManageTilesets_button.interactable = false;
+
     }
   }
   public void Toggle_mirror(GameObject checkmark)
