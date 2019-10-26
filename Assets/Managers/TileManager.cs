@@ -36,25 +36,30 @@ public static class TileManager
     // unpack default cpks
     PackageManager.LoadDefaultCPKs();
 
+    // default cat and cfl files
+    ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
+    ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
+
+    // load flatters
+    LoadFlatterInfo();
+
     // unpack every bin (zip) tileset if it's id exists in WorkshopModIds to unpacked crashday content folder
     string[] WorkshopModIds = File.ReadAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt");
-    string CdWorkshopPath = NavigateDirUp(IO.GetCrashdayPath(), 2) + "\\workshop\\content\\508980\\";
 
+    if (WorkshopModIds.Length == 1 && WorkshopModIds[0] == "")
+      return;
+
+    string CdWorkshopPath = NavigateDirUp(IO.GetCrashdayPath(), 2) + "\\workshop\\content\\508980\\";
     //Unpack custom tilesets to folder with original files. It's easier that way.
     foreach (string Id in WorkshopModIds)
       PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + Id).First(), Id);
 
-    // default cat and cfl files
-    ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
-    ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
     // load custom tilesets
-    foreach(string Id in WorkshopModIds)
+    foreach (string Id in WorkshopModIds)
     {
       ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + Id + "\\content\\editor\\");
       ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + Id + "\\content\\tiles\\", Id);
     }
-    // load flatters
-    LoadFlatterInfo();
   }
   /// <summary>
   /// Handles tile positioning on GUI as well as tilesets. Has to be run before ReadCflFiles
@@ -87,15 +92,15 @@ public static class TileManager
           //cfl file has unnecessary blank lines at the bottom. => End reading.
           if (setName == "")
             break;
-            
+
           int InCategory = int.Parse(file[j + 1]);
-         
+
           for (int k = j; k < j + InCategory; k++)
           {
             string[] cat = Regex.Split(file[k + 3], " ");
             // example: RwToArenaFloor.p3d => rwtoarenafloor
-            string name = cat[0].Split(new char[] { '.'})[0].ToLower();
-            if(!TileListInfo.ContainsKey(name))
+            string name = cat[0].Split(new char[] { '.' })[0].ToLower();
+            if (!TileListInfo.ContainsKey(name))
               TileListInfo.Add(name, new TileListEntry(setName));
           }
           j += InCategory + 5;
@@ -136,7 +141,7 @@ public static class TileManager
     {
       string[] cfl = System.IO.File.ReadAllLines(File);
       string name = Path.GetFileNameWithoutExtension(File);
-      if(name == "mica_grass_cp")
+      if (name == "mica_grass_cp")
       {
 
       }
