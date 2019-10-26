@@ -14,6 +14,7 @@ public class FlyCamera : MonoBehaviour
   private float totalRun = 1.0f;
   private int flag = 0;
   bool isStandardCam = true;
+  float Ordinary_cam_last_height = 20f;
   public GameObject SaveMenu;
 
   void Update()
@@ -38,15 +39,20 @@ public class FlyCamera : MonoBehaviour
         transform.position = new Vector3(5, 20, 5);
         transform.rotation = (isStandardCam) ? Quaternion.Euler(45, 45, 0) : Quaternion.Euler(90, 0, 0);
       }
-      if (Input.GetKeyDown("enter"))
+      if (Input.GetKeyDown("enter")) // switch camera type
       {
         isStandardCam = !isStandardCam;
         if (!isStandardCam)
-          transform.position = new Vector3(transform.position.x, 900, transform.position.z);
+        { // switch to birds eye
+          Ordinary_cam_last_height = transform.position.y;
+          //  
+          transform.position = new Vector3(transform.position.x, Data.maxHeight, transform.position.z);
+        }
         else
-          transform.position = new Vector3(transform.position.x, 50, transform.position.z);
+        { //switch to ordinary
+          transform.position = new Vector3(transform.position.x, Ordinary_cam_last_height, transform.position.z);
+        }
       }
-
 
       if (isStandardCam && !SaveMenu.activeSelf)
         Ordinarycamera();
@@ -57,6 +63,8 @@ public class FlyCamera : MonoBehaviour
 
   void birdseyecamera()
   {
+    GetComponent<Camera>().orthographic = true;
+
     if (Input.GetKey(KeyCode.PageUp))
       GetComponent<Camera>().orthographicSize += 1;
     if (Input.GetKey(KeyCode.PageDown))
@@ -65,18 +73,11 @@ public class FlyCamera : MonoBehaviour
         GetComponent<Camera>().orthographicSize -= 1;
     }
 
-    GetComponent<Camera>().orthographic = true;
-
     transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
-    Vector3 t = GetBaseInput();
-    t *= 0.2f;
-    if (Input.GetKey(KeyCode.LeftShift))
-    {
-      t.x = Mathf.Clamp(t.x, -0.1f, 0.1f);
-      t.z = Mathf.Clamp(t.z, -0.1f, 0.1f);
-    }
-    if (transform.position.x + t.x > 0 && transform.position.z + t.z > 0 && transform.position.x + t.x < 4 * SliderWidth.val + 1 && transform.position.z + t.z < 4 * SliderHeight.val + 1)
-      transform.SetPositionAndRotation(new Vector3(0,10,0), Quaternion.identity);
+    //Ruch
+    Vector3 p = GetBaseInput();
+
+    transform.Translate(p, Space.World);
   }
   void Ordinarycamera()
   {
@@ -108,7 +109,7 @@ public class FlyCamera : MonoBehaviour
 
     }
     lastMouse = Input.mousePosition;
-    //Sprint
+    //Ruch
     Vector3 p = GetBaseInput();
     if (Input.GetKey(KeyCode.LeftShift))
     {

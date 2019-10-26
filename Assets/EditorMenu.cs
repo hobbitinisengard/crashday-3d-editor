@@ -77,7 +77,6 @@ public class EditorMenu : MonoBehaviour
       }
     }
   }
-
   private void Toggle_floor1Shader(Shader ForceShader = null)
   {
     if(ForceShader != null)
@@ -99,7 +98,7 @@ public class EditorMenu : MonoBehaviour
   }
   void Awake()
   {
-    NameOfTrack.text = this.GetComponent<Loader>().nazwa_toru.text;
+    NameOfTrack.text = GetComponent<Loader>().nazwa_toru.text;
 
   }
   public void FormToBuildMenu()
@@ -143,14 +142,6 @@ public class EditorMenu : MonoBehaviour
       help.SetActive(false);
     else
       help.SetActive(true);
-  }
-
-  public static Bitmap ConvertTo24bpp(System.DrawingCore.Image img)
-  {
-    var bmp = new Bitmap(img.Width, img.Height, PixelFormat.Format24bppRgb);
-    using (var gr = System.DrawingCore.Graphics.FromImage(bmp))
-      gr.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height));
-    return bmp;
   }
 
 

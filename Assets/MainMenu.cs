@@ -12,40 +12,42 @@ public class MainMenu : MonoBehaviour
 {
   public Text LoadingScreen_text_logo;
   public GameObject loadScreen;
-  public GameObject UnpackScreen;
   public Button ManageTilesets_button;
-  public GameObject ManageTilesets_content;
+  public ScrollRect ManageTilesets_ScrollView;
   /// <summary>Whether new track dimensions don't exceed STATIC.TrackTileLimit</summary>
   public static bool CanCreateTrack = true;
   void Awake()
   {
+    Data.LoadMirrored = false;
     Data.Isloading = false;
     // if we running this for the first time
     if(TileManager.TileListInfo.Count == 0)
     {
       TileManager.LoadTiles();
-      Populate_Manage_Tilesets_Menu();
-      UnpackScreen.SetActive(false);
     }
+    Populate_Manage_Tilesets_Menu();
   }
-
+  private void Enable_manage_tiles_button()
+  {
+    ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+    ManageTilesets_button.interactable = true;
+  }
   private void Populate_Manage_Tilesets_Menu()
   {
     // if there is any custom tileset (with workshopId)
     if (TileManager.TileListInfo.Where(t => t.Value.Custom_tileset_id != null).Any())
     {
-      ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-      ManageTilesets_button.interactable = true;
+      Enable_manage_tiles_button();
 
-      GameObject manage_entry_template = ManageTilesets_content.transform.GetChild(0).gameObject;
-
-      foreach (var mod_id in TileManager.TileListInfo.Select(t => t.Value.Custom_tileset_id).Distinct())
+      GameObject manage_entry_template = ManageTilesets_ScrollView.content.transform.GetChild(0).gameObject;
+      string[] mod_ids = TileManager.TileListInfo.Select(t => t.Value.Custom_tileset_id).Distinct().ToArray();
+      foreach (var mod_id in mod_ids)
       {
         if(mod_id != null)
         {
           GameObject NewEntry = Instantiate(manage_entry_template, manage_entry_template.transform.parent);
           NewEntry.transform.Find("Id").GetComponent<Text>().text = mod_id;
-          NewEntry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Value.TilesetName).ToArray());
+          NewEntry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Value.TilesetName).Distinct().ToArray());
 
           // entry gameobject's name is workshopId
           NewEntry.name = mod_id;
@@ -64,18 +66,26 @@ public class MainMenu : MonoBehaviour
       TileManager.TileListInfo.Remove(name);
 
     //remove entry in tilesets.txt
-    string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "tilesets.txt").Where(line => line != Mod_id).ToArray();
-    File.WriteAllLines(Application.streamingAssetsPath + "tilesets.txt", lines_to_keep);
+    string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "\\tilesets.txt").Where(line => line != Mod_id).ToArray();
+    File.WriteAllLines(Application.streamingAssetsPath + "\\tilesets.txt", lines_to_keep);
 
     //remove folder in moddata
-    Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\");
+    Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\", true);
 
     // remove entry in menu
-    Destroy(ManageTilesets_content.transform.Find(Mod_id));
+    DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(Mod_id).gameObject);
+
+    if(ManageTilesets_ScrollView.content.childCount == 1) // if we only have empty invisible manage_entry_template remaining
+    {
+      // disable menu
+      ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
+      ManageTilesets_button.interactable = false;
+
+    }
   }
-  public void ToggleMirror(bool val)
+  public void Toggle_mirror(GameObject checkmark)
   {
-    Data.LoadMirrored = val;
+    Data.LoadMirrored =checkmark.activeSelf;
   }
   private void ChangeSceneToEditor()
   {
