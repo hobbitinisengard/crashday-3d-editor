@@ -331,7 +331,7 @@ public class Building : MonoBehaviour
   static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int tileDims)
   {
     pos.y = Data.maxHeight + 1;
-    if (pos.z <= 0 || pos.z >= 4 * SliderHeight.val || pos.x <= 0 || pos.x >= 4 * Data.TRACK.Width)
+    if (pos.z <= 0 || pos.z >= 4 * Data.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Data.TRACK.Width)
       return false;
     RaycastHit[] hits = Physics.BoxCastAll(pos, new Vector3(4 * tileDims.x * 0.4f, 1, 4 * tileDims.z * 0.4f), Vector3.down, Quaternion.identity, Terraining.rayHeight, 1 << 9);
     return (hits.Length == 0) ? true : false;
@@ -476,10 +476,6 @@ public class Building : MonoBehaviour
     //Get original dimensions
     Vector3Int tileDims = new Vector3Int(TileManager.TileListInfo[name].Size.x, 0, TileManager.TileListInfo[name].Size.y);
     GameObject rmc_PRE = GetRMC(name);
-    if(rmc_PRE == null)
-    {
-
-    }
     //Get real dims of tile
     if (cum_rotation == 90 || cum_rotation == 270)
     {

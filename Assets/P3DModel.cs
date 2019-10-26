@@ -157,11 +157,17 @@ public class P3DModel
 
     if (path.EndsWith(".dds"))
     {
-      tex = LoadTextureDXT(File.ReadAllBytes(path));
+      if (File.Exists(path))
+        tex = LoadTextureDXT(File.ReadAllBytes(path));
+      else
+        Debug.LogWarning(path + " | texture not found! Loading white texture instead.");
     }
     else if (path.EndsWith(".tga"))
     {
-      tex = TgaDecoder.LoadTGA(File.ReadAllBytes(path));
+      if (File.Exists(path))
+        tex = TgaDecoder.LoadTGA(File.ReadAllBytes(path));
+      else
+        Debug.LogWarning(path + " | texture not found! Loading white texture instead.");
     }
     else
     {

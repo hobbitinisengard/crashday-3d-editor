@@ -44,13 +44,13 @@ public static class TileManager
     foreach (string Id in WorkshopModIds)
       PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + Id).First(), Id);
 
-    // default cat and cfl files. Default cat and cfl files are built into editor because of "$(language)" parts in original files
+    // default cat and cfl files
     ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
     ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
     // load custom tilesets
     foreach(string Id in WorkshopModIds)
     {
-      ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + Id + "\\content\\editor\\", Id);
+      ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + Id + "\\content\\editor\\");
       ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + Id + "\\content\\tiles\\", Id);
     }
     // load flatters
@@ -59,7 +59,7 @@ public static class TileManager
   /// <summary>
   /// Handles tile positioning on GUI as well as tilesets. Has to be run before ReadCflFiles
   /// </summary>
-  private static void ReadCatFiles(string path, string mod_id = null)
+  private static void ReadCatFiles(string path)
   {
     // if no editor folder is present, return
     if (!Directory.GetParent(path).Exists)
@@ -94,7 +94,7 @@ public static class TileManager
           {
             string[] cat = Regex.Split(file[k + 3], " ");
             // example: RwToArenaFloor.p3d => rwtoarenafloor
-            string name = cat[0].Remove(cat[0].Length - 4).ToLower();
+            string name = cat[0].Split(new char[] { '.'})[0].ToLower();
             if(!TileListInfo.ContainsKey(name))
               TileListInfo.Add(name, new TileListEntry(setName));
           }
@@ -136,13 +136,16 @@ public static class TileManager
     {
       string[] cfl = System.IO.File.ReadAllLines(File);
       string name = Path.GetFileNameWithoutExtension(File);
+      if(name == "mica_grass_cp")
+      {
 
+      }
       for (int j = 0; j < cfl.Length; j++)
         cfl[j] = IO.RemoveComment(cfl[j]);
 
       string modelName = cfl[2].Split('.')[0].ToLower();
-      // don't read grass tiles
-      if (modelName == "field" || modelName == "border1" || modelName == "border2")
+      // field is just block of grass. It's listed in cfl file but isn't showed. Mica used this tile as CP (weird right?) so I had to take this into consideration
+      if ((modelName == "field" && mod_id == null) || modelName == "border1" || modelName == "border2")
         continue;
       string[] size_str = Regex.Split(cfl[3], " ");
       Vector2Int size = new Vector2Int(int.Parse(size_str[0]), int.Parse(size_str[1]));
@@ -173,10 +176,26 @@ public static class TileManager
           VegData.Add(new Vegetation(VegName, x, z, y));
         }
       }
-      Texture2D texTga = TgaDecoder.LoadTGA(NavigateDirUp(Directory, 2) + "\\textures\\pictures\\tiles\\" + name + ".tga");
+      string TexturePath = NavigateDirUp(Directory, 2) + "\\textures\\pictures\\tiles\\" + name + ".tga";
+      if (!System.IO.File.Exists(TexturePath))
+      {
+        TexturePath = IO.GetCrashdayPath() + "\\data\\content\\textures\\pictures\\tiles\\" + name + ".tga";
+      }
+      Texture2D texTga = TgaDecoder.LoadTGA(TexturePath);
 
-      P3DModel model = P3DParser.LoadFromFile(NavigateDirUp(Directory, 2) + "\\models\\" + modelName + ".p3d");
+      string Model_path = NavigateDirUp(Directory, 2) + "\\models\\" + modelName + ".p3d";
 
+      if (!System.IO.File.Exists(Model_path))
+      { // look for model in original files (used in mica's tiles)
+        Model_path = IO.GetCrashdayPath() + "\\data\\content\\models\\" + modelName + ".p3d";
+        if (!System.IO.File.Exists(Model_path))
+        {
+          Debug.LogWarning(Model_path + " | No p3d file present! Continuing without this tile..");
+          continue;
+        }
+      }
+
+      P3DModel model = P3DParser.LoadFromFile(Model_path);
       List<Material> ModelMaterials = new List<Material>(model.P3DNumTextures);
 
       for (int j = 0; j < model.P3DNumTextures; j++)
@@ -196,7 +215,7 @@ public static class TileManager
       }
 
       if (!TileListInfo.ContainsKey(name))
-      { // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. (special "default" tab)
+      { // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
         TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texTga, VegData.ToArray(), mod_id));
         TileListInfo[name].TilesetName = Data.DefaultTileset;
       }

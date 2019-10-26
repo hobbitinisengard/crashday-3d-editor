@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class SliderCase : MonoBehaviour
 {
   public Text title;
-  public GameObject TabTemplate;
+  public ScrollRect TabTemplate;
   public GameObject TileTemplate;
   public GameObject TilesetContainer;
   private string Current_tileset = Data.CheckpointString;

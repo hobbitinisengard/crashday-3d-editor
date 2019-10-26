@@ -8,7 +8,10 @@ public static class TgaDecoder
   public static Texture2D LoadTGA(string fileName)
   {
     if (!File.Exists(fileName))
+    {
       return new Texture2D(64, 64);
+    }
+      
     using (Bitmap bitmap = FromFile(fileName))
     {
       MemoryStream ms = new MemoryStream();
@@ -188,7 +191,6 @@ public static class TgaDecoder
   {
     return Decode(image);
   }
-  
 
   private static Bitmap Decode(byte[] image)
   {
@@ -199,6 +201,10 @@ public static class TgaDecoder
     {
       for (int x = 0; x < tga.Width; ++x)
       {
+        if(tga.GetPixel(x,y) == 16777215)
+        {
+
+        }
         bitmap.SetPixel(x, y, System.DrawingCore.Color.FromArgb(tga.GetPixel(x, y)));
       }
     }

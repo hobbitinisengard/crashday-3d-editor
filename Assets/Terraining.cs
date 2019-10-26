@@ -22,9 +22,8 @@ public class Terraining : MonoBehaviour
   public Slider slider;
   public Material transp;
   public Material red;
+  public Material white;
   public Button toslider; //button TO SLIDER
-  public Button hill; //creates hill with smooth by ...
-  public byte hillDim = 0; //  .. hillDim edges
   public Button Flatten;
   public Button Jumper;
   public Button Prostry;
@@ -71,7 +70,6 @@ public class Terraining : MonoBehaviour
       else
         FormMenu_toSlider();
     });
-    hill.onClick.AddListener(FormMenu_Hill);
     Prostry.onClick.AddListener(() => last_form_button = "prostry");
     Integral.onClick.AddListener(() => last_form_button = "integral");
     Jumper.onClick.AddListener(() => last_form_button = "jumper");
@@ -131,10 +129,6 @@ public class Terraining : MonoBehaviour
 
   }
 
-  public void Update_HillDim(string val)
-  {
-    hillDim = byte.Parse(val);
-  }
   private void Hide_text_helper()
   {
     slider.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
@@ -175,7 +169,11 @@ public class Terraining : MonoBehaviour
         slider.value = float.Parse(HelperInputField.text);
         Hide_text_helper();
       }
-      catch { }
+      catch 
+      {
+        slider.value = 0f;
+        Hide_text_helper();
+      }
     }
     KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9, KeyCode.KeypadPeriod, KeyCode.KeypadMinus };
     for (int i = 0; i < keyCodes.Length; i++)
@@ -570,28 +568,6 @@ public class Terraining : MonoBehaviour
     last_form_button = "";
   }
   /// <summary>
-  /// Smooth terrain button logic
-  /// </summary>
-  void FormMenu_Hill()
-  {
-    if (hillDim <= 0)
-      return;
-    surroundings = Building.Get_surrounding_tiles(null, znaczniki);
-    if (istilemanip)
-    {
-      List<int> indexes = MarkIsolines(GetMarkedZnaczniki());
-      UpdateMapColliders(indexes);
-      if (current != null)
-        surroundings.Add(current);
-      Building.UpdateTiles(surroundings);
-      surroundings.Clear();
-    }
-    else
-      Debug.LogError("istilemanip = false");
-
-    KeepShape.isOn = false;
-  }
-  /// <summary>
   /// Returns list of red znaczniki(tags)
   /// </summary>
   /// <returns></returns>
@@ -615,90 +591,6 @@ public class Terraining : MonoBehaviour
     return false;
   }
   /// <summary>
-  /// Goes around red znaczniki creating isolines of height (set by smoothstep). Every znacznik in isoline get red color (selected).
-  /// </summary>
-  /// <param name="top"></param>
-  /// <returns></returns>
-  private List<int> MarkIsolines(List<Vector3> top)
-  {
-    List<int> indexes = new List<int>();
-    List<Vector3> setznaczniki = new List<Vector3>();
-    Vector2Int[] moves = new Vector2Int[] { new Vector2Int(0, 1),
-                                          new Vector2Int(1,1), 
-        /*moves relative to global*/      new Vector2Int(1, 0),
-                                          new Vector2Int(1, -1),
-                                          new Vector2Int(0, -1),
-                                          new Vector2Int(-1, -1),
-                                          new Vector2Int(-1, 0),
-                                          new Vector2Int(-1, 1),
-        };
-    Vector3 LDpos = Get_LD();
-    Vector3 v = new Vector3(LDpos.x, 0, LDpos.z);
-    v.z--;
-    if (v.z < 1) // provides there is space to begin isolines
-      return null;
-    int index_of_last_move = 0;
-    //Going anti-clockwise and marking isolines
-    for (byte j = 1; j <= hillDim; j++)
-    {
-      do
-      {
-        byte lookups = 0;
-        //Look for move that can be done
-        for (int i = index_of_last_move; i < index_of_last_move + moves.Length; i++)
-        {
-          lookups++;
-          if (i > moves.Length - 1)
-            i = 0;
-          GameObject znacznik = MarkAndReturnZnacznik(new Vector3(v.x + moves[i].x, 0, v.z + moves[i].y));
-          if (znacznik != null)
-          {
-            v.Set(v.x + moves[i].x, 0, v.z + moves[i].y);
-            if (IsWithinMapBounds(v))
-            {
-              SetVertexInIsoline(v, j, ref top, ref znacznik);
-              indexes.Add(Loader.PosToIndex(v));
-              setznaczniki.Add(v);
-              index_of_last_move = i;
-              break;
-            }
-            else
-            { // return vertices that already 've been found
-              return indexes;
-            }
-          }
-          if (lookups == moves.Length)
-          { // havent found way - dead end - have to go back
-            int licznik = 1;
-            while (true)
-            {
-              v = setznaczniki[setznaczniki.Count - licznik];
-              v.y = 2000;
-              RaycastHit[] hits = Physics.SphereCastAll(v, 1.1f, Vector3.down, rayHeight, 1 << 11);
-              bool found = false;
-              foreach (var hit in hits)
-              {
-                if (hit.transform.name != "on")
-                  found = true;
-              }
-              if (found)
-                break;
-              licznik++;
-            }
-          }
-        }
-        lookups = 0;
-        if (index_of_last_move < 2)
-          index_of_last_move = moves.Length - 1 - index_of_last_move;
-        else
-          index_of_last_move -= 2;
-      } while (!(v.x == LDpos.x && v.z == LDpos.z - j));
-      v.z--;
-      setznaczniki.Clear();
-    }
-    return indexes;
-  }
-  /// <summary>
   /// Searches for znacznik in given pos. If found znacznik isn't marked, f. marks it and returns it.
   /// </summary>
   private GameObject MarkAndReturnZnacznik(Vector3 z_pos)
@@ -718,65 +610,7 @@ public class Terraining : MonoBehaviour
     }
     return null;
   }
-  /// <summary>
-  /// Handles setting proper height for vertex in isoline
-  /// </summary>
-  private void SetVertexInIsoline(Vector3 cur, byte izo_nr, ref List<Vector3> top, ref GameObject znacznik)
-  {
-    Vector3Int p_max = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
-    foreach (Vector3 p in top)
-    {
-      Vector3Int point = Vector3Int.RoundToInt(new Vector3(p.x, 0, p.z));
-      if (Vector3.Distance(cur, point) < Vector3.Distance(cur, p_max))
-      {
-        p_max.Set(Mathf.RoundToInt(point.x), 0, Mathf.RoundToInt(point.z));
-      }
-    }
-    float d_max = Distance(cur, p_max);
-
-    Vector3 bisector = (cur - p_max);
-    bisector.Normalize();
-    // pozycja vertexa o wysokości względnej 0, to przybliżony do siatki punkt przesunięcia cur o wektor bisector
-    // o komplementarnej do hillDim+1 długości
-    Vector3 p_min = cur + bisector * (hillDim - izo_nr + 1);
-    float d_min = Distance(cur, p_min);
-    try
-    {
-      float max = Loader.current_heights[Loader.PosToIndex(p_max)];
-      float min = Loader.current_heights[Loader.PosToIndex(p_min)];
-      float heightdiff = max - min;
-      float newheight = min + Smootherstep(min, max, min + (1f - d_max / (d_max + d_min)) * heightdiff) * heightdiff;
-      //float newheight = min + Smootherstep(min, max, min + (1f - (float)izo_nr / (hillDim + 1)) * heightdiff) * heightdiff;
-      Loader.current_heights[Loader.PosToIndex(cur)] = newheight;
-      Loader.former_heights[Loader.PosToIndex(cur)] = newheight;
-      znacznik.transform.position = new Vector3(znacznik.transform.position.x, newheight, znacznik.transform.position.z);
-    }
-    catch
-    {
-    }
-  }
-  //private int GetCorrAngle(Vector2 step)
-  //{
-  //    if (step.x == 1 && step.y == 0)
-  //        return 0;
-  //    else if (step.x == 1 && step.y == 1)
-  //        return -45;
-  //    else if (step.x == 0 && step.y == 1)
-  //        return -90;
-  //    else if (step.x == -1 && step.y == 1)
-  //        return -135;
-  //    else if (step.x == -1 && step.y == 0)
-  //        return 180;
-  //    else if (step.x == -1 && step.y == -1)
-  //        return 135;
-  //    else if (step.x == 0 && step.y == -1)
-  //        return 90;
-  //    else if (step.x == 1 && step.y == -1)
-  //        return 45;
-  //    else
-  //        return -1;
-  //}
-
+  
   /// <summary>
   /// Returns most outthrust to bottom-left highlighted vertex of selection
   /// </summary>
@@ -1044,9 +878,7 @@ public class Terraining : MonoBehaviour
             //if (!Connect.isOn)
             step += 1;
           }
-
         }
-
       }
       else
       { // equal heights along X axis _-_-
@@ -1101,11 +933,6 @@ public class Terraining : MonoBehaviour
 
         }
       }
-      //foreach(GameObject znacznik in znaczniki)
-      //{
-      //    znacznik.GetComponent<MeshRenderer>().sharedMaterial = transp;
-      //    znacznik.name = "off";
-      //}
       UpdateMapColliders(znaczniki);
       if (current != null)
         Building.UpdateTiles(new List<GameObject> { current });
@@ -1122,11 +949,11 @@ public class Terraining : MonoBehaviour
 
   bool IsWithinMapBounds(Vector3 v)
   {
-    return (v.x > 0 && v.x < 4 * Data.TRACK.Width && v.z > 0 && v.z < 4 * SliderHeight.val) ? true : false;
+    return (v.x > 0 && v.x < 4 * Data.TRACK.Width && v.z > 0 && v.z < 4 * Data.TRACK.Height) ? true : false;
   }
   bool IsWithinMapBounds(int x, int z)
   {
-    return (x > 0 && x < 4 * Data.TRACK.Width && z > 0 && z < 4 * SliderHeight.val) ? true : false;
+    return (x > 0 && x < 4 * Data.TRACK.Width && z > 0 && z < 4 * Data.TRACK.Height) ? true : false;
   }
   float Smootherstep(float edge0, float edge1, float x)
   {
@@ -1198,7 +1025,7 @@ public class Terraining : MonoBehaviour
         if (IsWithinSelectionBounds(znacznik))
         {
           //Debug.Log (znacznik.transform.position);
-          if (znacznik.GetComponent<MeshRenderer>().sharedMaterial == transp)
+          if (znacznik.GetComponent<MeshRenderer>().sharedMaterial == white)
           {
             znacznik.name = "on";
             znacznik.GetComponent<MeshRenderer>().sharedMaterial = red;
@@ -1206,7 +1033,7 @@ public class Terraining : MonoBehaviour
           else
           {
             znacznik.name = "off";
-            znacznik.GetComponent<MeshRenderer>().sharedMaterial = transp;
+            znacznik.GetComponent<MeshRenderer>().sharedMaterial = white;
           }
         }
       }
@@ -1258,7 +1085,7 @@ public class Terraining : MonoBehaviour
         GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
         znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
         znacznik.transform.position = current.transform.TransformPoint(rmc.vertices[i]);
-        znacznik.GetComponent<MeshRenderer>().material = transp;
+        znacznik.GetComponent<MeshRenderer>().material = white;
         znacznik.GetComponent<BoxCollider>().enabled = true;
         znacznik.layer = 11;
         if (i == 0)
@@ -1287,7 +1114,7 @@ public class Terraining : MonoBehaviour
             znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
             int index = x + 4 * z * Data.TRACK.Width + z;
             znacznik.transform.position = Loader.IndexToPos(index);
-            znacznik.GetComponent<MeshRenderer>().material = transp;
+            znacznik.GetComponent<MeshRenderer>().material = white;
             znacznik.GetComponent<BoxCollider>().enabled = true;
             znacznik.layer = 11;
             if (znaczniki.Count == 0)
