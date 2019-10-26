@@ -138,7 +138,7 @@ MonoBehaviour:
   m_MinSize: {x: 713, y: 394}
   m_MaxSize: {x: 18008, y: 14044}
   vertical: 0
-  controlID: 88
+  controlID: 376
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -163,7 +163,7 @@ MonoBehaviour:
   m_MinSize: {x: 232, y: 394}
   m_MaxSize: {x: 10002, y: 14044}
   vertical: 1
-  controlID: 94
+  controlID: 382
 --- !u!114 &8
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -383,14 +383,14 @@ MonoBehaviour:
   m_Gizmos: 1
   m_SceneIsLit: 1
   m_SceneLighting: 1
-  m_2DMode: 1
+  m_2DMode: 0
   m_isRotationLocked: 0
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 437.43033, y: 224.3456, z: -1223.5625}
+    m_Target: {x: 22.033438, y: 4.168127, z: 25.097649}
     speed: 2
-    m_Value: {x: 437.43033, y: 224.3456, z: -1223.5625}
+    m_Value: {x: 22.033438, y: 4.168127, z: 25.097649}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -411,25 +411,25 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
     yGrid:
-      m_Target: 0
-      speed: 2
-      m_Value: 0
-    zGrid:
       m_Target: 1
       speed: 2
       m_Value: 1
+    zGrid:
+      m_Target: 0
+      speed: 2
+      m_Value: 0
   m_Rotation:
-    m_Target: {x: 0, y: 0, z: 0, w: 1}
+    m_Target: {x: 0.42161754, y: -0.017690936, z: 0.008211256, w: 0.90658}
     speed: 2
-    m_Value: {x: -0.00000001716424, y: 0.0000001931336, z: -0.000000033114823, w: -0.99999994}
+    m_Value: {x: 0.42157018, y: -0.021770038, z: 0.010108299, w: 0.90647805}
   m_Size:
-    m_Target: 428.65213
+    m_Target: 9.333809
     speed: 2
-    m_Value: 448.8504
+    m_Value: 9.333809
   m_Ortho:
-    m_Target: 1
+    m_Target: 0
     speed: 2
-    m_Value: 1
+    m_Value: 0
   m_CameraSettings:
     m_Speed: 1
     m_SpeedNormalized: 0.5
@@ -443,7 +443,7 @@ MonoBehaviour:
     m_DynamicClip: 1
     m_OcclusionCulling: 0
   m_ShowGlobalGrid: 1
-  m_LastSceneViewRotation: {x: -0.07776833, y: 0.8750565, z: -0.15003781, w: -0.45356286}
+  m_LastSceneViewRotation: {x: -0.08717229, y: 0.89959055, z: -0.21045254, w: -0.3726226}
   m_LastSceneViewOrtho: 0
   m_ReplacementShader: {fileID: 0}
   m_ReplacementString: 
@@ -514,20 +514,20 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/scenes
+    - Assets/StandaloneFileBrowser/Sample
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/scenes
+  - Assets/StandaloneFileBrowser/Sample
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\Kuba\Desktop\crashday-3d-editor
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: c22f0000
-    m_LastClickedID: 12226
-    m_ExpandedIDs: 00000000ae2a0000b02c0000322f000054330000
+    m_SelectedIDs: 6a2d0000
+    m_LastClickedID: 11626
+    m_ExpandedIDs: 00000000a82a0000aa2c00002c2f000052330000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -555,7 +555,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000ae2a0000b02c0000322f000054330000
+    m_ExpandedIDs: 00000000a82a0000aa2c00002c2f000052330000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -582,22 +582,22 @@ MonoBehaviour:
   m_ListAreaState:
     m_SelectedInstanceIDs: 
     m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 1
-    m_ExpandedInstanceIDs: 564300006a400000020d000000500000f62600005c1b00004a270000d02f01006431000000000000
+    m_HadKeyboardFocusLastEvent: 0
+    m_ExpandedInstanceIDs: 564300006a400000020d000000500000f62600005c1b00004a270000d02f01006431000000000000f02b0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: mainMenu
-      m_OriginalName: mainMenu
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 11756
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 9}
     m_CreateAssetUtility:
@@ -665,9 +665,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 148c0000
-      m_LastClickedID: 35860
-      m_ExpandedIDs: 3ab0fbff84b0fbff64b1fbff1a31fdffa496fdff18a0fdff30a1fdff5ea1fdff20ebffffccf4ffffb8faffff86fbffffbc330000ca360000d6370000b64c0000bc4f0000567e00005c8100007a8100003e8a00006e8b0000148c0000
+      m_SelectedIDs: 
+      m_LastClickedID: 0
+      m_ExpandedIDs: d0f3fdff0af4fdff14f4fdff20f4fdffdaf4fdff14f5fdff1ef5fdff2af5fdffd2f5fdff0cf6fdff16f7fdff22f7fdff9631feff2834feffdc88feff5aa4feff26a7feff32f5feff961affff1220ffff8a20ffff4a21ffffcc2dffff142effff682effff802effff707dffff8efbffff6246000034490000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
