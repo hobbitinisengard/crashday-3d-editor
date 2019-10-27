@@ -28,7 +28,7 @@ public class Building : MonoBehaviour
 
   void Update()
   {
-    if (!savePanel.activeSelf)
+    if (!MouseInputUIBlocker.BlockedByUI)
     {
       if (Input.GetMouseButtonDown(1))
         cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
@@ -41,7 +41,7 @@ public class Building : MonoBehaviour
       if (Input.GetKeyDown(KeyCode.LeftAlt))
         SwitchToNULL();
 
-      if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space) && !FlyCamera.over_UI)
+      if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space))
       {
         if (!Highlight.over)
         {
@@ -99,14 +99,14 @@ public class Building : MonoBehaviour
           LMBclicked = false;
         nad_wczesniej = false;
       }
-      if (nad_wczesniej && FlyCamera.over_UI)
-      {//Delete currently showed element when moving cursor over menu
-        if (!LMBclicked)
-          DelLastPrefab();
-        else
-          LMBclicked = false;
-        nad_wczesniej = false;
-      }
+    }
+    else if (nad_wczesniej)
+    {//Delete currently showed element when moving cursor over menu
+      if (!LMBclicked)
+        DelLastPrefab();
+      else
+        LMBclicked = false;
+      nad_wczesniej = false;
     }
   }
   /// <summary>

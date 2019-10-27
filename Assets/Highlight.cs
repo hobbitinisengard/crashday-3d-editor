@@ -17,6 +17,7 @@ public class Highlight : MonoBehaviour
 
   void Update()
   {
+
     Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
     pos = get_valid_init_vector(r);
     if (pos.x == -1)
@@ -28,7 +29,9 @@ public class Highlight : MonoBehaviour
       t.x = 4 * Mathf.FloorToInt(pos.x / 4f); //Zwraca lewy dolny róg bieżącej trawki
       t.z = 4 * Mathf.FloorToInt(pos.z / 4f);
       over = true;
+
     }
+
   }
 
   //Returns position of map's vertex that is closest to pointer

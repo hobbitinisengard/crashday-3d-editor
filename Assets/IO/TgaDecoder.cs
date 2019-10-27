@@ -9,7 +9,8 @@ public static class TgaDecoder
   {
     if (!File.Exists(fileName))
     {
-      return new Texture2D(64, 64);
+      //return new Texture2D(64, 64);
+      return Resources.Load<Texture2D>("flag");
     }
       
     using (Bitmap bitmap = FromFile(fileName))

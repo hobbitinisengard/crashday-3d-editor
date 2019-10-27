@@ -107,7 +107,7 @@ public class Loader : MonoBehaviour
       GameObject NewTile = Instantiate(Tile1x1Template, TilesetContainer.transform.Find(TileKV.Value.TilesetName.ToString()).GetComponent<ScrollRect>().content);
       NewTile.name = TileKV.Key;
       NewTile.transform.GetChild(0).name = TileKV.Key;
-      NewTile.transform.GetChild(0).GetComponent<Image>().sprite = Sprite.Create(TileKV.Value.Icon, new Rect(Vector2.zero, new Vector2(64, 64)), Vector2.zero);
+      NewTile.transform.GetChild(0).GetComponent<Image>().sprite = Sprite.Create(TileKV.Value.Icon, new Rect(Vector2.zero, new Vector2(TileKV.Value.Icon.width, TileKV.Value.Icon.height)), Vector2.zero);
       NewTile.transform.GetChild(0).localScale = new Vector3(0.92f, 0.92f, 1);
       NewTile.AddComponent<ShowTileName>();
       NewTile.SetActive(true);

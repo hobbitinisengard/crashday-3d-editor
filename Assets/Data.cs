@@ -25,6 +25,7 @@ public static class Data
   public static string[] AllowedBushes { get; } = new []{"bush","rosebush","shrub","smltree","treetop","treetop2","treetop3","treetop4"};
   public static string DefaultTileset { get; set; } = "Default";
 
+
   /// <summary>
   /// Local coordinates of copied vertices. Put here to live when switching form-build tabs
   /// </summary>

@@ -5,7 +5,7 @@ public class FlyCamera : MonoBehaviour
 {
   [DllImport("user32.dll")]
   static extern bool SetCursorPos(int X, int Y);
-  public static bool over_UI = false;
+  bool over_UI = false;
   public float mainSpeed;// = 25; //regular speed
   public float shiftAdd;// = 50; //multiplied by how long shift is held.  Basically running
   public float maxShift;// = 100 //Maximum speed when holdin gshift

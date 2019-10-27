@@ -41,7 +41,7 @@ public class EditorMenu : MonoBehaviour
   {
     upperPanel_t_version.text = Data.VERSION;
     floor1 = Resources.Load<Material>("floor1");
-    if(Data.MissingTilesNames.Count > 0)
+    if (Data.MissingTilesNames.Count > 0)
     {
       MissingTilesPanel.SetActive(true);
       MissingTilesPanel_content.GetComponent<Text>().text = string.Join("\n", Data.MissingTilesNames);
@@ -52,7 +52,7 @@ public class EditorMenu : MonoBehaviour
     formToBuildButton.interactable = (formPANEL.activeSelf && !Terraining.isSelecting);
     if (Input.GetKeyDown(KeyCode.F5))
     {
-      save.SetActive(!save.activeSelf);
+      ToggleSaveMenu(); 
     }
     if (!save.activeSelf)
     {
@@ -77,9 +77,13 @@ public class EditorMenu : MonoBehaviour
       }
     }
   }
+  public void ToggleSaveMenu()
+  {
+    save.SetActive(!save.activeSelf);
+  }
   private void Toggle_floor1Shader(Shader ForceShader = null)
   {
-    if(ForceShader != null)
+    if (ForceShader != null)
     {
       floor1.shader = ForceShader;
       return;
@@ -214,16 +218,5 @@ public class EditorMenu : MonoBehaviour
     Data.TRACK.FieldFiles.Add(name);
     Data.TRACK.FieldFilesNumber++;
     return (ushort)(Data.TRACK.FieldFilesNumber - 1);
-  }
-
-  public void Toggle_saveMenu()
-  {
-    if (!formPANEL.activeSelf)
-    {
-      if (save.activeSelf)
-        save.SetActive(false);
-      else
-        save.SetActive(true);
-    }
   }
 }

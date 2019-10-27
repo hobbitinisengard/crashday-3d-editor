@@ -36,14 +36,15 @@ public class Terraining : MonoBehaviour
   public Toggle Connect;
   public Text HelperInputField; // Text for setting height by numpad
   public Text SelectionRotation; // Helper text for showing current rotation
+  int index = 0; //Indexy do meshow dla vertexa
+  float slider_realheight;
   private int SelectionRotationVal = 0;
   public static GameObject indicator;
   public static List<GameObject> znaczniki = new List<GameObject>();
   public static List<GameObject> surroundings = new List<GameObject>();
   public static int rayHeight = Data.maxHeight - Data.minHeight + 5;
-  int index = 0; //Indexy do meshow dla vertexa
   public static Vector3Int max_verts_visible_dim = new Vector3Int(60, 0, 60); // Vector3 of visible vertices in second form mode
-  float slider_realheight;
+
   /// <summary>
   /// Currently selected tile in terraining mode
   /// </summary>
@@ -55,7 +56,7 @@ public class Terraining : MonoBehaviour
   bool waiting4LD = false; //After selecting shape, state of waiting for bottom-left vertex
   bool waiting4LDpassed = false; // state of execution of shape after waiting for bottom-left vertex
   bool is_entering_keypad_value = false; // used in numericenter();
-  int menucontrol = 1; // 0=do nothing 1=firstFormingMode 2=second forming mode
+  int menucontrol = 1; // 1=firstFormingMode 2=second forming mode
   string last_form_button;
   Vector3Int LD;
   float LDH; // auxiliary value for height of bottom-left vertex
@@ -80,55 +81,61 @@ public class Terraining : MonoBehaviour
     InverseButton.onClick.AddListener(InverseSelection);
     state_help_text.text = "Manual forming..";
   }
-
   void Update()
   {
-    if (!savePanel.activeSelf)
+
+    UndoKeyWorks();
+    ManageCopyPasteVertices();
+    Numericenter();
+    mousewheelcheck();
+    SetFormingMode();
+    Ctrl_key_works();
+    istilemanip_state(); //selecting vertices. (PPM disables it)
+    waiting4LD_state(); //  to get bottom-left vertex
+    selectShape();
+    menucontrol = Control();
+    if (menucontrol == 1)
     {
-      ManageCopyPasteVertices();
-      Numericenter();
-      mousewheelcheck();
-      SetFormingMode();
-      Ctrl_key_works();
-      istilemanip_state(); //selecting vertices. (PPM disables it)
-      waiting4LD_state(); //  to get bottom-left vertex
-      selectShape();
-      menucontrol = Control();
-      if (menucontrol == 1)
+      if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
       {
-        if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
+        if (Input.GetMouseButtonUp(0))
+          UndoBuffer.ApplyOperation();
+        if (!MouseInputUIBlocker.BlockedByUI)
         {
-          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0) && index == 0)
-            Single_vertex_manipulation(); // single-action :)
-          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0) && index == 0)
-            Single_vertex_manipulation(); //auto-fire >:)
+          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+            Single_vertex_manipulation(); // single-action
+          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+            Single_vertex_manipulation(); //auto-fire
           else if (Input.GetMouseButtonDown(1) && Highlight.over)
             Make_elevation();
-          if (Input.GetKeyDown(KeyCode.Escape))
-          {//ESC toggles off Make_Elevation()
-            index = 0;
-            if (indicator != null)
-              Destroy(indicator);
-          }
         }
-      }
-      else if (menucontrol == 2)
-      {
-        // form Menu
-        if (indicator != null)
-        {
-          Destroy(indicator);
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {//ESC toggles off Make_Elevation()
           index = 0;
-        }
-        if (Input.GetMouseButtonDown(0))
-        {
-          HandleVertexBoxes(Input.GetKey(KeyCode.Q));
+          if (indicator != null)
+            Destroy(indicator);
         }
       }
     }
-
+    else if (menucontrol == 2)
+    {
+      // form Menu
+      if (indicator != null)
+      {
+        Destroy(indicator);
+        index = 0;
+      }
+      if (!MouseInputUIBlocker.BlockedByUI && Input.GetMouseButtonDown(0))
+      {
+        HandleVertexBoxes(Input.GetKey(KeyCode.Q));
+      }
+    }
   }
-
+  private void UndoKeyWorks()
+  {
+    if (Input.GetKeyUp(KeyCode.Z))
+      UndoBuffer.PasteUndoZnaczniki();
+  }
   private void Hide_text_helper()
   {
     slider.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
@@ -169,7 +176,7 @@ public class Terraining : MonoBehaviour
         slider.value = float.Parse(HelperInputField.text);
         Hide_text_helper();
       }
-      catch 
+      catch
       {
         slider.value = 0f;
         Hide_text_helper();
@@ -333,7 +340,7 @@ public class Terraining : MonoBehaviour
         else if (last_form_button == "copy")
           CopySelectionToClipboard();
         else
-          ApplyFanceShape();
+          ApplyFancyShape();
 
         waiting4LDpassed = false;
         last_form_button = null;
@@ -397,18 +404,13 @@ public class Terraining : MonoBehaviour
     CopyText.GetComponent<Text>().text = "Inversed.";
     Invoke("RefreshCopyText", 1);
   }
-  /// <summary>
-  /// used to change text after certain time with Invoke() method
-  /// </summary>
-  public void RefreshCopyText()
-  {
-    CopyText.GetComponent<Text>().text = SelectionRotationVal.ToString();
-  }
-  public void PasteSelectionOntoTerrain()
+
+  private void PasteSelectionOntoTerrain()
   {
     if (Data.CopyClipboard.Count == 0)
       return;
 
+    UndoBuffer.AddOperation(Data.CopyClipboard);
     //Indexes of vertices for UpdateMapColliders()
     List<int> indexes = new List<int>();
 
@@ -444,7 +446,7 @@ public class Terraining : MonoBehaviour
     Building.UpdateTiles(to_update);
   }
 
-  void waiting4LD_state()
+  private void waiting4LD_state()
   {
     RaycastHit hit;
     if (waiting4LD && !waiting4LDpassed)
@@ -486,31 +488,31 @@ public class Terraining : MonoBehaviour
     }
     if (Input.GetKey(KeyCode.LeftShift))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < Data.maxHeight)
       {
         slider.value += 10;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > Data.minHeight)
       {
         slider.value -= 10;
       }
     }
     else if (Input.GetKey(KeyCode.LeftAlt))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < Data.maxHeight)
       {
         slider.value += 0.25f;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > Data.minHeight)
       {
         slider.value -= 0.25f;
       }
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < 2000)
+    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && slider.value < Data.maxHeight)
     {
       slider.value += 1;
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > -2000)
+    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && slider.value > Data.minHeight)
     {
       slider.value -= 1;
     }
@@ -544,6 +546,7 @@ public class Terraining : MonoBehaviour
         {
           Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
           int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
+          UndoBuffer.AddZnacznik(Loader.IndexToPos(index));
           indexes.Add(index);
           if (KeepShape.isOn)
             Loader.current_heights[index] += elevateby;
@@ -554,6 +557,7 @@ public class Terraining : MonoBehaviour
           Loader.former_heights[index] = Loader.current_heights[index];
         }
       }
+      UndoBuffer.ApplyOperation();
       UpdateMapColliders(indexes);
 
       if (current != null)
@@ -568,32 +572,9 @@ public class Terraining : MonoBehaviour
     last_form_button = "";
   }
   /// <summary>
-  /// Returns list of red znaczniki(tags)
-  /// </summary>
-  /// <returns></returns>
-  private List<Vector3> GetMarkedZnaczniki()
-  {
-    List<Vector3> marked = new List<Vector3>();
-    foreach (var z in znaczniki)
-    {
-      if (z.name == "on")
-        marked.Add(new Vector3(z.transform.position.x, 0, z.transform.position.z));
-    }
-    return marked;
-  }
-
-  private bool IsThisZnacznikMarked(Vector3 z_pos)
-  {
-    RaycastHit hit;
-    z_pos.y = Data.maxHeight;
-    if (Physics.SphereCast(z_pos, 0.1f, Vector3.down, out hit, rayHeight, 1 << 11) && hit.transform.name == "on")
-      return true;
-    return false;
-  }
-  /// <summary>
   /// Searches for znacznik in given pos. If found znacznik isn't marked, f. marks it and returns it.
   /// </summary>
-  private GameObject MarkAndReturnZnacznik(Vector3 z_pos)
+  public static GameObject MarkAndReturnZnacznik(Vector3 z_pos)
   {
     RaycastHit hit;
     z_pos.y = Data.maxHeight;
@@ -604,56 +585,11 @@ public class Terraining : MonoBehaviour
       else
       {
         hit.transform.name = "on";
-        hit.transform.GetComponent<MeshRenderer>().material = red;
+        hit.transform.GetComponent<MeshRenderer>().material = Resources.Load<Material>("red");
         return hit.transform.gameObject;
       }
     }
     return null;
-  }
-  
-  /// <summary>
-  /// Returns most outthrust to bottom-left highlighted vertex of selection
-  /// </summary>
-  private Vector3Int Get_LD()
-  {
-    foreach (var znacznik in znaczniki)
-    {
-      if (znacznik.name == "on")
-        return Vector3Int.RoundToInt(znacznik.transform.position);
-    }
-    return new Vector3Int();
-  }
-  /// <summary>
-  /// Used for dynamic for loops
-  /// </summary>
-  /// <param name="i"></param>
-  /// <param name="condition"></param>
-  private void Incdec(ref int i, bool condition)
-  {
-    if (condition)
-      i++;
-    else
-      i--;
-  }
-  private DuVecInt GetDimensionsOfZnaczniki(ref List<GameObject> znaczniki)
-  {
-    int minx = int.MaxValue, maxx = 0, minz = int.MaxValue, maxz = 0;
-    foreach (GameObject znacznik in znaczniki)
-    {
-      if (znacznik.name == "on")
-      {
-        Vector3Int pos = Vector3Int.RoundToInt(znacznik.transform.position);
-        if (minx > pos.x)
-          minx = pos.x;
-        if (minz > pos.z)
-          minz = pos.z;
-        if (maxx < pos.x)
-          maxx = pos.x;
-        if (maxz < pos.z)
-          maxz = pos.z;
-      }
-    }
-    return new DuVecInt(new Vector2Int(minx, minz), new Vector2Int(maxx - minx + 1, maxz - minz + 1));
   }
   /// <summary>
   /// Returns x++ if low < high; else returns x--
@@ -700,45 +636,6 @@ public class Terraining : MonoBehaviour
           Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
         else
           Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
-        {
-          //bool traf = Physics.Raycast(new Vector3(LD.x, Terenowanie.Data.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
-          //if (traf && hit.transform.gameObject.name == "on")
-          //{
-          //    //Get outlying extreme position
-          //    RaycastHit[] verts = Physics.BoxCastAll(hit.transform.position, new Vector3(1, rayHeight, 0.4f), going == "left" ? Vector3.left : Vector3.right, Quaternion.identity, Mathf.Infinity, 1 << 11);
-          //    for (int i = verts.Length - 1; i > 0; i--)
-          //    {
-          //        if (verts[i].transform.name == "on")
-          //        {
-          //            Extremes[Extremes.Count - 1].y2 = verts[i].transform.position.y;
-          //            break;
-          //        }
-          //    }
-          //}
-          //else
-          //{
-          //    bool foundLine = false;
-          //    for (int x = LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x)) // going Z, (X loop)
-          //    {
-          //        //Check for any markups in this Z line
-          //        traf = Physics.Raycast(new Vector3(x, hit.transform.position.y, z), going == "right" ? Vector3.back : Vector3.forward, out hit, Terenowanie.rayHeight, 1 << 11);
-          //        if (traf)
-          //        {
-          //            LD.x = x;
-          //            z = (int)hit.transform.position.z;
-          //            if (hit.transform.gameObject.name == "on")
-          //            {
-          //                z = (int)Go2High(PG.z, LD.z, ref z);
-          //                foundLine = true;
-          //                break;
-          //            }
-          //        }
-          //    }
-          //    if (!foundLine)
-          //        break;
-          //}\
-        }
-
       }
     }
     else
@@ -763,44 +660,6 @@ public class Terraining : MonoBehaviour
           Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
         else
           Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
-        {
-          //bool traf = Physics.Raycast(new Vector3(x, Terenowanie.Data.maxHeight + 1, LD.z), Vector3.down, out hit, Terenowanie.rayHeight, 1 << 11);
-          //if (traf && hit.transform.gameObject.name == "on")
-          //{
-          //    //Add base position vertex to list
-          //    Extremes.Add(new DuVec3(x, hit.transform.position.y, -1));
-
-          //    // Get the most outlying marked vertex in given 'line'
-          //    RaycastHit[] verts = Physics.RaycastAll(hit.transform.position, going == "forward" ? Vector3.forward : Vector3.back, Terenowanie.rayHeight, 1 << 11);
-          //    for (int i = verts.Length - 1; i > 0; i--)
-          //    { 
-          //        if (verts[i].transform.name == "on")
-          //        {
-          //            Extremes[Extremes.Count - 1].y2 = verts[i].transform.position.y;
-          //            break;
-          //        }
-          //    }
-          //} else
-          //{
-          //    bool foundLine = false;
-          //    for(int z=LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z)) // going X, (Z loop)
-          //    {
-          //        traf = Physics.Raycast(new Vector3(x, hit.transform.position.y, z), going == "forward" ? Vector3.right : Vector3.left, out hit, Terenowanie.rayHeight, 1 << 11);
-          //        if (traf)
-          //        {
-          //            LD.z = z;
-
-          //            x = (int)hit.transform.position.x;
-          //            x = (int)Go2High(PG.x, LD.x, ref x);
-
-          //            foundLine = true;
-          //            break;
-          //        }
-          //    }
-          //    if (!foundLine)
-          //        break;
-          //}\
-        }
       }
     }
     return Extremes;
@@ -808,7 +667,7 @@ public class Terraining : MonoBehaviour
   /// <summary>
   /// Handles placing more complicated shapes.
   /// </summary>
-  void ApplyFanceShape()
+  void ApplyFancyShape()
   {
     RaycastHit hit;
 
@@ -816,10 +675,9 @@ public class Terraining : MonoBehaviour
     if (last_form_button == "flatter")
     {
       if (current == null || !IsFlatter(current.name))
-      return;
+        return;
     }
     surroundings = Building.Get_surrounding_tiles(null, znaczniki);
-    int index = 0;
     if (waiting4LDpassed)
     {
       //We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
@@ -849,6 +707,7 @@ public class Terraining : MonoBehaviour
               }
               bool traf = Physics.Raycast(new Vector3(x, Data.maxHeight + 1, z), Vector3.down, out hit, rayHeight, 1 << 11);
               index = x + 4 * z * Data.TRACK.Width + z;
+              UndoBuffer.AddZnacznik(Loader.IndexToPos(index));
               Vector3 vertpos = Loader.IndexToPos(index);
               if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
               {
@@ -901,6 +760,7 @@ public class Terraining : MonoBehaviour
               //Debug.DrawLine(new Vector3(x, Terenowanie.Data.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
               bool traf = Physics.Raycast(new Vector3(x, Data.maxHeight + 1, z), Vector3.down, out hit, rayHeight, 1 << 11);
               index = x + 4 * z * Data.TRACK.Width + z;
+              UndoBuffer.AddZnacznik(Loader.IndexToPos(index));
               Vector3 vertpos = Loader.IndexToPos(index);
               if (traf && hit.transform.gameObject.name == "on" && IsWithinMapBounds(vertpos))
               {
@@ -938,8 +798,8 @@ public class Terraining : MonoBehaviour
         Building.UpdateTiles(new List<GameObject> { current });
       Building.UpdateTiles(surroundings);
       surroundings.Clear();
+      UndoBuffer.ApplyOperation();
     }
-
   }
 
   private bool IsFlatter(string Name)
@@ -947,11 +807,11 @@ public class Terraining : MonoBehaviour
     return TileManager.TileListInfo[Name].FlatterPoints.Length != 0 ? true : false;
   }
 
-  bool IsWithinMapBounds(Vector3 v)
+  public static bool IsWithinMapBounds(Vector3 v)
   {
     return (v.x > 0 && v.x < 4 * Data.TRACK.Width && v.z > 0 && v.z < 4 * Data.TRACK.Height) ? true : false;
   }
-  bool IsWithinMapBounds(int x, int z)
+  public static bool IsWithinMapBounds(int x, int z)
   {
     return (x > 0 && x < 4 * Data.TRACK.Width && z > 0 && z < 4 * Data.TRACK.Height) ? true : false;
   }
@@ -1176,7 +1036,7 @@ public class Terraining : MonoBehaviour
   {
     if (index == 0)
     {
-      //Ustal początkową pozycję i ustaw tam znacznik
+      // Get initial position and set znacznik there
       if (IsWithinMapBounds(Highlight.pos))
       {
         index = Highlight.pos.x + 4 * Data.TRACK.Width * Highlight.pos.z + Highlight.pos.z;
@@ -1188,7 +1048,7 @@ public class Terraining : MonoBehaviour
     }
     else
     {
-      //Pozycja początkowa ustalona.
+      // Time to get second position
       if (IsWithinMapBounds(Highlight.pos))
       {
         int index2 = Highlight.pos.x + 4 * Data.TRACK.Width * Highlight.pos.z + Highlight.pos.z;
@@ -1202,6 +1062,7 @@ public class Terraining : MonoBehaviour
             for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
             {
               int idx = x + 4 * z * Data.TRACK.Width + z;
+              UndoBuffer.AddZnacznik(Loader.IndexToPos(idx));
               Loader.former_heights[idx] = SliderValue2RealHeight(slider.value);
               Loader.current_heights[idx] = Loader.former_heights[idx];
               indexes.Add(idx);
@@ -1218,23 +1079,14 @@ public class Terraining : MonoBehaviour
           to_update.Add(hit.transform.gameObject);
         }
         Building.UpdateTiles(to_update);
+        UndoBuffer.ApplyOperation();
       }
     }
-  }
-  static float GetLowestRMCPoint(GameObject rmc_o)
-  {
-    float to_return = Data.maxHeight + 1;
-    foreach (Vector3 vert in rmc_o.GetComponent<MeshCollider>().sharedMesh.vertices)
-    {
-      if (vert.y < to_return)
-        to_return = vert.y;
-    }
-    return to_return;
   }
   void Ctrl_key_works()
   {
 
-    if (Input.GetKey(KeyCode.LeftControl) && Highlight.over && !FlyCamera.over_UI && !Input.GetKey(KeyCode.LeftAlt))
+    if (Input.GetKey(KeyCode.LeftControl) && Highlight.over && !Input.GetKey(KeyCode.LeftAlt))
     {
       if (is_entering_keypad_value)
         Hide_text_helper();
@@ -1247,18 +1099,21 @@ public class Terraining : MonoBehaviour
   /// <summary>
   /// Handles quick sculpting mode
   /// </summary>
-  void Single_vertex_manipulation()
+  void Single_vertex_manipulation(bool SaveUndo = false)
   {
-    if (Highlight.over && !FlyCamera.over_UI && IsWithinMapBounds(Highlight.pos))
+    if (Highlight.over && IsWithinMapBounds(Highlight.pos))
     {
       Vector3Int v = Highlight.pos;
+      int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
+      UndoBuffer.AddZnacznik(Loader.IndexToPos(index));
+
       //Debug.DrawLine(new Vector3(v.x, Terenowanie.Data.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, 5);
       RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Data.maxHeight + 1, v.z), 0.5f, Vector3.down, rayHeight, 1 << 9);
       List<GameObject> to_update = new List<GameObject>();
       foreach (RaycastHit hit in hits)
         to_update.Add(hit.transform.gameObject);
-      int index = v.x + 4 * v.z * Data.TRACK.Width + v.z;
-      if (to_update.Count != 0)
+
+      if (to_update.Count > 0)
       {
         if (AreListedObjectsHaveRMCVertexHere(to_update, index))
         {
