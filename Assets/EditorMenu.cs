@@ -52,7 +52,7 @@ public class EditorMenu : MonoBehaviour
     formToBuildButton.interactable = (formPANEL.activeSelf && !Terraining.isSelecting);
     if (Input.GetKeyDown(KeyCode.F5))
     {
-      ToggleSaveMenu(); 
+      ToggleSaveMenu();
     }
     if (!save.activeSelf)
     {
@@ -168,15 +168,14 @@ public class EditorMenu : MonoBehaviour
         Data.TRACK.Heightmap[4 * Data.TRACK.Height - y][x] = Loader.current_heights[i] * 5;
       }
     }
-
+    Data.TRACK.FieldFiles.Clear();
+    Data.TRACK.FieldFiles.Add("field.cfl");
+    Data.TRACK.FieldFilesNumber = 1;
+    
     // Prepare track tiles arrays
     for (int z = 0; z < Data.TRACK.Height; z++)
       for (int x = 0; x < Data.TRACK.Width; x++)
         Data.TRACK.TrackTiles[z][x].Set(0, 0, 0, 0);
-
-    Data.TRACK.FieldFiles.Clear();
-    Data.TRACK.FieldFiles.Add("field.cfl");
-    Data.TRACK.FieldFilesNumber = 1;
 
     // Save tiles
     for (int z = 0; z < Data.TRACK.Height; z++)
@@ -191,6 +190,7 @@ public class EditorMenu : MonoBehaviour
           Vector2Int dim = TileManager.GetRealDims(Data.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
           if (inwersja == 1 && rotacja != 0)
             rotacja = (byte)(4 - rotacja);
+          //Debug.Log(Data.TilePlacementArray[z, x].Name + " dims=" + dim + " " + fieldId + " inv=" + inwersja + " rot=" + rotacja);
           //Base part
           Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, 0);
           //Left Bottom
@@ -204,6 +204,14 @@ public class EditorMenu : MonoBehaviour
             Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, 0);
         }
       }
+    }
+
+    if (Data.LoadMirrored)
+    {
+      Data.TRACK.DynamicObjectFiles.Clear();
+      Data.TRACK.DynamicObjectFilesNumber = 0;
+      Data.TRACK.DynamicObjects.Clear();
+      Data.TRACK.DynamicObjectsNumber = 0;
     }
     MapParser.SaveMap(Data.TRACK, path + "\\" + Data.UpperBarTrackName + ".trk");
   }

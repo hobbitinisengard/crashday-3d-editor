@@ -99,6 +99,7 @@ public class Building : MonoBehaviour
           LMBclicked = false;
         nad_wczesniej = false;
       }
+
     }
     else if (nad_wczesniej)
     {//Delete currently showed element when moving cursor over menu
@@ -158,7 +159,7 @@ public class Building : MonoBehaviour
 
       if (IsCheckpoint(Data.TilePlacementArray[pos.z, pos.x].Name))
       {
-        Data.TRACK.Checkpoints.Remove((ushort)(pos.x * (SliderHeight.val - 1 - pos.y)));
+        Data.TRACK.Checkpoints.Remove((ushort)(pos.x * (Data.TRACK.Height - 1 - pos.y)));
         Data.TRACK.CheckpointsNumber--;
       }
 
@@ -288,10 +289,12 @@ public class Building : MonoBehaviour
 
   static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int p)
   {
+    if (rotacja == 360)
+      rotacja = 0;
     Data.TilePlacementArray[p.z, p.x].Inversion = inwersja;
     Data.TilePlacementArray[p.z, p.x].Name = nazwa;
     Data.TilePlacementArray[p.z, p.x].Rotation = rotacja;
-    if (TileManager.TileListInfo[nazwa].IsCheckpoint && !Data.TRACK.Checkpoints.Contains((ushort)(p.x + (Data.TRACK.Height - 1 - p.z) * Data.TRACK.Width)))
+    if (TileManager.TileListInfo[nazwa].IsCheckpoint && !Data.Isloading && !Data.TRACK.Checkpoints.Contains((ushort)(p.x + (Data.TRACK.Height - 1 - p.z) * Data.TRACK.Width)))
     {
       Data.TRACK.Checkpoints.Add((ushort)(p.x + (Data.TRACK.Height - 1 - p.z) * Data.TRACK.Width));
       Data.TRACK.CheckpointsNumber++;

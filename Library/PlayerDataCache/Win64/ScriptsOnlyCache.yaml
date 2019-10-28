@@ -8,13 +8,17 @@ ScriptsOnlyBuild:
     - Highlight
     - Loader
     - MainMenu
+    - MouseInputUIBlocker
     - SliderCase
     - SliderHeight
     - SliderWidth
     - Terraining
     - VertexHeight
+    UnityEditor.TestRunner.dll:
+    - UnityEditor.TestTools.TestRunner.TestListCacheData
     UnityEngine.UI.dll:
     - UnityEngine.EventSystems.EventSystem
+    - UnityEngine.EventSystems.EventTrigger
     - UnityEngine.EventSystems.StandaloneInputModule
     - UnityEngine.UI.Button
     - UnityEngine.UI.CanvasScaler
@@ -30,6 +34,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Text
     - UnityEngine.UI.Toggle
     com.unity.multiplayer-hlapi.Runtime.dll:
+    - UnityEngine.Networking.NetworkCallbacks
     - UnityEngine.Networking.NetworkIdentity
   sceneClasses:
     Assets/scenes/mainEditor.unity:
@@ -67,6 +72,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 9456}
     - Class: 114
       Script: {instanceID: 9460}
+    - Class: 114
+      Script: {instanceID: 9462}
     - Class: 114
       Script: {instanceID: 9466}
     - Class: 114
@@ -106,15 +113,17 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9934}
     - Class: 114
-      Script: {instanceID: 10254}
+      Script: {instanceID: 10026}
     - Class: 114
-      Script: {instanceID: 10328}
+      Script: {instanceID: 10256}
     - Class: 114
-      Script: {instanceID: 10582}
+      Script: {instanceID: 10330}
     - Class: 114
-      Script: {instanceID: 10670}
+      Script: {instanceID: 10584}
     - Class: 114
-      Script: {instanceID: 10880}
+      Script: {instanceID: 10674}
+    - Class: 114
+      Script: {instanceID: 10884}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -221,13 +230,13 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9746}
     - Class: 114
-      Script: {instanceID: 10152}
+      Script: {instanceID: 10154}
     - Class: 114
-      Script: {instanceID: 10400}
+      Script: {instanceID: 10402}
     - Class: 114
-      Script: {instanceID: 10456}
+      Script: {instanceID: 10458}
     - Class: 114
-      Script: {instanceID: 10766}
+      Script: {instanceID: 10770}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -517,18 +526,6 @@ ScriptsOnlyBuild:
     assemblyName: com.unity.multiplayer-hlapi.Runtime.dll
     namespaceName: UnityEngine.Networking
     className: NetworkTransform
-  - hash:
-      serializedVersion: 2
-      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
-    assemblyName: UnityEngine.Advertisements.dll
-    namespaceName: UnityEngine.Advertisements
-    className: CallbackExecutor
-  - hash:
-      serializedVersion: 2
-      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
-    assemblyName: UnityEngine.Advertisements.dll
-    namespaceName: UnityEngine.Advertisements.Editor
-    className: Placeholder
   - hash:
       serializedVersion: 2
       Hash: cf9f5cf2c3145a37ac07f00e50e460f9
@@ -861,6 +858,12 @@ ScriptsOnlyBuild:
     className: TMP_Asset
   - hash:
       serializedVersion: 2
+      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: MouseInputUIBlocker
+  - hash:
+      serializedVersion: 2
       Hash: c3d3430df9e3ea95e3e3d587961390fb
     assemblyName: Unity.Timeline.dll
     namespaceName: UnityEngine.Timeline
@@ -1133,4 +1136,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Kuba/Desktop/23f/3D Editor.exe
+  playerPath: C:/Users/Kuba/Desktop/v23/3D Editor 2.3.exe

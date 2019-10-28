@@ -9,12 +9,6 @@ public static class Data
   /// <summary>Maximum tile limit</summary>
   public readonly static int TrackTileLimit = 8000;
   internal static readonly string CheckpointString = "Checkpoints";
-
-  /// <summary>
-  /// Array of tiles that have bushes on them (obsolete)
-  /// </summary>
-  //public static string[] bushes = new string[] { "tree1", "tree2", "tree3", "tree4", "tree5", "streetl", "alley", "cralley", "dirtalley", "zebracross", "curveb2", "plot1", "plot2", "plot3" };
-
   public static TrackSavable TRACK { get; set; }
   ///<summary> Is editor loading map? </summary>
   public static bool Isloading { get; set; } = false;

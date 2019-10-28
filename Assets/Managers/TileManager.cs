@@ -150,7 +150,7 @@ public static class TileManager
 
       string modelName = cfl[2].Split('.')[0].ToLower();
       // field is just block of grass. It's listed in cfl file but isn't showed. Mica used this tile as CP (weird right?) so I had to take this into consideration
-      if ((modelName == "field" && mod_id == null) || modelName == "border1" || modelName == "border2")
+      if ((modelName == "field" && mod_id == null))
         continue;
       string[] size_str = Regex.Split(cfl[3], " ");
       Vector2Int size = new Vector2Int(int.Parse(size_str[0]), int.Parse(size_str[1]));

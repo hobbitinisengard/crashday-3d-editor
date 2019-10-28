@@ -40,7 +40,6 @@ public class Loader : MonoBehaviour
           //  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as empty grass fields (FieldId = 0)  
           if (Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x].FieldId < Data.TRACK.FieldFiles.Count && Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x].FieldId != 0)
           {
-            // assignment for clarity
             TrackTileSavable tile = Data.TRACK.TrackTiles[Data.TRACK.Height - 1 - z][x];
 
             // without .cfl suffix
@@ -63,9 +62,19 @@ public class Loader : MonoBehaviour
             Vector2Int dim = TileManager.GetRealDims(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
             if (!Data.LoadMirrored)
               Data.TilePlacementArray[z - dim.y + 1, x].Set(TileName, Rotation, Inversion);
-            else
-              Data.TilePlacementArray[z - dim.y + 1, Data.TRACK.Width - 1 - x - dim.x + 1].Set(TileName, 360 - Rotation, !Inversion);
+            else // inverse and rotate all elements except checkpoints
+              Data.TilePlacementArray[z - dim.y + 1, Data.TRACK.Width - 1 - x - dim.x + 1].Set(TileName, 360 - Rotation, TileManager.TileListInfo[TileName].IsCheckpoint ? false : !Inversion);
           }
+        }
+      }
+      if (Data.LoadMirrored)
+      { //swap checkpoints indexes
+        for(int i=0; i < Data.TRACK.Checkpoints.Count; i++)
+        {
+          Vector2 pos = TileIndexToPos(Data.TRACK.Checkpoints[i]);
+          //  assuming checkpoint is 1x1 tile
+          pos.Set(Data.TRACK.Width - 1 - pos.x, pos.y);
+          Data.TRACK.Checkpoints[i] = (ushort)TilePosToIndex(pos);
         }
       }
       InitializeHeightArrays(Data.TRACK.Height, Data.TRACK.Width);
@@ -205,6 +214,14 @@ public class Loader : MonoBehaviour
   public static int PosToIndex(Vector3 v)
   {
     return Mathf.RoundToInt(v.x + 4 * v.z * Data.TRACK.Width + v.z);
+  }
+  private static Vector2 TileIndexToPos(int index)
+  {
+    return new Vector2(index % Data.TRACK.Width, index / Data.TRACK.Width);
+  }
+  private static int TilePosToIndex(Vector2 v)
+  {
+    return Mathf.RoundToInt(v.x + v.y * Data.TRACK.Width);
   }
   //static GameObject CreatePlane(int pnx, int pny, Material feedmaterial)
   //{

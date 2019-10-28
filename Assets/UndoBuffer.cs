@@ -68,12 +68,11 @@ public static class UndoBuffer
           zn.transform.position = new Vector3(zn.transform.position.x, mrk.y, zn.transform.position.z);
 
         // Look for tiles lying here
-        {
-          RaycastHit tile;
-          pom.y = Data.maxHeight;
-          if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Data.maxHeight - Data.minHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
-            to_update.Add(tile.transform.gameObject);
-        }
+        pom.y = Data.maxHeight;
+        RaycastHit[] tile_raycasts = Physics.SphereCastAll(pom, 0.1f, Vector3.down, Data.maxHeight - Data.minHeight, 1 << 9);
+        GameObject[] tiles = tile_raycasts.Where(tile => !to_update.Contains(tile.transform.gameObject)).Select(tile => tile.transform.gameObject).ToArray();
+        to_update.AddRange(tiles);
+
       }
     }
     Terraining.UpdateMapColliders(indexes);

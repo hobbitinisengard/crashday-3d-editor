@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 public class DuVec3
@@ -254,13 +255,9 @@ public class Terraining : MonoBehaviour
     {
       Vector3Int v = Vector3Int.RoundToInt(Loader.IndexToPos(i));
       v.y = Data.maxHeight + 1;
-      RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, rayHeight, 1 << 8);
-      foreach (RaycastHit hit in hits)
-        if (!mcs.Contains(hit.transform.gameObject))
-        {
-          mcs.Add(hit.transform.gameObject);
-        }
-
+      RaycastHit[] tile_raycasts = Physics.SphereCastAll(v, 0.1f, Vector3.down, rayHeight, 1 << 8);
+      GameObject[] tiles = tile_raycasts.Where(tile => !mcs.Contains(tile.transform.gameObject)).Select(tile => tile.transform.gameObject).ToArray();
+      mcs.AddRange(tiles);
     }
     UpdateMapColliders(mcs, przywrocenie_terenu);
   }
@@ -269,10 +266,7 @@ public class Terraining : MonoBehaviour
     rmc_pos.y = Data.maxHeight + 1;
     RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, rayHeight, 1 << 8);
     List<GameObject> mcs = new List<GameObject>();
-    foreach (RaycastHit hit in hits)
-    {
-      mcs.Add(hit.transform.gameObject);
-    }
+    mcs.AddRange(hits.Select(hit => hit.transform.gameObject).ToArray());
     UpdateMapColliders(mcs, przywrocenie_terenu);
   }
 
@@ -435,10 +429,10 @@ public class Terraining : MonoBehaviour
 
         // Look for tiles lying here
         {
-          RaycastHit tile;
           pom.y = Data.maxHeight;
-          if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, rayHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
-            to_update.Add(tile.transform.gameObject);
+          RaycastHit[] tile_raycasts = Physics.SphereCastAll(pom, 0.1f, Vector3.down, rayHeight, 1 << 9);
+          GameObject[] tiles = tile_raycasts.Where(tile => !to_update.Contains(tile.transform.gameObject)).Select(tile=> tile.transform.gameObject).ToArray();
+          to_update.AddRange(tiles);
         }
       }
     }
@@ -1110,8 +1104,7 @@ public class Terraining : MonoBehaviour
       //Debug.DrawLine(new Vector3(v.x, Terenowanie.Data.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, 5);
       RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Data.maxHeight + 1, v.z), 0.5f, Vector3.down, rayHeight, 1 << 9);
       List<GameObject> to_update = new List<GameObject>();
-      foreach (RaycastHit hit in hits)
-        to_update.Add(hit.transform.gameObject);
+      to_update.AddRange(hits.Select(h => h.transform.gameObject).ToArray());
 
       if (to_update.Count > 0)
       {
