@@ -1090,10 +1090,10 @@ public class TextureAssign : EditorWindow
 						//Remove texture.
 						material.SetTexture(metallicTextureID, null);
 
-						//Set the metal slider.
+						//Set the metal HeightSlider.
 						material.SetFloat(metallicSliderID, metallicValue);
 
-						//Set the smoothness slider.
+						//Set the smoothness HeightSlider.
 						material.SetFloat(smoothnessSliderID, smoothnessValue);
 
 						material.DisableKeyword(metallicKeyword);
@@ -1127,7 +1127,7 @@ public class TextureAssign : EditorWindow
 						//Set the specular color.
 						material.SetColor(specularColorID, rgbaColor);
 
-						//Set the smoothness slider.
+						//Set the smoothness HeightSlider.
 						material.SetFloat(smoothnessSliderID, smoothnessValue);
 
 						material.DisableKeyword(specularKeyword);

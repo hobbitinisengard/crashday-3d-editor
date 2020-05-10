@@ -2,8 +2,9 @@
 using System.Linq;
 using UnityEngine;
 
-public static class UndoBuffer
+public class UndoBuffer : MonoBehaviour
 {
+
   /// <summary>
   /// Global coordinates of former vertices before last terrain operation
   /// </summary>
@@ -12,6 +13,17 @@ public static class UndoBuffer
   /// Clear buffer before next call of AddZnacznik
   /// </summary>
   private static bool Clear_buffer_before_next_add = false;
+
+  public static void AddZnacznik(int x, int z)
+  {
+    Vector3 mrk = new Vector3(x, 0, z);
+    if (Clear_buffer_before_next_add)
+    {
+      UndoZnaczniki.Clear();
+      Clear_buffer_before_next_add = false;
+    }
+    UndoZnaczniki.Add(mrk);
+  }
   /// <summary>
   /// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
   /// </summary>
@@ -31,7 +43,7 @@ public static class UndoBuffer
   /// <param name="Mrks"></param>
   public static void AddOperation(List<Vector3> Mrks)
   {
-    UndoZnaczniki = Mrks;
+    UndoZnaczniki = Mrks.ToList();
   }
   /// <summary>
   /// Signalizes that next call of AddZnacznik will belong to new operation
@@ -53,31 +65,33 @@ public static class UndoBuffer
     List<GameObject> to_update = new List<GameObject>();
     foreach (var mrk in UndoZnaczniki)
     {
-      if (Terraining.IsWithinMapBounds(mrk))
+      if (Service.IsWithinMapBounds(mrk))
       {
         // Update arrays of vertex heights
-        indexes.Add(Loader.PosToIndex(mrk));
-        Loader.current_heights[indexes[indexes.Count - 1]] = mrk.y;
-        Loader.former_heights[indexes[indexes.Count - 1]] = mrk.y;
+        indexes.Add(Service.PosToIndex(mrk));
+        Service.current_heights[indexes[indexes.Count - 1]] = mrk.y;
+        Service.former_heights[indexes[indexes.Count - 1]] = mrk.y;
 
         Vector3 pom = mrk;
 
         // Mark pasted vertices
-        GameObject zn = Terraining.MarkAndReturnZnacznik(pom);
+        GameObject zn = Service.MarkAndReturnZnacznik(pom);
         if (zn != null)
           zn.transform.position = new Vector3(zn.transform.position.x, mrk.y, zn.transform.position.z);
 
         // Look for tiles lying here
-        pom.y = Data.maxHeight;
-        RaycastHit[] tile_raycasts = Physics.SphereCastAll(pom, 0.1f, Vector3.down, Data.maxHeight - Data.minHeight, 1 << 9);
-        GameObject[] tiles = tile_raycasts.Where(tile => !to_update.Contains(tile.transform.gameObject)).Select(tile => tile.transform.gameObject).ToArray();
-        to_update.AddRange(tiles);
-
+        {
+          RaycastHit tile;
+          pom.y = Service.maxHeight;
+          if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.maxHeight - Service.minHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
+            to_update.Add(tile.transform.gameObject);
+        }
       }
     }
-    Terraining.UpdateMapColliders(indexes);
-    Building.UpdateTiles(to_update);
+    Service.UpdateMapColliders(indexes);
+    Build.UpdateTiles(to_update);
     UndoZnaczniki.Clear();
   }
+  
 }
 

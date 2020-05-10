@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public class MouseInputUIBlocker : MonoBehaviour
 {
   public static bool BlockedByUI;
+
   private EventTrigger eventTrigger;
 
   private void Start()
@@ -26,11 +27,11 @@ public class MouseInputUIBlocker : MonoBehaviour
     }
   }
 
-  public void EnterUI()
+  private void EnterUI()
   {
     BlockedByUI = true;
   }
-  public void ExitUI()
+  private void ExitUI()
   {
     BlockedByUI = false;
   }

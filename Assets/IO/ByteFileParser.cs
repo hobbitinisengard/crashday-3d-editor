@@ -65,7 +65,7 @@ public class ByteFileParser
 	public void WriteString(string str)
 	{
 		WriteFlag(str);
-		//Data.AddRange(Encoding.UTF8.GetBytes("\0"));
+		//Service.AddRange(Encoding.UTF8.GetBytes("\0"));
 		Data.Add(0);
 	}
 

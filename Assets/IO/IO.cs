@@ -7,7 +7,7 @@ public class IO
 {
   public static string GetCrashdayPath()
   {
-    string crashdayPath;
+    string crashdayPath = null;
 
     if (PlayerPrefs.HasKey("crashpath"))
     {
@@ -15,13 +15,21 @@ public class IO
       if (!Directory.Exists(crashdayPath))
       {
         crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
+        if (crashdayPath == null)
+          Application.Quit();
         PlayerPrefs.SetString("crashpath", crashdayPath);
       }
     }
     else
     {
-      crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
-      PlayerPrefs.SetString("crashpath", crashdayPath);
+      string[] data = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false);
+      if (data.Length == 0)
+        Application.Quit();
+      else
+      {
+        crashdayPath = data[0];
+        PlayerPrefs.SetString("crashpath", crashdayPath);
+      }
     }
 
     if (!File.Exists(crashdayPath + "/crashday.exe"))
@@ -33,6 +41,10 @@ public class IO
     return crashdayPath;
   }
 
+  public static void RemoveCrashdayPath()
+  {
+    PlayerPrefs.DeleteKey("crashpath");
+  }
   /// <summary>
   /// Remove a comment in a file and remove all trailing spaces
   /// </summary>

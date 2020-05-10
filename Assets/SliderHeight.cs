@@ -15,7 +15,7 @@ public class SliderHeight : MonoBehaviour
 
   public void UpdateHeight(float value)
   {
-    if (value * SliderWidth.val > Data.TrackTileLimit)
+    if (value * SliderWidth.val > Service.TrackTileLimit)
     {
       SliderWidth.trackWidth.color = Color.red;
       trackHeight.color = Color.red;
@@ -27,8 +27,8 @@ public class SliderHeight : MonoBehaviour
       trackHeight.color = orange;
       MainMenu.CanCreateTrack = true;
     }
-    //Debug.Log ("th" + value + "tw" + val);
     val = (int)value;
     trackHeight.text = value.ToString();
   }
+ 
 }

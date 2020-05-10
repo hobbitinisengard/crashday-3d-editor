@@ -1,7 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-//Handles slider in BUILD mode.
+//Handles HeightSlider in BUILD mode.
 //Tabs are added in Loader class
 public class SliderCase : MonoBehaviour
 {
@@ -9,7 +8,7 @@ public class SliderCase : MonoBehaviour
   public ScrollRect TabTemplate;
   public GameObject TileTemplate;
   public GameObject TilesetContainer;
-  private string Current_tileset = Data.CheckpointString;
+  private string Current_tileset = Service.CheckpointString;
   private string[] Tilesets;
   public void InitializeSlider(string[] tilesets)
   {

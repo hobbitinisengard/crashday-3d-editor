@@ -115,15 +115,15 @@ public static class TileManager
   {
     TextAsset Txt = Resources.Load("flatters") as TextAsset;
     string File = Txt.text;
-    string[] lines = Regex.Split(File, "\r\n");
+    string[] lines = Regex.Split(File, "\n");
     foreach (var line in lines)
     {
       string[] brkLine = Regex.Split(line, " ");
       string name = brkLine[0];
       float[] flatters = new float[brkLine.Length - 1];
       for (int i = 0; i < flatters.Length; i++)
-        flatters[i] = float.Parse(brkLine[i + 1]);
-
+        flatters[i] = float.Parse(brkLine[i + 1], System.Globalization.CultureInfo.InvariantCulture);
+        
       if (!TileListInfo.ContainsKey(name))
         TileListInfo.Add(name, new TileListEntry(flatters));
       else
@@ -141,16 +141,12 @@ public static class TileManager
     {
       string[] cfl = System.IO.File.ReadAllLines(File);
       string name = Path.GetFileNameWithoutExtension(File);
-      if (name == "mica_grass_cp")
-      {
-
-      }
       for (int j = 0; j < cfl.Length; j++)
         cfl[j] = IO.RemoveComment(cfl[j]);
 
       string modelName = cfl[2].Split('.')[0].ToLower();
       // field is just block of grass. It's listed in cfl file but isn't showed. Mica used this tile as CP (weird right?) so I had to take this into consideration
-      if ((modelName == "field" && mod_id == null))
+      if ((modelName == "field" && mod_id == null) || modelName == "border1" || modelName == "border2")
         continue;
       string[] size_str = Regex.Split(cfl[3], " ");
       Vector2Int size = new Vector2Int(int.Parse(size_str[0]), int.Parse(size_str[1]));
@@ -160,7 +156,6 @@ public static class TileManager
       string Restrictions = Regex.Replace(cfl[12 + offset], " ", "");
       // remove STOP characters
       Restrictions = Restrictions.Remove(Restrictions.Length - 4);
-
       string Vegetation_str = cfl[16 + offset];
 
       List<Vegetation> VegData = new List<Vegetation>();
@@ -172,13 +167,14 @@ public static class TileManager
           string VegName = cfl[19 + offset + 7 * j];
           VegName = VegName.Substring(0, VegName.IndexOf('.'));
           // don't load grass and small vegetation. We are interested only in big trees
-          if (!Data.AllowedBushes.Contains(VegName))
-            continue;
-          string[] xz = Regex.Split(cfl[21 + offset + 7 * j], " ");
-          float x = float.Parse(xz[0], System.Globalization.CultureInfo.InvariantCulture);
-          float z = float.Parse(xz[1], System.Globalization.CultureInfo.InvariantCulture);
-          string y = cfl[23 + offset + 7 * j];
-          VegData.Add(new Vegetation(VegName, x, z, y));
+          // TODO
+          //if (!Service.AllowedBushes.Contains(VegName))
+          //  continue;
+          //string[] xz = Regex.Split(cfl[21 + offset + 7 * j], " ");
+          //float x = float.Parse(xz[0], System.Globalization.CultureInfo.InvariantCulture);
+          //float z = float.Parse(xz[1], System.Globalization.CultureInfo.InvariantCulture);
+          //string y = cfl[23 + offset + 7 * j];
+          //VegData.Add(new Vegetation(VegName, x, z, y));
         }
       }
       string TexturePath = NavigateDirUp(Directory, 2) + "\\textures\\pictures\\tiles\\" + name + ".tga";
@@ -222,12 +218,12 @@ public static class TileManager
       if (!TileListInfo.ContainsKey(name))
       { // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
         TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texTga, VegData.ToArray(), mod_id));
-        TileListInfo[name].TilesetName = Data.DefaultTileset;
+        TileListInfo[name].TilesetName = Service.DefaultTilesetName;
       }
       else
         TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texTga, VegData.ToArray(), mod_id);
       if (IsCheckpoint)
-        TileListInfo[name].TilesetName = Data.CheckpointString;
+        TileListInfo[name].TilesetName = Service.CheckpointString;
     }
 
   }
@@ -259,7 +255,7 @@ public static class TileManager
     if (name == "$ID trkdata/editor/fields.cat CategorySet12")
       return "Nature";
     if (name == "$ID trkdata/editor/cps.cat CategorySet1")
-      return Data.CheckpointString;
+      return Service.CheckpointString;
 
     return name;
   }

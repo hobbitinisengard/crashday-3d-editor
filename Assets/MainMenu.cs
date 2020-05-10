@@ -18,8 +18,8 @@ public class MainMenu : MonoBehaviour
   public static bool CanCreateTrack = true;
   void Awake()
   {
-    Data.LoadMirrored = false;
-    Data.Isloading = false;
+    Service.LoadMirrored = false;
+    Service.Isloading = false;
     // if we running this for the first time
     if(TileManager.TileListInfo.Count == 0)
     {
@@ -84,7 +84,7 @@ public class MainMenu : MonoBehaviour
   }
   public void Toggle_mirror(GameObject checkmark)
   {
-    Data.LoadMirrored =checkmark.activeSelf;
+    Service.LoadMirrored =checkmark.activeSelf;
   }
   private void ChangeSceneToEditor()
   {
@@ -92,6 +92,36 @@ public class MainMenu : MonoBehaviour
     {
       SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
+  }
+  public void RemoveEntryAndContentFolder()
+  {
+    string contentpath = IO.GetCrashdayPath() + "\\data\\content\\";
+    try
+    {
+      Directory.Delete(contentpath, true);
+    }
+    catch
+    {}
+    IO.RemoveCrashdayPath();
+    QuitGame();
+  }
+  public static void DeleteDirectory(string target_dir)
+  {
+    string[] files = Directory.GetFiles(target_dir);
+    string[] dirs = Directory.GetDirectories(target_dir);
+
+    foreach (string file in files)
+    {
+      File.SetAttributes(file, FileAttributes.Normal);
+      File.Delete(file);
+    }
+
+    foreach (string dir in dirs)
+    {
+      DeleteDirectory(dir);
+    }
+
+    Directory.Delete(target_dir, false);
   }
   public void CreateNewTrack()
   {
@@ -112,12 +142,12 @@ public class MainMenu : MonoBehaviour
       string path = sourcepath[0];
       //Path can't have .trk suffix
       path = path.Substring(0, path.Length - 4);
-      Data.UpperBarTrackName = path.Substring(path.LastIndexOf('\\') + 1);
+      Service.UpperBarTrackName = path.Substring(path.LastIndexOf('\\') + 1);
       SaveTrackPath(path);
-      Data.TRACK = MapParser.ReadMap(path + ".trk");
+      Service.TRACK = MapParser.ReadMap(path + ".trk");
 
       //Set isLoading flag to true
-      Data.Isloading = true;
+      Service.Isloading = true;
       StartCoroutine("EnableLoadingScreen");
 
       ChangeSceneToEditor();
@@ -126,7 +156,7 @@ public class MainMenu : MonoBehaviour
 
   IEnumerator EnableLoadingScreen()
   {
-    LoadingScreen_text_logo.text = "3D Editor " + Data.VERSION;
+    LoadingScreen_text_logo.text = "3D Editor " + Service.VERSION;
     string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
     loadScreen.SetActive(true);
     loadScreen.transform.Find(nazwa).gameObject.SetActive(true);

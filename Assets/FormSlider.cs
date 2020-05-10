@@ -1,21 +1,31 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-
+public enum Mode { Manual, Shape, Profiles}
 public class FormSlider : MonoBehaviour
 {
-    public Slider slider;
-    public Text text;
+  public Slider slider;
+  public Text text;
 
-    void Update()
+  public void SwitchSliderTo(Mode mode)
+  {
+    if (mode == Mode.Manual)
     {
-        // When somebody pressed F
-        if (text.text == "Manual forming..")
-            slider.value = 1;
-        if (text.text == "Shape forming..")
-            slider.value = 2;
+      text.text = "Manual mode";
+      slider.value = 1;
     }
-    void OnValueChanged()
+    if (mode == Mode.Shape)
     {
-        Terraining.firstFormingMode = !Terraining.firstFormingMode;
+      text.text = "Shape mode";
+      slider.value = 2;
     }
+    if(mode == Mode.Profiles)
+    {
+      text.text = "Profiles mode";
+      slider.value = 3;
+    }
+  }
+  public void SwitchTextStatus(string Text)
+  {
+    text.text = Text;
+  }
 }

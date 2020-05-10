@@ -2,6 +2,8 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
+    <CscToolPath>C:\Program Files\Unity\Hub\Editor\2019.1.14f1\Editor\Data\Tools\RoslynScripts</CscToolPath>
+    <CscToolExe>unity_csc.bat</CscToolExe>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -52,9 +54,6 @@
     <UnityVersion>2019.1.14f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2019.1.14f1\Editor\Data\Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
@@ -63,13 +62,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Building.cs" />
+    <Compile Include="Assets\ArealMode.cs" />
+    <Compile Include="Assets\Build.cs" />
+    <Compile Include="Assets\CopyPaste.cs" />
     <Compile Include="Assets\Creatermcpos.cs" />
-    <Compile Include="Assets\Data.cs" />
     <Compile Include="Assets\DynamicObjectSavable.cs" />
     <Compile Include="Assets\EditorMenu.cs" />
     <Compile Include="Assets\FlyCamera.cs" />
+    <Compile Include="Assets\Form.cs" />
     <Compile Include="Assets\FormSlider.cs" />
+    <Compile Include="Assets\HeightSlider.cs" />
     <Compile Include="Assets\Highlight.cs" />
     <Compile Include="Assets\IO\ByteFileParser.cs" />
     <Compile Include="Assets\IO\IO.cs" />
@@ -85,28 +87,34 @@
     <Compile Include="Assets\Managers\ZipManager.cs" />
     <Compile Include="Assets\MouseInputUIBlocker.cs" />
     <Compile Include="Assets\P3DModel.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\GeneratePathExample.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\PathFollower.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\PathPlacer.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\PathSceneTool.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\PathSpawner.cs" />
+    <Compile Include="Assets\PathCreator\Examples\Scripts\RoadMeshCreator.cs" />
+    <Compile Include="Assets\ProfileCreator.cs" />
+    <Compile Include="Assets\RadiusSlider.cs" />
+    <Compile Include="Assets\Service.cs" />
+    <Compile Include="Assets\ShapeMenu.cs" />
     <Compile Include="Assets\ShowTileName.cs" />
+    <Compile Include="Assets\SingleMode.cs" />
     <Compile Include="Assets\SliderCase.cs" />
     <Compile Include="Assets\SliderHeight.cs" />
     <Compile Include="Assets\SliderWidth.cs" />
+    <Compile Include="Assets\SplineTestRoom.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\IStandaloneFileBrowser.cs" />
-    <Compile Include="Assets\StandaloneFileBrowser\Sample\BasicSample.cs" />
-    <Compile Include="Assets\StandaloneFileBrowser\Sample\CanvasSampleOpenFileImage.cs" />
-    <Compile Include="Assets\StandaloneFileBrowser\Sample\CanvasSampleOpenFileText.cs" />
-    <Compile Include="Assets\StandaloneFileBrowser\Sample\CanvasSampleSaveFileImage.cs" />
-    <Compile Include="Assets\StandaloneFileBrowser\Sample\CanvasSampleSaveFileText.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowser.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserEditor.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserMac.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserWindows.cs" />
-    <Compile Include="Assets\Terraining.cs" />
+    <Compile Include="Assets\StepSlider.cs" />
     <Compile Include="Assets\TilePlacement.cs" />
     <Compile Include="Assets\TrackSavable.cs" />
     <Compile Include="Assets\TrackTileSavable.cs" />
     <Compile Include="Assets\UndoBuffer.cs" />
     <Compile Include="Assets\Utils.cs" />
     <Compile Include="Assets\Vegetation.cs" />
-    <Compile Include="Assets\VertexHeight.cs" />
     <None Include="Assets\Resources\_defcps.txt" />
     <None Include="Assets\Resources\DepthShader.shader" />
     <None Include="Assets\Resources\Normal-Bumped.shader" />
@@ -116,43 +124,43 @@
     <None Include="Assets\Resources\flatters.txt" />
     <None Include="Assets\Resources\_defflds.txt" />
     <Reference Include="Unity.Timeline.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
     <Reference Include="com.unity.multiplayer-hlapi.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-hlapi.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-hlapi.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Timeline">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="Unity.CollabProxy.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
     </Reference>
     <Reference Include="com.unity.multiplayer-weaver.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-weaver.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-weaver.Editor.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.XR.LegacyInputHelpers">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEngine.XR.LegacyInputHelpers.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEngine.XR.LegacyInputHelpers.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.SpatialTracking">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEditor.SpatialTracking.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEditor.SpatialTracking.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpatialTracking">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEngine.SpatialTracking.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.DataPrivacy">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.XR.LegacyInputHelpers">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEditor.XR.LegacyInputHelpers.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/UnityEditor.XR.LegacyInputHelpers.dll</HintPath>
     </Reference>
     <Reference Include="com.unity.multiplayer-hlapi.Runtime">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-hlapi.Runtime.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/ScriptAssemblies/com.unity.multiplayer-hlapi.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.1.14f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -338,25 +346,25 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.1.14f1/Editor/Data/UnityExtensions/Unity/TestRunner/net35/unity-custom/nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Assets/packages/SharpZipLib.1.2.0/lib/net45/ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Assets/packages/SharpZipLib.1.2.0/lib/net45/ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="ZKWeb.System.Drawing">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Assets/packages/ZKWeb.System.Drawing.4.0.1/lib/net45/ZKWeb.System.Drawing.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Assets/packages/ZKWeb.System.Drawing.4.0.1/lib/net45/ZKWeb.System.Drawing.dll</HintPath>
     </Reference>
     <Reference Include="Ookii.Dialogs">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Assets/StandaloneFileBrowser/Plugins/Ookii.Dialogs.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Assets/StandaloneFileBrowser/Plugins/Ookii.Dialogs.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Assets/StandaloneFileBrowser/Plugins/System.Windows.Forms.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Assets/StandaloneFileBrowser/Plugins/System.Windows.Forms.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.Editor">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.Editor.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.StandardEvents">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.StandardEvents.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.StandardEvents.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
-      <HintPath>C:/Users/Kuba/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.Tracker.dll</HintPath>
+      <HintPath>C:/Users/Żyrafa/Desktop/crashday-3d-editor/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.Tracker.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.1.14f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/mscorlib.dll</HintPath>
@@ -712,6 +720,16 @@
     <Reference Include="Boo.Lang">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.1.14f1/Editor/Data/MonoBleedingEdge/lib/mono/unityscript/Boo.Lang.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="PathCreator.csproj">
+      <Project>{4AC21252-2E2C-85D3-6E7E-12EF94B7C523}</Project>
+      <Name>PathCreator</Name>
+    </ProjectReference>
+    <ProjectReference Include="PathCreatorEditor.csproj">
+      <Project>{F9C7C40D-FC42-BBCD-C70D-C4D7242E4010}</Project>
+      <Name>PathCreatorEditor</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
