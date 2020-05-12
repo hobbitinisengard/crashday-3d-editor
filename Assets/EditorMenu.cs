@@ -157,9 +157,9 @@ public class EditorMenu : MonoBehaviour
           ushort fieldId = SetAndGetFieldId(Service.TilePlacementArray[z, x].Name);
           byte inwersja = (byte)(Service.TilePlacementArray[z, x].Inversion ? 1 : 0);
           byte rotacja = (byte)(Service.TilePlacementArray[z, x].Rotation / 90);
-          Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
           if (inwersja == 1 && rotacja != 0)
             rotacja = (byte)(4 - rotacja);
+          Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
           //Base part
           Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, 0);
           //Left Bottom

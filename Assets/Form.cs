@@ -32,10 +32,12 @@ public class Form : MonoBehaviour
   public Slider HeightSlider;
   public Slider FormSlider;
   public static ManualMode mode;
+
   private void Start()
   {
     mode = ManualMode.single;
   }
+
   void Update()
   {
     if (Input.GetKeyDown(KeyCode.F))
@@ -44,7 +46,6 @@ public class Form : MonoBehaviour
       ToggleManipMode();
     if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
       UndoBuffer.PasteUndoZnaczniki();
-
   }
   
   /// <summary>

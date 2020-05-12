@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-  public readonly static string VERSION = "2.4";
+  public readonly static string VERSION = "2.4.2";
   /// <summary>Maximum tile limit</summary>
   public readonly static int TrackTileLimit = 8000;
   /// <summary>

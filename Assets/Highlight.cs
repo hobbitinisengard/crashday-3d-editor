@@ -29,7 +29,6 @@ public class Highlight : MonoBehaviour
       t.z = 4 * Mathf.FloorToInt(pos.z / 4f);
       over = true;
     }
-   // DebugRayCast(pos, r);
   }
 
   //Returns position of map's vertex that is closest to pointer
@@ -39,7 +38,7 @@ public class Highlight : MonoBehaviour
     if (traf && hit.transform.gameObject.layer != 5)
     { // Raycast nie przejdzie przez elementy UI
       Vector3 to_return = Vector3Int.RoundToInt(hit.point);
-      to_return.y = hit.transform.position.y;
+      to_return.y = hit.point.y;
       return to_return;
     }
     else

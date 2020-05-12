@@ -17,10 +17,6 @@ public class SingleMode : MonoBehaviour
   }
   void Update()
   {
-    RunManualFormingMode();
-  }
-  void RunManualFormingMode()
-  {
     if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
     {
       if (Input.GetMouseButtonUp(0))

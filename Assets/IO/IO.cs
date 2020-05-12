@@ -37,7 +37,6 @@ public class IO
       PlayerPrefs.DeleteKey("crashpath");
       crashdayPath = GetCrashdayPath();
     }
-
     return crashdayPath;
   }
 

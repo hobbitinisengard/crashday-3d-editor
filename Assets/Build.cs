@@ -47,6 +47,9 @@ public class Build : MonoBehaviour
         XButtonState(); // X won't let PlacePrefab work
       if (Input.GetKey(KeyCode.LeftAlt))
         SwitchToNULL();
+      if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
+        PickUpTileUnderCursor();// Pick up tile under cursor
+
       if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space))
       {
         if (!Highlight.over)
@@ -79,10 +82,7 @@ public class Build : MonoBehaviour
             last_trawa = Highlight.t;
             LMBclicked = false;
           }
-          if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
-          { // Pick up tiles that is under cursor
-            PickUpTileUnderCursor();
-          }
+
           else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && AllowLMB)
           {//Place currently showed tile on terrain
             LMBclicked = true;
@@ -231,12 +231,12 @@ public class Build : MonoBehaviour
     return to_return;
   }
 
-    /// <summary>
-    /// Returns array of tiles being placed on terrain occupied by "znaczniki"
-    /// </summary>
-    /// <param name="znaczniki"></param>
-    /// <returns></returns>
-    public static List<GameObject> Get_surrounding_tiles(List<GameObject> znaczniki)
+  /// <summary>
+  /// Returns array of tiles being placed on terrain occupied by "znaczniki"
+  /// </summary>
+  /// <param name="znaczniki"></param>
+  /// <returns></returns>
+  public static List<GameObject> Get_surrounding_tiles(List<GameObject> znaczniki)
   {
     List<GameObject> to_return = new List<GameObject>();
     foreach (GameObject znacznik in znaczniki)
@@ -387,8 +387,8 @@ public class Build : MonoBehaviour
       rmc.RecalculateNormals();
       rmc_mc = null;
       rmc_mc = rmc;
-      rmc_o.SetActive(false);
-      rmc_o.SetActive(true);
+      //rmc_o.SetActive(false);
+      //rmc_o.SetActive(true);
     }
     //2. Matching edge of every rmc up if under or above given vertex already is another vertex (of another tile)
     foreach (GameObject rmc_o in rmcs)
@@ -400,18 +400,18 @@ public class Build : MonoBehaviour
       // Match RMC up and take care of current_heights table
       Match_rmc2rmc(rmc_o);
       Vector3Int pos = Vpos2epos(rmc_o);
-      bool Inversion = Service.TilePlacementArray[pos.z, pos.x].Inversion;
+      bool Mirrored = Service.TilePlacementArray[pos.z, pos.x].Inversion;
       int Rotation = Service.TilePlacementArray[pos.z, pos.x].Rotation;
-      GameObject prefab = rmc_o.transform.GetChild(0).gameObject;
+      GameObject Prefab = rmc_o.transform.GetChild(0).gameObject;
       //Get original dimensions
       Vector3Int tileDims = GetTileDims(rmc_o);
 
       //Delete old prefab and replace it with plain new.
-      Vector3 old_pos = prefab.transform.position;
-      string prefab_name = prefab.name;
+      Vector3 old_pos = Prefab.transform.position;
+      string prefab_name = Prefab.name;
 
-      DestroyImmediate(prefab);
-      prefab = GetPrefab(prefab_name, old_pos, Quaternion.Euler(0, Rotation, 0), rmc_o.transform);
+      DestroyImmediate(Prefab);
+      Prefab = GetPrefab(prefab_name, old_pos, Quaternion.Euler(0, Rotation, 0), rmc_o.transform);
       bool anythingchanged = false;
       Vector3Int LDpos = GetLDpos(rmc_o);
       //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
@@ -430,10 +430,11 @@ public class Build : MonoBehaviour
         }
       }
       Service.UpdateMapColliders(rmc_o.transform.position, tileDims);
-      List<Mesh> meshes = GetPrefabMeshList(Inversion, prefab);
-      Tiles_to_RMC_Cast(ref meshes, prefab, Inversion);
+      GetPrefabMesh(Mirrored, Prefab);
+      Tiles_to_RMC_Cast(Prefab, Mirrored);
       rmc_o.layer = 9;
     }
+      
   }
 
   public static void InverseMesh(Mesh mesh)
@@ -448,7 +449,6 @@ public class Build : MonoBehaviour
       int[] trgs = mesh.GetTriangles(i);
       mesh.SetTriangles(trgs.Reverse().ToArray(), i);
     }
-
   }
   public static GameObject GetPrefab(string TileName, Vector3 position, Quaternion rotation, Transform parent)
   {
@@ -567,8 +567,9 @@ public class Build : MonoBehaviour
     //-------------------------
     GameObject Prefab = GetPrefab(name, rmcPlacement, Quaternion.Euler(new Vector3(0, cum_rotation, 0)), current_rmc.transform);
 
-    List<Mesh> meshes = GetPrefabMeshList(mirrored, Prefab);
-    Tiles_to_RMC_Cast(ref meshes, Prefab, mirrored);
+    //List<Mesh> meshes = GetPrefabMeshList(mirrored, Prefab);
+    GetPrefabMesh(mirrored, Prefab);
+    Tiles_to_RMC_Cast(Prefab, mirrored);
 
     current_rmc.layer = 9;
     Service.TilePlacementArray[LDpos.z / 4, LDpos.x / 4].t_verts = GetRmcIndices(current_rmc);
@@ -593,42 +594,22 @@ public class Build : MonoBehaviour
   /// Lista meshów. \-/ dziecka prefaba zaznacz MarkDynamic(), zainwersjuj, dodaj do listy. Jeśli nie ma dzieci, to prefab dodaj do listy meshów
   /// returns nested meshes of given tile in simple list
   /// </summary>
-  static List<Mesh> GetPrefabMeshList(bool inwersja, GameObject prefab)
+  static void GetPrefabMesh(bool mirrored, GameObject prefab)
   {
-    List<Mesh> meshes = new List<Mesh>();
-    if (prefab.transform.childCount != 0)
-    {
-      for (int i = 0; i < prefab.transform.childCount; i++)
-      {
-        if (prefab.transform.GetChild(i).tag != "krzaczor" && prefab.transform.GetChild(i).GetComponent<MeshRenderer>().enabled)
-        {
-          prefab.transform.GetChild(i).gameObject.GetComponent<MeshFilter>().mesh.MarkDynamic();
-          if (inwersja)
-            InverseMesh(prefab.transform.GetChild(i).gameObject.GetComponent<MeshFilter>().mesh);
-          meshes.Add(prefab.transform.GetChild(i).gameObject.GetComponent<MeshFilter>().mesh);
-        }
-      }
-    }
-    else
-    {
-      prefab.GetComponent<MeshFilter>().mesh.MarkDynamic();
-      if (inwersja)
-        InverseMesh(prefab.GetComponent<MeshFilter>().mesh);
-      meshes.Add(prefab.GetComponent<MeshFilter>().mesh);
-    }
-    return meshes;
+    prefab.GetComponent<MeshFilter>().mesh.MarkDynamic();
+    if (mirrored)
+      InverseMesh(prefab.GetComponent<MeshFilter>().mesh);
   }
 
   /// <summary>
   /// getPzero dla nazwa_tilesa, \-/ z meshes ray na 10. Jeśli nie trafił to na 8, jak nie trafił to podstawową wysokością jest Bounding height
   /// Logic for placing tile onto RMC. Used in PlacePrefab and UpdateTiles
   /// </summary>
-  static void Tiles_to_RMC_Cast(ref List<Mesh> meshes, GameObject prefab, bool inwersja)
+  static void Tiles_to_RMC_Cast(GameObject prefab, bool inwersja)
   {
+    Mesh mesh = prefab.GetComponent<MeshFilter>().mesh;
     float pzero = GetPzero(prefab.name);
     // Raycast tiles(H) \ rmc
-    foreach (Mesh mesh in meshes)
-    {
       Vector3[] verts = mesh.vertices;
       for (int i = 0; i < mesh.vertices.Length; i++)
       {
@@ -649,7 +630,6 @@ public class Build : MonoBehaviour
           else // out of map boundaries: height of closest edge
             verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Service.current_heights[0] + v.y - pzero, v.z));
         }
-      }
       mesh.vertices = verts;
       mesh.RecalculateBounds();
       mesh.RecalculateNormals();
@@ -788,8 +768,8 @@ public class Build : MonoBehaviour
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
-    rmc_o.SetActive(false);
-    rmc_o.SetActive(true);
+    //rmc_o.SetActive(false);
+    //rmc_o.SetActive(true);
   }
 }
 

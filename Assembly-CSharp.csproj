@@ -87,12 +87,6 @@
     <Compile Include="Assets\Managers\ZipManager.cs" />
     <Compile Include="Assets\MouseInputUIBlocker.cs" />
     <Compile Include="Assets\P3DModel.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\GeneratePathExample.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\PathFollower.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\PathPlacer.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\PathSceneTool.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\PathSpawner.cs" />
-    <Compile Include="Assets\PathCreator\Examples\Scripts\RoadMeshCreator.cs" />
     <Compile Include="Assets\ProfileCreator.cs" />
     <Compile Include="Assets\RadiusSlider.cs" />
     <Compile Include="Assets\Service.cs" />

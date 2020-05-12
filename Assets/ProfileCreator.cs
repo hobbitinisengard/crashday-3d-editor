@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
+
 enum ProfileState { idle, first_clicked, profileApplied, preview_visible }
 /// <summary>
 /// Hooked in Profiles Menu. Responsible for Profiles functionality
@@ -9,13 +11,13 @@ enum ProfileState { idle, first_clicked, profileApplied, preview_visible }
 public class ProfileCreator : MonoBehaviour
 {
   public GameObject FormPanel;
-
   private VertexPath[] paths;
   private GameObject RoadMesh;
   private List<List<GameObject>> Profiles = new List<List<GameObject>>();
   public Material white;
   public Material red;
   private ProfileState state = ProfileState.idle;
+
   private void OnEnable()
   {
     FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
@@ -34,17 +36,18 @@ public class ProfileCreator : MonoBehaviour
   {
     state = s;
     if (s == ProfileState.idle)
-      SwitchTextStatus("LMB/Backspace");
+      SwitchTextStatus("Ready..");
     else if (s == ProfileState.first_clicked)
-      SwitchTextStatus("Waiting 4 endpoint..");
+      SwitchTextStatus("*Selecting*");
     else if (s == ProfileState.profileApplied)
-      SwitchTextStatus("RMB/Backspace");
+      SwitchTextStatus("RMB/backspace");
     else if (s == ProfileState.preview_visible)
       SwitchTextStatus("Enter/Backspace/Del");
   }
   private void Update()
   {
     SelectingProfile();
+
     if (Input.GetMouseButtonDown(1))
       AcceptProfile();
     if (Input.GetKeyDown(KeyCode.Backspace) && state != ProfileState.preview_visible)
@@ -60,7 +63,7 @@ public class ProfileCreator : MonoBehaviour
   }
   void AcceptProfile()
   {
-    if (state == ProfileState.first_clicked || !IsNewProfileValid())
+    if (!IsNewProfileValid())
       return;
     SwitchTextStatus(ProfileState.idle);
   }
@@ -80,11 +83,26 @@ public class ProfileCreator : MonoBehaviour
     {
       if (Input.GetMouseButtonDown(0))
       {
-        if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, Service.maxHeight, 1 << 11))
-          return;
         if (!Service.IsWithinMapBounds(Highlight.pos))
           return;
-        if (state == ProfileState.profileApplied)
+        if(Input.GetKey(KeyCode.LeftControl)) // add single vertex
+        { 
+          if (state == ProfileState.idle || state == ProfileState.first_clicked)
+          { // first or middle marking
+            if(state == ProfileState.idle)
+            {
+              GameObject znacznik = Service.CreateMarking(red);
+              Profiles.Add(new List<GameObject>() { znacznik }); //add first marking to list
+            }
+            else if (state == ProfileState.first_clicked)
+            {
+              GameObject znacznik = Service.CreateMarking(white);
+              Profiles.Last().Add(znacznik); //add middle marking
+            }
+            SwitchTextStatus(ProfileState.first_clicked);
+          }
+        }
+        else if (state == ProfileState.profileApplied) // standard multiple selection
         { // redo first marking
           GameObject znacznik = Service.CreateMarking(white);
           for (int i = 0; i < Profiles.Last().Count; i++) // delete markings of current profile
@@ -102,7 +120,7 @@ public class ProfileCreator : MonoBehaviour
         }
         else if (state == ProfileState.first_clicked)
         { // second marking 
-          Vector3[] RemainingPos = GetRemainingPoints(Profiles.Last()[0].transform.position, Highlight.pos);
+          Vector3[] RemainingPos = GetRemainingPoints(Profiles.Last().Last().transform.position, Highlight.pos);
           foreach (var pos in RemainingPos)
             Profiles.Last().Add(Service.CreateMarking(white, pos));
 
@@ -115,7 +133,6 @@ public class ProfileCreator : MonoBehaviour
   Vector3[] GetRemainingPoints(Vector3 begin, Vector3 end)
   {
     List<Vector3> to_return = new List<Vector3>();
-
     while (begin.x != end.x || begin.z != end.z)
     {
       if (begin.x != end.x)

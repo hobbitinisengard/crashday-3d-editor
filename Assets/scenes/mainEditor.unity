@@ -2990,7 +2990,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Paste last
+  m_Text: PASTE [V]
 --- !u!222 &390016652
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7804,11 +7804,13 @@ MonoBehaviour:
 
     2. Apply Profile with RMB
 
-    3a. To create path you need at least 3 profiles
+    3a. With CTRL+LMB you can add middle point
 
-    3b. Initial (red) points has to be properly aligned
+    3b. To create path you need at least 3 profiles
 
-    3c Remove Profile with [backspace]
+    3c. Initial (red) points has to be properly aligned
+
+    3d Remove Profile with [backspace]
 
     4. Show Path with [enter]
 

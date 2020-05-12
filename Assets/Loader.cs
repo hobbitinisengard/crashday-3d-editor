@@ -189,8 +189,4 @@ public class Loader : MonoBehaviour
     Build.UpdateTiles(to_update);
     Service.Isloading = false;
   }
-
- 
-  
-
 }

@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 public enum CopyState { empty, copying, non_empty }
-public enum PastingMode { fixed_height, addition}
+public enum PastingMode { fixed_height, addition }
 /// <summary>
 /// works with ShapeMenu. Handles copy/paste functionality. 
 /// </summary>
@@ -42,7 +42,7 @@ public class CopyPaste : MonoBehaviour
   }
   void SwitchPastingMode()
   {
-    if(pastingMode == PastingMode.fixed_height)
+    if (pastingMode == PastingMode.fixed_height)
     {
       pastingMode = PastingMode.addition;
       PastingModeSwitch.transform.GetChild(0).gameObject.GetComponent<Text>().text = "Addition";
@@ -57,14 +57,23 @@ public class CopyPaste : MonoBehaviour
   }
   void Update()
   {
+    FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+
     if (MouseInputUIBlocker.BlockedByUI)
       return;
     // ShapeMenu triggers CopySelectionToClipboard()
     if (Input.GetKeyDown(KeyCode.C))
       ShapeMenu.LastSelected = FormButton.copy;
+    if (Input.GetKeyDown(KeyCode.V) && State == CopyState.non_empty)
+      SwitchState(CopyState.copying);
 
     if (State == CopyState.copying)
     {
+      FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
+
+      if(pastingMode == PastingMode.fixed_height)
+      Mousewheelcheck();
+
       if (Input.GetKeyDown(KeyCode.Tab))
         SwitchPastingMode();
       if (Input.GetMouseButtonDown(1))
@@ -86,7 +95,7 @@ public class CopyPaste : MonoBehaviour
         SwitchState(CopyState.non_empty);
       }
     }
-    
+
   }
   internal void CopySelectionToClipboard()
   {
@@ -231,7 +240,7 @@ public class CopyPaste : MonoBehaviour
         // Update arrays of vertex heights
         indexes.Add(Service.PosToIndex(pom));
         UndoBuffer.AddZnacznik((int)pom.x, (int)pom.z);
-        if(pastingMode == PastingMode.fixed_height)
+        if (pastingMode == PastingMode.fixed_height)
         {
           Service.current_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
           Service.former_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
@@ -247,5 +256,39 @@ public class CopyPaste : MonoBehaviour
     UndoBuffer.ApplyOperation();
     Build.UpdateTiles(Build.Get_surrounding_tiles(Markings));
   }
-
+  void Mousewheelcheck()
+  {
+    if (Input.GetKey(KeyCode.LeftShift))
+    {
+      if (Input.GetAxis("Mouse ScrollWheel") > 0)
+      {
+        fixed_height += 10;
+      }
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+      {
+        fixed_height -= 10;
+      }
+    }
+    else if (Input.GetKey(KeyCode.LeftAlt))
+    {
+      if (Input.GetAxis("Mouse ScrollWheel") > 0)
+      {
+        fixed_height += 0.25f;
+      }
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+      {
+        fixed_height -= 0.25f;
+      }
+    }
+    else if (Input.GetAxis("Mouse ScrollWheel") > 0)
+    {
+      fixed_height += 1;
+    }
+    else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+    {
+      fixed_height -= 1;
+    }
+    if (Input.GetAxis("Mouse ScrollWheel") != 0)
+      UpdatePreview();
+  }
 }

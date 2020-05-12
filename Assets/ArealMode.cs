@@ -17,10 +17,6 @@ public class ArealMode : MonoBehaviour
   }
   void Update()
   {
-    RunManualFormingMode();
-  }
-  void RunManualFormingMode()
-  {
     if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
     {
       if (Input.GetMouseButtonUp(0))
@@ -33,17 +29,18 @@ public class ArealMode : MonoBehaviour
           Destroy(indicator);
       }
       if (!MouseInputUIBlocker.BlockedByUI)
-      { 
-          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
-            Areal_vertex_manipulation(); // single-action
-          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
-            Areal_vertex_manipulation(); //auto-fire
-          else if (Input.GetMouseButtonDown(1) && Highlight.over)
-            Make_areal_elevation();
-        
+      {
+        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+          Areal_vertex_manipulation(); // single-action
+        else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+          Areal_vertex_manipulation(); //auto-fire
+        else if (Input.GetMouseButtonDown(1) && Highlight.over)
+          Make_areal_elevation();
+
       }
     }
   }
+
   void Areal_vertex_manipulation()
   {
     if (Service.IsWithinMapBounds(Highlight.pos))
