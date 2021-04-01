@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-  public readonly static string VERSION = "2.4.2";
+  public readonly static string VERSION = "2.5";
   /// <summary>Maximum tile limit</summary>
   public readonly static int TrackTileLimit = 8000;
   /// <summary>
@@ -28,8 +28,11 @@ public static class Service
   /// Load track by inversing elements
   /// </summary>
   public static bool LoadMirrored = false;
-  public readonly static int minHeight = -2000;
-  public readonly static int maxHeight = 2000;
+  public readonly static int maxHeight = 20000;
+  public readonly static int minHeight = -maxHeight;
+  /// <summary>
+  /// rayHeight = maxHeight - minHeight + 5
+  /// </summary>
   public readonly static int rayHeight = maxHeight - minHeight + 5;
   public static List<string> MissingTilesNames = new List<string>();
 
@@ -76,13 +79,14 @@ public static class Service
   public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
   {
     GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
-    znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+    znacznik.transform.localScale = new Vector3(0.2f, 0.01f, 0.2f);
     znacznik.transform.position = (pos != null) ? (Vector3)pos : Highlight.pos;
     if (hasCollider)
       znacznik.GetComponent<BoxCollider>().enabled = true;
     else
       Object.Destroy(znacznik.GetComponent<BoxCollider>());
     znacznik.GetComponent<MeshRenderer>().material = material;
+    
     znacznik.layer = 11;
     return znacznik;
   }
@@ -140,6 +144,8 @@ public static class Service
         mc.GetComponent<MeshFilter>().mesh = mc.GetComponent<MeshCollider>().sharedMesh;
         mc.GetComponent<MeshCollider>().enabled = false;
         mc.GetComponent<MeshCollider>().enabled = true;
+       // mc.SetActive(false);
+        //mc.SetActive(true);
       }
     }
   }
@@ -154,7 +160,7 @@ public static class Service
     foreach (int i in indexes)
     {
       Vector3Int v = Vector3Int.RoundToInt(Service.IndexToPos(i));
-      v.y = Service.maxHeight + 1;
+      v.y = Service.maxHeight;
       RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Service.rayHeight, 1 << 8);
       foreach (RaycastHit hit in hits)
         if (!mcs.Contains(hit.transform.gameObject))
@@ -167,7 +173,7 @@ public static class Service
   }
   public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
   {
-    rmc_pos.y = Service.maxHeight + 1;
+    rmc_pos.y = Service.maxHeight;
     RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 8);
     List<GameObject> mcs = new List<GameObject>();
     foreach (RaycastHit hit in hits)

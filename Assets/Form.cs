@@ -22,6 +22,7 @@ public class Form : MonoBehaviour
   public GameObject ManualMenu;
     public GameObject ArealMenu;
     public GameObject SingleMenu;
+
   // Shape mode menu
   public GameObject ShapeMenu;
   public GameObject FormMenu;
@@ -36,6 +37,7 @@ public class Form : MonoBehaviour
   private void Start()
   {
     mode = ManualMode.single;
+    Physics.queriesHitBackfaces = true;
   }
 
   void Update()

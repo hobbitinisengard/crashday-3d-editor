@@ -16,10 +16,12 @@ public class SliderCase : MonoBehaviour
   }
   void Update()
   {
+    // Don't allow switching tilesets when ctrl+mousewheel (mixing) is used
+    if (Input.GetKey(KeyCode.LeftControl))
+      return;
     if (Input.GetAxis("Mouse ScrollWheel") != 0)
     {
       HideCase(Current_tileset);
-
       if (Input.GetAxis("Mouse ScrollWheel") > 0)
         Current_tileset = GetNextTabName(Current_tileset);
       else

@@ -51,13 +51,7 @@ public class ShapeMenu : MonoBehaviour
   private Vector3 mousePosition1;
   void Start()
   {
-    toslider.onClick.AddListener(() =>
-    {
-      if (KeepShape.isOn)
-        LastSelected = FormButton.to_slider_keep;
-      else
-        FormMenu_toSlider();
-    });
+    toslider.onClick.AddListener(() => LastSelected = FormButton.to_slider);
     Prostry.onClick.AddListener(() => LastSelected = FormButton.linear);
     Integral.onClick.AddListener(() => LastSelected = FormButton.integral);
     Jumper.onClick.AddListener(() => LastSelected = FormButton.jump);
@@ -84,7 +78,7 @@ public class ShapeMenu : MonoBehaviour
   }
   void UpdateCurrent()
   {
-    if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight + 1, Highlight.pos.z),
+    if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
       Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
     {
       if (hit.transform.gameObject.layer == 9)
@@ -138,7 +132,7 @@ public class ShapeMenu : MonoBehaviour
         FormPanel.GetComponent<Form>().ShapeMenu.GetComponent<CopyPaste>().CopySelectionToClipboard();
       else
       {
-        ApplyFancyShape();
+        ApplyFormingFunction();
         StateSwitch(SelectionState.SELECTING_VERTICES);
       }
 
@@ -160,10 +154,10 @@ public class ShapeMenu : MonoBehaviour
 
       if (Input.GetMouseButtonUp(0)) //First click
       {
-        if (Physics.Raycast(new Vector3(Highlight.pos.x, 100, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.maxHeight + 1, 1 << 11) && hit.transform.gameObject.name == "on")
+        if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 11) && hit.transform.gameObject.name == "on")
         {
           BL = Vector3Int.RoundToInt(hit.point);
-          BL.y = hit.point.y;
+          BL.y = hit.transform.gameObject.transform.position.y;
           StateSwitch(SelectionState.BL_SELECTED);
         }
       }
@@ -196,6 +190,7 @@ public class ShapeMenu : MonoBehaviour
         int index = Service.PosToIndex(v);
         UndoBuffer.AddZnacznik(Service.IndexToPos(index));
         indexes.Add(index);
+
         if (KeepShape.isOn)
           Service.current_heights[index] += elevateby;
         else
@@ -282,92 +277,18 @@ public class ShapeMenu : MonoBehaviour
     }
     return Extremes;
   }
-  private Vector3Int Set_up_LD_and_PG()
-  {
-    int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
-    foreach (GameObject znacznik in markings)
-    {
-      if (znacznik.name == "on")
-      {
-        if (lowX > znacznik.transform.position.x)
-          lowX = Mathf.RoundToInt(znacznik.transform.position.x);
-        if (hiX < znacznik.transform.position.x)
-          hiX = Mathf.RoundToInt(znacznik.transform.position.x);
-
-        if (lowZ > znacznik.transform.position.z)
-          lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
-        if (hiZ < znacznik.transform.position.z)
-          hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
-      }
-    }
-    // for vertices on tiles
-    if (current)
-    {
-      if (BL.x < hiX)
-      {
-        if (BL.z < hiZ)
-        {
-          return new Vector3Int(hiX, 0, hiZ);
-        }
-        else
-          return new Vector3Int(hiX, 0, lowZ);
-      }
-      else
-      {
-        if (BL.z < hiZ)
-        {
-          return new Vector3Int(lowX, 0, hiZ);
-        }
-        else
-          return new Vector3Int(lowX, 0, lowZ);
-      }
-    }
-    // for vertices of grass
-    Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-    bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-    bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
-    if (D && Dhit.transform.name != "on")
-      D = false;
-    if (L && Lhit.transform.name != "on")
-      L = false;
-    Vector3Int PG = new Vector3Int();
-
-    if (D)
-    {
-      if (L)
-      {
-        BL.Set(hiX, BL.y, hiZ);
-        PG.Set(lowX, 0, lowZ);
-      }
-      else
-      {
-        BL.Set(lowX, BL.y, hiZ);
-        PG.Set(hiX, 0, lowZ);
-      }
-    }
-    else
-    {
-      if (L)
-      {
-        PG.Set(lowX, 0, hiZ);
-        BL.Set(hiX, BL.y, lowZ);
-      }
-      else
-      {
-        PG.Set(hiX, 0, hiZ);
-        BL.Set(lowX, BL.y, lowZ);
-      }
-    }
-
-    return PG;
-  }
   /// <summary>
   /// Handles placing more complicated shapes.
   /// </summary>
-  void ApplyFancyShape()
+  void ApplyFormingFunction()
   {
     RaycastHit hit;
-
+    // to Height button check (always checks BL even if KeepShape is off - I'm s lazy fuck)
+    if(LastSelected == FormButton.to_slider)
+    {
+      FormMenu_toSlider();
+      return;
+    }
     //Flatter check
     if (LastSelected == FormButton.flatter)
     {
@@ -379,7 +300,80 @@ public class ShapeMenu : MonoBehaviour
     if (selectionState == SelectionState.BL_SELECTED)
     {
       //We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
-      Vector3Int PG = Set_up_LD_and_PG();
+      Vector3Int PG = new Vector3Int();
+      int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
+      foreach (GameObject znacznik in markings)
+      {
+        if (znacznik.name == "on")
+        {
+          if (lowX > znacznik.transform.position.x)
+            lowX = Mathf.RoundToInt(znacznik.transform.position.x);
+          if (hiX < znacznik.transform.position.x)
+            hiX = Mathf.RoundToInt(znacznik.transform.position.x);
+
+          if (lowZ > znacznik.transform.position.z)
+            lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
+          if (hiZ < znacznik.transform.position.z)
+            hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
+        }
+      }
+      // for vertices on tiles
+      if (current)
+      {
+        if (BL.x < hiX)
+        {
+          if (BL.z < hiZ)
+          {
+            PG.Set(hiX, 0, hiZ);
+          }
+          else
+            PG.Set(hiX, 0, lowZ);
+        }
+        else
+        {
+          if (BL.z < hiZ)
+          {
+            PG.Set(lowX, 0, hiZ);
+          }
+          else
+            PG.Set(lowX, 0, lowZ);
+        }
+      }
+      // for vertices of grass
+      Vector3 center = new Vector3(BL.x, BL.y, BL.z);
+      bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
+      bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
+      if (D && Dhit.transform.name != "on")
+        D = false;
+      if (L && Lhit.transform.name != "on")
+        L = false;
+      if (D)
+      {
+        if (L)
+        {
+          BL.Set(hiX, BL.y, hiZ);
+          PG.Set(lowX, 0, lowZ);
+        }
+        else
+        {
+          BL.Set(lowX, BL.y, hiZ);
+          PG.Set(hiX, 0, lowZ);
+        }
+      }
+      else
+      {
+        if (L)
+        {
+          PG.Set(lowX, 0, hiZ);
+          BL.Set(hiX, BL.y, lowZ);
+        }
+        else
+        {
+          PG.Set(hiX, 0, hiZ);
+          BL.Set(lowX, BL.y, lowZ);
+        }
+      }
+
       List<DuVec3> extremes = new List<DuVec3>();
       float slider_realheight = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
       float heightdiff = slider_realheight - BL.y;
@@ -406,7 +400,7 @@ public class ShapeMenu : MonoBehaviour
                 slider_realheight = extremes[ext_index].P2.y;
                 BL.y = extremes[ext_index].P1.y;
               }
-              bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight + 1, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
+              bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
               index = Service.PosToIndex(x, z);
               UndoBuffer.AddZnacznik(Service.IndexToPos(index));
               Vector3 vertpos = Service.IndexToPos(index);
@@ -423,6 +417,7 @@ public class ShapeMenu : MonoBehaviour
                   vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
                 else if (LastSelected == FormButton.flatter)
                   vertpos.y = BL.y - TileManager.TileListInfo[current.name].FlatterPoints[step];
+                
                 if (KeepShape.isOn)
                   vertpos.y += old_Y - BL.y;
                 Service.former_heights[index] = vertpos.y;
@@ -455,7 +450,7 @@ public class ShapeMenu : MonoBehaviour
                 BL.y = extremes[ext_index].P1.y;
               }
               //Debug.DrawLine(new Vector3(x, Terenowanie.Service.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
-              bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight + 1, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
+              bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
               index = Service.PosToIndex(x, z);
               UndoBuffer.AddZnacznik(Service.IndexToPos(index));
               Vector3 vertpos = Service.IndexToPos(index);

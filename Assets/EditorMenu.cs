@@ -5,11 +5,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
+using System.Collections.Generic;
 //Handles all variables essential for editor
 public class DuVecInt
 {
   /// <summary>
-  /// Pozycja LD
+  /// BL Position
   /// </summary>
   public Vector2Int pos;
   public Vector2Int dims;
@@ -146,7 +147,7 @@ public class EditorMenu : MonoBehaviour
     Service.TRACK.FieldFiles.Clear();
     Service.TRACK.FieldFiles.Add("field.cfl");
     Service.TRACK.FieldFilesNumber = 1;
-
+    List<QuarterData> QuartersToSave = new List<QuarterData>();
     // Save tiles
     for (int z = 0; z < Service.TRACK.Height; z++)
     {
@@ -159,22 +160,30 @@ public class EditorMenu : MonoBehaviour
           byte rotacja = (byte)(Service.TilePlacementArray[z, x].Rotation / 90);
           if (inwersja == 1 && rotacja != 0)
             rotacja = (byte)(4 - rotacja);
+          byte height = Service.TilePlacementArray[z, x].Height;
           Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
           //Base part
-          Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, 0);
+          Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, height);
           //Left Bottom
           if (dim.y == 2)
-            Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, 0);
-          //Right top
+            //Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x, 1, rotacja, inwersja, height));
+          ////Right top
           if (dim.x == 2)
-            Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, 0);
-          //Right bottom
+            //  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z + 1 - dim.y, x+1, 2, rotacja, inwersja, height));
+          ////Right bottom
           if (dim.x == 2 && dim.y == 2)
-            Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, 0);
+            //  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 0, rotacja, inwersja, height));
         }
       }
     }
-    Service.TRACK.Comment = "Made with 3D editor " + Service.VERSION;
+    foreach(QuarterData q in QuartersToSave)
+    {
+      if(Service.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
+        Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1? (ushort)65471 : (ushort)65472, q.rotacja, q.inwersja, q.height);
+    }
     MapParser.SaveMap(Service.TRACK, path + "\\" + Service.UpperBarTrackName + ".trk");
   }
   ushort SetAndGetFieldId(string name)
@@ -188,5 +197,25 @@ public class EditorMenu : MonoBehaviour
     Service.TRACK.FieldFiles.Add(name);
     Service.TRACK.FieldFilesNumber++;
     return (ushort)(Service.TRACK.FieldFilesNumber - 1);
+  }
+
+  private struct QuarterData
+  {
+    public int Y;
+    public int X;
+    public byte ID;
+    public byte rotacja;
+    public byte inwersja;
+    public byte height;
+
+    public QuarterData(int v1, int v2, int v3, byte rotacja, byte inwersja, byte height)
+    {
+      this.Y = v1;
+      this.X = v2;
+      this.ID = (byte)v3;
+      this.rotacja = rotacja;
+      this.inwersja = inwersja;
+      this.height = height;
+    }
   }
 }

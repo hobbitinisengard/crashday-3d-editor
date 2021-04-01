@@ -32,7 +32,7 @@ public class Loader : MonoBehaviour
       {
         for (int x = 0; x < Service.TRACK.Width; x++)
         {
-          //  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as empty grass fields (FieldId = 0)  
+          //  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as grass fields (FieldId = 0)  
           if (Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].FieldId < Service.TRACK.FieldFiles.Count && Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].FieldId != 0)
           {
             // assignment for clarity
@@ -50,18 +50,19 @@ public class Loader : MonoBehaviour
                 Service.MissingTilesNames.Add(TileName);
               continue;
             }
-
             int Rotation = tile.Rotation * 90;
             bool Inversion = tile.IsMirrored == 0 ? false : true;
             //Inversed tiles rotate anti-clockwise so..
             if (Inversion && Rotation != 0)
               Rotation = 360 - Rotation;
-
+            byte Height = tile.Height;
             Vector2Int dim = TileManager.GetRealDims(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
             if (!Service.LoadMirrored)
-              Service.TilePlacementArray[z - dim.y + 1, x].Set(TileName, Rotation, Inversion);
+            {
+                Service.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
+            }
             else
-              Service.TilePlacementArray[z - dim.y + 1, Service.TRACK.Width - 1 - x - dim.x + 1].Set(TileName, 360 - Rotation, !Inversion);
+              Service.TilePlacementArray[z - dim.y + 1, Service.TRACK.Width - 1 - x - dim.x + 1].Set(TileName, 360 - Rotation, !Inversion, Height);
           }
         }
       }
@@ -183,7 +184,14 @@ public class Loader : MonoBehaviour
       {
         if (Service.TilePlacementArray[z, x].Name == null)
           continue;
-        to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(new Vector3Int(4 * x, 0, 4 * z), Service.TilePlacementArray[z, x].Name, Service.TilePlacementArray[z, x].Rotation, Service.TilePlacementArray[z, x].Inversion));
+        Vector3Int tilepos;
+        if (Service.TilePlacementArray[z, x].BottomTop)
+          tilepos = new Vector3Int(4 * x, 0, 4 * (z - 1));
+        else
+          tilepos = new Vector3Int(4 * x, 0, 4 * z);
+        to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(tilepos, 
+          Service.TilePlacementArray[z, x].Name, Service.TilePlacementArray[z, x].Rotation, 
+          Service.TilePlacementArray[z, x].Inversion, Service.TilePlacementArray[z,x].Height));
       }
     }
     Build.UpdateTiles(to_update);

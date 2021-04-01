@@ -1195,4 +1195,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: "C:/Users/\u017Byrafa/Desktop/3d-editor-2.4.2/3D Editor.exe"
+  playerPath: C:/Users/User/Desktop/3deditor/3dtest/3D Editor.exe

@@ -10,7 +10,11 @@ public class HeightSlider : MonoBehaviour
   public Text HelperInputField;
   public Material partiallytransparent;
   bool IsEnteringKeypadValue = false; // used in numericenter();
-
+  private void Start()
+  {
+    HSlider.minValue = Service.minHeight;
+    HSlider.maxValue = Service.maxHeight;
+  }
   private void Update()
   {
     Numericenter();

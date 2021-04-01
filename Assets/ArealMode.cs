@@ -2,7 +2,10 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-
+/// <summary>
+/// First submode of manual mode: Areal mode. Second one is Single mode
+/// You switch between them with [Tab]
+/// </summary>
 public class ArealMode : MonoBehaviour
 {
   public Slider HeightSlider;
@@ -17,12 +20,12 @@ public class ArealMode : MonoBehaviour
   }
   void Update()
   {
-    if (!Input.GetKey(KeyCode.LeftControl)) //jeżeli nie było ctrl_key_works()
+    if (!Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
     {
       if (Input.GetMouseButtonUp(0))
         UndoBuffer.ApplyOperation();
 
-      if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
+      if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
       {
         index = 0;
         if (indicator != null)
@@ -76,7 +79,8 @@ public class ArealMode : MonoBehaviour
       RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
                                              new Vector3(RadiusSlider.Radius + 1, 1, RadiusSlider.Radius),
                                               Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
-      Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
+      List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
+      Build.UpdateTiles(hitsList);
       UndoBuffer.ApplyOperation();
     }
   }
@@ -140,7 +144,7 @@ public class ArealMode : MonoBehaviour
         }
         Destroy(indicator);
         index = 0;
-        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight + 1, 0.5f * (a.z + b.z)),
+        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight, 0.5f * (a.z + b.z)),
           new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
           Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9); //Search for tiles
         Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());

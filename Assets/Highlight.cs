@@ -4,7 +4,7 @@ using UnityEngine;
 public class Highlight : MonoBehaviour
 {
   /// <summary>
-  /// Vertexowy wymiar Lewego Dolnego Rogu elementu
+  /// Vertexowy wymiar Lewego Dolnego Rogu trawki
   /// </summary>
   public static Vector3Int t = new Vector3Int();
   /// <summary>

@@ -21,6 +21,16 @@ public class FlyCamera : MonoBehaviour
   {
     if (!SaveMenu.activeSelf)
     {
+      if (Input.GetKeyUp(KeyCode.BackQuote))
+      {
+        float posY = this.transform.position.y;
+        Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Mathf.Infinity, 1 << 8))
+        { // if casting elevated element from underground, raise camera up to it
+          this.transform.position = new Vector3(hit.transform.position.x, 
+            posY > hit.transform.position.y ? posY : hit.transform.position.y + 10, hit.transform.position.z);
+        }
+      }
       over_UI = (Input.mousePosition.x < 0.232 * Screen.width) ? true : false;
       if (Input.GetKeyDown(KeyCode.PageUp))
       {
@@ -64,7 +74,6 @@ public class FlyCamera : MonoBehaviour
   void birdseyecamera()
   {
     GetComponent<Camera>().orthographic = true;
-
     if (Input.GetKey(KeyCode.PageUp))
       GetComponent<Camera>().orthographicSize += 1;
     if (Input.GetKey(KeyCode.PageDown))

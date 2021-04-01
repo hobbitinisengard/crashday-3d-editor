@@ -9,10 +9,6 @@ public class TileListEntry
   public List<Material> Materials;
   public Texture2D Icon;
   public Vector2Int Size;
-  /// <summary>
-  /// Placement of tile in given editor tab
-  /// </summary>
-  public Vector3Int EditorPlacement;
   
   /// <summary>
   /// string with H1

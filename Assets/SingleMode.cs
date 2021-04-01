@@ -82,7 +82,7 @@ public class SingleMode : MonoBehaviour
         }
         Destroy(indicator);
         index = 0;
-        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight + 1, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
+        RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
         List<GameObject> to_update = new List<GameObject>();
         foreach (RaycastHit hit in hits)
           to_update.Add(hit.transform.gameObject);
@@ -102,7 +102,7 @@ public class SingleMode : MonoBehaviour
       Vector3 v = Highlight.pos;
       int index = Service.PosToIndex(v);
       UndoBuffer.AddZnacznik(Service.IndexToPos(index));
-      RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.maxHeight + 1, v.z), 0.5f, Vector3.down, Service.rayHeight, 1 << 9);
+      RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.maxHeight, v.z), 0.5f, Vector3.down, Service.rayHeight, 1 << 9);
       List<GameObject> to_update = new List<GameObject>();
       foreach (RaycastHit hit in hits)
         to_update.Add(hit.transform.gameObject);

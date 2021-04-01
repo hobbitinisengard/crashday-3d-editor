@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-// Isn't used in editor.
+// Isn't used in editor
 public class Creatermcpos : MonoBehaviour
 {
   RaycastHit hit;

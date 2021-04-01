@@ -1,22 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 //Handles BUILD mode.
+public enum Border { V1U, V2U, H1R, H2R, V2B, V1B, H2L, H1L }
+
 public class Build : MonoBehaviour
 {
   // "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
   // "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
   public GameObject editorPanel; //-> slidercase.cs
   public Text CURRENTELEMENT; //name of currently selected element on top of the building menu
+  public Text BuildButtonText; // text 'build' in build button
   public GameObject savePanel; // "save track scheme" menu
+  public Material partiallytransparent;
 
   public bool LMBclicked = false;
   public bool AllowLMB = false;
   /// <summary>obj_rmc = current RMC</summary>
   public static GameObject current_rmc;
+  public static bool enableMixing = false;
+  public static byte MixingHeight = 0;
   /// <summary>current tile</summary>
-  GameObject Current_tile;
   /// <summary>former position of temporary placement of tile in build mode</summary>
   Vector3 last_trawa;
   public static bool nad_wczesniej = Highlight.over;
@@ -41,6 +47,10 @@ public class Build : MonoBehaviour
         cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
 
       CURRENTELEMENT.text = EditorMenu.tile_name;
+      if (Input.GetKeyUp(KeyCode.M))
+        SwitchMixingMode();
+      if (enableMixing)
+        CtrlWithMousewheelWorks();
       if (Input.GetKeyDown(KeyCode.Q))
         InverseState(); // Q enabled inversion
       if (Input.GetKey(KeyCode.X))
@@ -86,7 +96,8 @@ public class Build : MonoBehaviour
           else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && AllowLMB)
           {//Place currently showed tile on terrain
             LMBclicked = true;
-            Save_tile_properties(EditorMenu.tile_name, inversion, cum_rotation, new Vector3Int(Highlight.t.x / 4, 0, Highlight.t.z / 4));
+            Save_tile_properties(EditorMenu.tile_name, inversion, cum_rotation, 
+              new Vector3Int(Highlight.t.x / 4, 0, Highlight.t.z / 4), enableMixing ? MixingHeight : (byte)0);
           }
           if (Input.GetMouseButtonDown(1) && Highlight.over && !LMBclicked)
           {//Rotation with RMB
@@ -114,6 +125,37 @@ public class Build : MonoBehaviour
       nad_wczesniej = false;
     }
   }
+  void CtrlWithMousewheelWorks()
+  {
+    if (Input.GetAxis("Mouse ScrollWheel") != 0 && Input.GetKey(KeyCode.LeftControl))
+    {
+      if (Input.GetAxis("Mouse ScrollWheel") > 0)
+      {
+        if (MixingHeight < 255)
+          MixingHeight += 1;
+        else
+          return;
+      }
+      else
+      {
+        if (MixingHeight > 0)
+          MixingHeight -= 1;
+        else
+          return;
+      }
+      MixingHeightPreview();
+    }
+  }
+  /// <summary>Displays transparent cuboid for 2 secs.</summary>
+  public void MixingHeightPreview()
+  {
+    GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
+    Destroy(preview.GetComponent<BoxCollider>());
+    preview.GetComponent<MeshRenderer>().material = partiallytransparent;
+    preview.transform.localScale = new Vector3(3f, 0.05f, 3);
+    preview.transform.position = new Vector3(2 + Highlight.t.x, MixingHeight/5f, 2 + Highlight.t.z);
+    Destroy(preview, 2);
+  }
   /// <summary>
   /// Toggles off tile preview 
   /// </summary>
@@ -139,24 +181,33 @@ public class Build : MonoBehaviour
     if (Input.GetMouseButtonDown(0))
       Del_underlying_element();
   }
-  void PickUpTileUnderCursor()
+  void SwitchMixingMode()
   {
-    Vector3 v = Highlight.pos;
-    v.y = Service.maxHeight + 1;
-    bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
-    if (traf)
+    enableMixing = !enableMixing;
+    if (enableMixing)
     {
-      EditorMenu.tile_name = hit.transform.name;
-      editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[EditorMenu.tile_name].TilesetName);
+      BuildButtonText.color = new Color32(39, 255, 0, 255);
+    }
+    else
+    {
+      BuildButtonText.color = new Color32(255, 161, 54, 255);
     }
   }
-  public static bool IsCheckpoint(string nazwa_tilesa)
+  public static void DelLastPrefab()
   {
-    return TileManager.TileListInfo[nazwa_tilesa].IsCheckpoint;
+    if (current_rmc != null)
+    {
+      Unhide_trawkas(current_rmc.transform.position);
+      Vector3Int pos = Vpos2epos(current_rmc);
+      List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
+      DestroyImmediate(current_rmc);
+      RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
+      UpdateTiles(surroundings);
+    }
   }
   public static void Del_underlying_element()
   {
-    bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight + 1, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+    bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
     if (traf && hit.transform.gameObject != current_rmc)
     {
       Vector3Int pos = Vpos2epos(hit.transform.gameObject);
@@ -171,16 +222,39 @@ public class Build : MonoBehaviour
       List<GameObject> to_restore = Get_surrounding_tiles(hit.transform.gameObject);
       DestroyImmediate(hit.transform.gameObject);
       Service.TilePlacementArray[pos.z, pos.x].Name = null;
-      Przywroc_teren(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
+      RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
       UpdateTiles(to_restore);
     }
   }
+  void PickUpTileUnderCursor()
+  {
+    Vector3 v = Highlight.pos;
+    v.y = Service.maxHeight;
+    bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+    if (traf)
+    {
+      EditorMenu.tile_name = hit.transform.name;
+      editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[EditorMenu.tile_name].TilesetName);
+    }
+  }
+  public static bool IsCheckpoint(string nazwa_tilesa)
+  {
+    return TileManager.TileListInfo[nazwa_tilesa].IsCheckpoint;
+  }
+
   static void Unhide_trawkas(Vector3 pos)
   {
-    pos.y = Service.maxHeight + 1;
+    pos.y = Service.maxHeight;
     RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.rayHeight, 1 << 8);
     foreach (RaycastHit hit in hits)
       hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = true;
+  }
+  static void Hide_trawkas(Vector3 pos)
+  {
+    pos.y = Service.maxHeight;
+    RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.rayHeight, 1 << 8);
+    foreach (RaycastHit hit in hits)
+      hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = false;
   }
   public static Vector3Int Vpos2epos(GameObject rmc)
   {
@@ -190,22 +264,10 @@ public class Build : MonoBehaviour
     to_return.z = Mathf.RoundToInt((rmc.transform.position.z - 2 - 2 * (dim.z - 1)) / 4f);
     return to_return;
   }
-  public static void DelLastPrefab()
-  {
-    if (current_rmc != null)
-    {
-      Unhide_trawkas(current_rmc.transform.position);
-      Vector3Int pos = Vpos2epos(current_rmc);
-      List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
-      DestroyImmediate(current_rmc);
-      Przywroc_teren(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
-      UpdateTiles(surroundings);
-    }
-  }
   public static int[] GetRmcIndices(GameObject rmc)
   {
     List<int> to_return = new List<int>();
-    Vector3Int LD = GetLDpos(rmc);
+    Vector3Int LD = GetBLPos(rmc);
     Vector3Int tileDims = GetTileDims(current_rmc);
     for (int z = 0; z <= 4 * tileDims.z; z++)
     {
@@ -222,7 +284,7 @@ public class Build : MonoBehaviour
     foreach (int index in indexes)
     {
       Vector3 pos = Service.IndexToPos(index);
-      pos.y = Service.maxHeight + 1;
+      pos.y = Service.maxHeight;
       RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
       foreach (RaycastHit hit in hits)
         if (!to_return.Contains(hit.transform.gameObject))
@@ -242,7 +304,7 @@ public class Build : MonoBehaviour
     foreach (GameObject znacznik in znaczniki)
     {
       Vector3 pos = znacznik.transform.position;
-      pos.y = Service.maxHeight + 1;
+      pos.y = Service.maxHeight;
       RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
       foreach (RaycastHit hit in hits)
         if (!to_return.Contains(hit.transform.gameObject))
@@ -257,7 +319,9 @@ public class Build : MonoBehaviour
   {
     rmc_o.layer = 10;
     List<GameObject> to_return = new List<GameObject>();
-    RaycastHit[] hits = Physics.BoxCastAll(rmc_o.transform.position, rmc_o.GetComponent<MeshFilter>().mesh.bounds.size * 0.55f, Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+    Vector3 extents = rmc_o.GetComponent<MeshFilter>().mesh.bounds.extents;
+    extents.y = 1; // bounding box for boxcast must have non-zero height
+    RaycastHit[] hits = Physics.BoxCastAll(rmc_o.transform.position, extents, Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
     foreach (RaycastHit hit in hits)
       to_return.Add(hit.transform.gameObject);
     rmc_o.layer = 9;
@@ -266,7 +330,7 @@ public class Build : MonoBehaviour
   /// <summary>
   /// Returns bottom left point of tile in global coords
   /// </summary>
-  public static Vector3Int GetLDpos(GameObject rmc_o)
+  public static Vector3Int GetBLPos(GameObject rmc_o)
   {
     Vector3Int to_return = new Vector3Int();
     Vector3 el_pos = rmc_o.transform.position;
@@ -276,7 +340,7 @@ public class Build : MonoBehaviour
 
     if (to_return.z % 4 != 0 || to_return.z % 4 != 0)
     {
-      Debug.LogError("Źle ustawiony LD=" + to_return);
+      Debug.LogError("Wrong position of BL=" + to_return);
     }
     return to_return;
   }
@@ -289,41 +353,44 @@ public class Build : MonoBehaviour
     Vector2Int dimVec = TileManager.GetRealDims(rmc_o.name, isRotated);
     return new Vector3Int(dimVec.x, 0, dimVec.y);
   }
-
-  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int p)
+  /// <summary>
+  /// Pass name as string "null" save only inversion and rotation without name
+  /// </summary>
+  /// <param name="nazwa"></param>
+  /// <param name="inwersja"></param>
+  /// <param name="rotacja"></param>
+  /// <param name="p"></param>
+  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int p, byte Height = 0)
   {
-    Service.TilePlacementArray[p.z, p.x].Inversion = inwersja;
-    Service.TilePlacementArray[p.z, p.x].Name = nazwa;
-    Service.TilePlacementArray[p.z, p.x].Rotation = rotacja;
-    if (TileManager.TileListInfo[nazwa].IsCheckpoint && !Service.TRACK.Checkpoints.Contains((ushort)(p.x + (Service.TRACK.Height - 1 - p.z) * Service.TRACK.Width)))
+    Service.TilePlacementArray[p.z, p.x].Set(nazwa, rotacja, inwersja, Height);
+
+    if (TileManager.TileListInfo[nazwa].IsCheckpoint)// && !Service.TRACK.Checkpoints.Contains((ushort)(p.x + (Service.TRACK.Height - 1 - p.z) * Service.TRACK.Width)))
     {
       Service.TRACK.Checkpoints.Add((ushort)(p.x + (Service.TRACK.Height - 1 - p.z) * Service.TRACK.Width));
       Service.TRACK.CheckpointsNumber++;
     }
-
   }
   /// <summary>
-  /// Recover terrain before "matching" terrain up. Tile which terrain is recovered has to be already destroyed!
+  /// Recover terrain before "matching" terrain up. Tile whom terrain is recovered has to be already destroyed!
   /// </summary>
-  static void Przywroc_teren(List<int> indexes)
+  static void RecoverTerrain(List<int> indexes)
   {
     if (indexes == null || indexes.Count == 0)
       return;
     for (int i = 0; i < indexes.Count; i++)
     {
       Vector3 v = Service.IndexToPos(indexes[i]);
-      v.y = Service.maxHeight + 1;
+      v.y = Service.maxHeight;
       bool traf = Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
       if (traf)
       {
-        Service.former_heights[indexes[i]] = hit.point.y;
-        //Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
+        //Service.former_heights[indexes[i]] = hit.point.y;
+        // Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
       }
       else
       {
         //Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.yellow, 5);
       }
-
     }
     Service.UpdateMapColliders(indexes, true);
   }
@@ -334,16 +401,18 @@ public class Build : MonoBehaviour
   /// </summary>
   static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int tileDims)
   {
-    pos.y = Service.maxHeight + 1;
+    pos.y = Service.maxHeight;
     if (pos.z <= 0 || pos.z >= 4 * Service.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Service.TRACK.Width)
       return false;
-    RaycastHit[] hits = Physics.BoxCastAll(pos, new Vector3(4 * tileDims.x * 0.4f, 1, 4 * tileDims.z * 0.4f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
-    return (hits.Length == 0) ? true : false;
+    if (Physics.BoxCast(pos, new Vector3(4 * tileDims.x * 0.4f, 1, 4 * tileDims.z * 0.4f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9))
+      return false;
+    else
+      return true;
   }
 
   static bool CheckPosition(int offsetx, int offsetz)
   {
-    Vector3 v = new Vector3(Highlight.t.x + 2f + 4 * offsetx, Service.maxHeight + 1, Highlight.t.z + 2f + 4 * offsetz);
+    Vector3 v = new Vector3(Highlight.t.x + 2f + 4 * offsetx, Service.maxHeight, Highlight.t.z + 2f + 4 * offsetz);
     //Vector3 x = new Vector3(v.x, -5, v.z);
     //Debug.DrawLine(v, x, Color.yellow, 500);
     bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9 | 1 << 8);
@@ -363,12 +432,263 @@ public class Build : MonoBehaviour
       return 0;
     }
   }
+  /// <summary>
+  /// For example returns Border.H1L and Border.H2R for 1x1V1. 
+  /// </summary>
+  /// <param name="RMCname"></param>
+  /// <returns></returns>
+  static List<Border> GetNonRestrictedBorders(string RMCname)
+  {
+    List<Border> toreturn = new List<Border>();
+    if (!RMCname.Contains("V1"))
+    {
+      toreturn.Add(Border.V1U);
+      toreturn.Add(Border.V1B);
+      Debug.Log("V1U, V1B");
+    }
+    if (!RMCname.Contains("H1"))
+    {
+      toreturn.Add(Border.H1L);
+      toreturn.Add(Border.H1R);
+      Debug.Log("H1L, H1R");
+    }
+    if (RMCname[0] == 2 && !RMCname.Contains("V2"))
+    {
+      toreturn.Add(Border.V2U);
+      toreturn.Add(Border.V2B);
+      Debug.Log("V2U, V2B");
+    }
+    if (RMCname[2] == 2 && !RMCname.Contains("H2"))
+    {
+      toreturn.Add(Border.H2L);
+      toreturn.Add(Border.H2R);
+      Debug.Log("H2L, H2R");
+    }
+    return toreturn;
+  }
+  /// <summary>
+  /// Returns vector mov (rmc.transform.position + mov) for raycast of given border depending on rmc dims
+  /// </summary>
+  static Vector3 GetMovVectorForBorder(Border b, Vector2Int dims, GameObject rmc)
+  {
+    Vector3 v = new Vector3();
+    if (b == Border.H1L)
+    {
+      v.Set(-dims.x * 2, 0, dims.y == 1 ? 0 : 2);
+    }
+    else if (b == Border.H1R)
+    {
+      v.Set(dims.x * 2, 0, dims.y == 1 ? 0 : 2);
+    }
+    else if (b == Border.V1U)
+    {
+      v.Set(dims.x == 1 ? 0 : -2, 0, dims.y * 2);
+    }
+    else if (b == Border.V1B)
+    {
+      v.Set(dims.x == 1 ? 0 : -2, 0, -dims.y * 2);
+    }
+    else if (b == Border.H2L)
+    {
+      v.Set(-4, 0, -2);
+    }
+    else if (b == Border.H2R)
+    {
+      v.Set(4, 0, 2);
+    }
+    else if (b == Border.V2U)
+    {
+      v.Set(2, 0, 4);
+    }
+    else //if(b == Border.V2B)
+    {
+      v.Set(2, 0, -4);
+    }
+    Vector3 angles = rmc.transform.rotation.eulerAngles;
+    v = Quaternion.Euler(angles) * v; // rotate vector
+    return v;
+  }
+  /// <summary>
+  /// Translates vector pointing to border to that border
+  /// </summary>
+  /// <param name="v">Vector pointing from center of given tile to border</param>
+  /// <param name="dims">Default dims of tile</param>
+  /// <returns></returns>
+  static Border Vector2Border(Vector3 v, Vector2Int dims)
+  {
+    if (dims.y == 1)
+    {
+      if (v.x == dims.x * 2 && v.z == 0)
+        return Border.H1R;
+      if (v.x == -dims.x * 2 && v.z == 0)
+        return Border.H1L;
+    }
+    if (dims.y == 2)
+    {
+      if (v.x == dims.x * 2 && v.z == 2)
+        return Border.H1R;
+      if (v.x == -dims.x * 2 && v.z == 2)
+        return Border.H1L;
+    }
+    if (v.x == 2 && v.z == -4)
+      return Border.V2B;
+    if (v.x == 2 && v.z == 4)
+      return Border.V2U;
+    if (v.x == 4 && v.z == 2)
+      return Border.H2R;
+    if (v.x == -4 && v.z == -2)
+      return Border.H2L;
+    if (dims.x == 1)
+    {
+      if (v.x == 0 && v.z == -dims.y * 2)
+        return Border.V1B;
+      else if (v.x == 0 && v.z == dims.y * 2)
+        return Border.V1U;
+    }
+    if (dims.x == 2)
+    {
+      if (v.x == -2 && v.z == -dims.y * 2)
+        return Border.V1B;
+      else if (v.x == 0 && v.z == -dims.y * 2)
+        return Border.V1B;
+    }
+    Debug.LogError("Wrong vector input");
+    return Border.H1L;
+  }
+  /// <summary>
+  /// Update rmcs depending on their neighbourhood
+  /// </summary>
+  /// <param name="rmcs"></param>
+  static void ApplyIllogicalBendingRuleForRmcs(List<GameObject> rmcs)
+  {
+    // List of List of Borders of rmcs which need to be bent despite possible perpendicular restrictions
+    List<List<Border>> BordersOfRmcs = new List<List<Border>>();
+    // If element has non-restricted border, check if its neighbour restricts it
+    foreach (GameObject rmc in rmcs)
+    {
+      rmc.layer = 10;
+      string RMCname = TileManager.TileListInfo[rmc.name].RMCname;
+      // List of borders to check directly from rmc name
+      List<Border> Borders_to_check = GetNonRestrictedBorders(RMCname);
+      Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
 
+      List<Border> BordersToUpdate = new List<Border>();
+      foreach (Border b in Borders_to_check)
+      {
+        // Mov vector has to take into consideration rotation of an object
+        Vector3 mov = GetMovVectorForBorder(b, dims, rmc);
+        mov += rmc.transform.position;
+        mov.y = Service.rayHeight;
+        if (Physics.SphereCast(mov, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight + 1, 1 << 9))
+        {
+          if (Does_this_tile_restrict_given_border(hit.transform.gameObject, mov))
+          {
+            BordersToUpdate.Add(b);
+            //Service.PosToIndex()
+          }
+        }
+      }
+      BordersOfRmcs.Add(BordersToUpdate);
+      rmc.layer = 9;
+    }
+    if (BordersOfRmcs.Count == 0)
+      return;
+    // Time to update rmcs with new vertices
+    for (int i = 0; i < rmcs.Count; i++)
+    {
+      Vector3[] verts = rmcs[i].GetComponent<MeshFilter>().mesh.vertices;
+      List<Vector2> vertices2D = new List<Vector2>(verts.Length);
+      // map vertices to 2d space
+      for (int j = 0; j < verts.Length; j++)
+        vertices2D.Add(new Vector2(verts[j].x, verts[j].z));
+
+      // add new vertices. Iterate over border list that is assigned for every rmc
+      foreach (Border b in BordersOfRmcs[i])
+      {
+        Vector2[] newpoints = GenerateIllogicalBendVerts(b, rmcs[i]);
+        vertices2D.AddRange(newpoints);
+      }
+      Triangulator tr = new Triangulator(vertices2D.ToArray());
+      int[] indices = tr.Triangulate();
+
+      // Create the Vector3 vertices
+      Vector3[] Vertices3D = new Vector3[vertices2D.Count];
+      for (int j = 0; j < Vertices3D.Length; j++)
+      {
+        Vertices3D[j].Set(vertices2D[j].x, 0, vertices2D[j].y);
+        // Debug.Log(Vertices3D[j]);
+      }
+
+      // Create the mesh
+      Mesh mesh = new Mesh();
+      mesh.vertices = Vertices3D;
+      mesh.triangles = indices;
+      mesh.RecalculateNormals();
+      mesh.RecalculateBounds();
+
+      rmcs[i].GetComponent<MeshFilter>().mesh = mesh;
+      rmcs[i].GetComponent<MeshCollider>().sharedMesh = null;
+      rmcs[i].GetComponent<MeshCollider>().sharedMesh = mesh;
+    }
+  }
+  static Vector2[] GenerateIllogicalBendVerts(Border b, GameObject rmc)
+  {
+    Vector2[] to_return = new Vector2[3];
+    string RMCname = TileManager.TileListInfo[rmc.name].RMCname;
+    Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
+    Vector3 mov = GetMovVectorForBorder(b, dims, rmc);
+    Vector2 newpoint = new Vector2(mov.x, mov.z);
+    string BorderName = Enum.GetName(typeof(Border), b);
+    if (BorderName.Contains("L"))
+    {// move right
+      to_return[0] = newpoint + Vector2.right;
+      to_return[1] = to_return[0] + Vector2.up;
+      to_return[2] = to_return[0] + Vector2.down;
+    }
+    else if (BorderName.Contains("R"))
+    {// move left
+      to_return[0] = newpoint + Vector2.left;
+      to_return[1] = to_return[0] + Vector2.up;
+      to_return[2] = to_return[0] + Vector2.down;
+    }
+    else if (BorderName.Contains("U"))
+    {// move down
+      to_return[0] = newpoint + Vector2.down;
+      to_return[1] = to_return[0] + Vector2.left;
+      to_return[2] = to_return[0] + Vector2.right;
+    }
+    else if (BorderName.Contains("D"))
+    {// move up
+      to_return[0] = newpoint + Vector2.up;
+      to_return[1] = to_return[0] + Vector2.left;
+      to_return[2] = to_return[0] + Vector2.right;
+    }
+
+    return to_return;
+  }
+  static bool Does_this_tile_restrict_given_border(GameObject restricting_tile, Vector3 borderPos)
+  {
+    string RMCname = TileManager.TileListInfo[restricting_tile.name].RMCname;
+    Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
+    Vector3 angles = restricting_tile.transform.rotation.eulerAngles;
+    Vector3 exam = borderPos - restricting_tile.transform.position;
+    // exam vector points to border 
+    exam = Quaternion.Euler(angles) * exam;
+    Border border = Vector2Border(exam, dims);
+    string BorderName = Enum.GetName(typeof(Border), border); // e.g H1L
+    BorderName = BorderName.Substring(0, 2); // e.g H1
+    if (RMCname.Contains(BorderName))
+      return true;
+    else
+      return false;
+  }
   /// <summary>
   /// Places given tiles again onto terrain. (This function usually runs after changing terrain)
   /// </summary>
   public static void UpdateTiles(List<GameObject> rmcs)
   {
+    // 0. Rmc can change dynamically if less restrictive rmc lies next to more restrictive rmc
+    //ApplyIllogicalBendingRuleForRmcs(rmcs);
     //1. Updating only vertices of every RMC in list.
     foreach (GameObject rmc_o in rmcs)
     {
@@ -387,8 +707,8 @@ public class Build : MonoBehaviour
       rmc.RecalculateNormals();
       rmc_mc = null;
       rmc_mc = rmc;
-      //rmc_o.SetActive(false);
-      //rmc_o.SetActive(true);
+      rmc_o.SetActive(false);
+      rmc_o.SetActive(true);
     }
     //2. Matching edge of every rmc up if under or above given vertex already is another vertex (of another tile)
     foreach (GameObject rmc_o in rmcs)
@@ -402,39 +722,37 @@ public class Build : MonoBehaviour
       Vector3Int pos = Vpos2epos(rmc_o);
       bool Mirrored = Service.TilePlacementArray[pos.z, pos.x].Inversion;
       int Rotation = Service.TilePlacementArray[pos.z, pos.x].Rotation;
-      GameObject Prefab = rmc_o.transform.GetChild(0).gameObject;
-      //Get original dimensions
-      Vector3Int tileDims = GetTileDims(rmc_o);
-
+      byte Height = Service.TilePlacementArray[pos.z, pos.x].Height;
       //Delete old prefab and replace it with plain new.
-      Vector3 old_pos = Prefab.transform.position;
-      string prefab_name = Prefab.name;
+      if (rmc_o.transform.childCount != 0)
+        DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
+      GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform);
 
-      DestroyImmediate(Prefab);
-      Prefab = GetPrefab(prefab_name, old_pos, Quaternion.Euler(0, Rotation, 0), rmc_o.transform);
-      bool anythingchanged = false;
-      Vector3Int LDpos = GetLDpos(rmc_o);
+      Vector3Int tileDims = GetTileDims(rmc_o);
+      Vector3Int LDpos = GetBLPos(rmc_o);
+
+      Hide_trawkas(rmc_o.transform.position);
       //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
       for (int z = 0; z <= 4 * tileDims.z; z++)
       {
         for (int x = 0; x <= 4 * tileDims.x; x++)
         {
-          if (x != 0 && z != 0 && x != 4 * tileDims.x && z != 4 * tileDims.z)
+          if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
           {
-            Schowaj_8(x, z, LDpos, ref anythingchanged); // środek
+            Match_boundaries(x, z, LDpos); // borders
           }
           else
           {
-            Match_boundaries(x, z, LDpos, ref anythingchanged); //obrzeża
+            Hide_Inside(x, z, LDpos);
           }
         }
       }
       Service.UpdateMapColliders(rmc_o.transform.position, tileDims);
       GetPrefabMesh(Mirrored, Prefab);
-      Tiles_to_RMC_Cast(Prefab, Mirrored);
+      Tiles_to_RMC_Cast(Prefab, Mirrored, Height);
       rmc_o.layer = 9;
+
     }
-      
   }
 
   public static void InverseMesh(Mesh mesh)
@@ -444,145 +762,134 @@ public class Build : MonoBehaviour
       verts[i] = new Vector3(-verts[i].x, verts[i].y, verts[i].z);
     mesh.vertices = verts;
 
-    for (int i = 0; i < mesh.subMeshCount; i++) // Każdemu materiałowi trzeba przypisać tablicę trójkątów
+    for (int i = 0; i < mesh.subMeshCount; i++) // Every material has to be assigned with triangle array
     {
       int[] trgs = mesh.GetTriangles(i);
       mesh.SetTriangles(trgs.Reverse().ToArray(), i);
     }
   }
-  public static GameObject GetPrefab(string TileName, Vector3 position, Quaternion rotation, Transform parent)
+  public static GameObject GetPrefab(string TileName, Transform parent)
   {
     //set the model and textures for the tile
-    GameObject Prefab = new GameObject();
+    GameObject Prefab = new GameObject(TileName);
     Mesh m = TileManager.TileListInfo[TileName].Model.CreateMesh();
     var mf = Prefab.AddComponent<MeshFilter>();
     mf.mesh = m;
     var mr = Prefab.AddComponent<MeshRenderer>();
     mr.materials = TileManager.TileListInfo[TileName].Materials.ToArray();
-    Prefab.transform.position = position;
-    Prefab.transform.rotation = rotation;
-    Prefab.transform.SetParent(parent);
-    Prefab.name = TileName;
+    Prefab.transform.SetParent(parent, false);
     Prefab.transform.localScale /= 5f;
     return Prefab;
   }
 
   /// <summary>
-  /// Places tile having given: bottom-left position, its name, rotation, inversion
+  /// Instantiates rmc with no correct placing and no prefab. Rest of the work is delegated to UpdateTiles function
   /// </summary>
-  public GameObject PlaceTile(Vector3Int LDpos, string name, int cum_rotation, bool mirrored = false)
+  public GameObject PlaceTile(Vector3Int BLpos, string name, int cum_rotation, bool mirrored = false, byte Height = 0)
   {
+    // Placing tile with LMB cannot be accepted if X is pressed or there's no place 4 tile 
     AllowLMB = false;
+    // Don't allow placing tile in delete mode
     if (Input.GetKey(KeyCode.X))
       return null;
-
     Quaternion rotate_q = Quaternion.Euler(new Vector3(0, cum_rotation, 0));
-    //Get original dimensions
-    Vector3Int tileDims = new Vector3Int(TileManager.TileListInfo[name].Size.x, 0, TileManager.TileListInfo[name].Size.y);
-    GameObject rmc_PRE = GetRMC(name);
+
     //Get real dims of tile
+    Vector3Int tileDims = new Vector3Int(TileManager.TileListInfo[name].Size.x, 0, TileManager.TileListInfo[name].Size.y);
     if (cum_rotation == 90 || cum_rotation == 270)
     {
       int pom = tileDims.x;
       tileDims.x = tileDims.z;
       tileDims.z = pom;
+
     }
-    Vector3Int rmcPlacement = new Vector3Int(LDpos.x + 2 + 2 * (tileDims.x - 1), 0, LDpos.z + 2 + 2 * (tileDims.z - 1));
+    Vector3Int rmcPlacement = new Vector3Int(BLpos.x + 2 + 2 * (tileDims.x - 1), 0, BLpos.z + 2 + 2 * (tileDims.z - 1));
 
     if (!Service.Isloading)
     {
-      if (!IsTherePlace4Tile(rmcPlacement, tileDims))
+      if (enableMixing)
+      {
+        if (!IsTherePlaceForQuarter(BLpos))
+        {
+
+          return null;
+        }
+      }
+      else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
       {
         current_rmc = null;
         return null;
       }
     }
+
     AllowLMB = true;
-    //______________________
-    //PLACE RMC ONTO TERRAIN
-    //----------------------
-    current_rmc = Instantiate(rmc_PRE, rmcPlacement, rotate_q);
 
-    //if (mirrored)
-    //  InverseMesh(current_rmc.GetComponent<MeshFilter>().mesh);
-
+    // Instantiate RMC
+    current_rmc = Instantiate(GetRMC(name), rmcPlacement, rotate_q);
     current_rmc.name = name;
-
     Mesh rmc = current_rmc.GetComponent<MeshFilter>().mesh;
-    current_rmc.layer = 10;
-
     rmc.MarkDynamic();
-
+    current_rmc.GetComponent<MeshRenderer>().enabled = false;
+    //Update RMC
     Vector3[] verts = rmc.vertices;
-
-    MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
-
-    //Align RMC
     for (int index = 0; index < rmc.vertices.Length; index++)
     {
       Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(rmc.vertices[index]));
       verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
     }
-
-    //update RMC
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
-    rmc_mc.sharedMesh = null;
-    rmc_mc.sharedMesh = rmc;
-    current_rmc.GetComponent<MeshRenderer>().enabled = false;
-    if (!Service.Isloading)
+    MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
+    Service.TilePlacementArray[BLpos.z / 4, BLpos.x / 4].t_verts = GetRmcIndices(current_rmc);
+
+    List<GameObject> rmcsToUpdate = Get_surrounding_tiles(current_rmc);
+    GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
+    current_rmc.layer = 10;
+    Vector3Int LDpos = GetBLPos(current_rmc);
+
+    Hide_trawkas(current_rmc.transform.position);
+    //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
+    for (int z = 0; z <= 4 * tileDims.z; z++)
     {
-      List<GameObject> rmcsToUpdate = new List<GameObject>();
-      bool anythingchanged = false;
-      //_______________________
-      //Match terrain to rmc
-      //---------------------------
-      for (int z = 0; z <= 4 * tileDims.z; z++)
+      for (int x = 0; x <= 4 * tileDims.x; x++)
       {
-        for (int x = 0; x <= 4 * tileDims.x; x++)
+        if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
         {
-          if (z != 0 && z != 4 * tileDims.z && x != 0 && x != 4 * tileDims.x)
-          {
-            Schowaj_8(x, z, LDpos, ref anythingchanged); // środek
-          }
-          else
-          {
-            rmcsToUpdate = Match_boundaries(x, z, LDpos, ref anythingchanged, rmcsToUpdate); //obrzeża
-          }
+          Match_boundaries(x, z, LDpos); // borders
+        }
+        else
+        {
+          Hide_Inside(x, z, LDpos);
         }
       }
-      if (anythingchanged)
-      {
-        Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
-      }
-
-      if (rmcsToUpdate != null)
-      {
-        UpdateTiles(rmcsToUpdate);
-      }
     }
-    //_________________________
-    //PLACE TILE ONTO RMC
-    //-------------------------
-    GameObject Prefab = GetPrefab(name, rmcPlacement, Quaternion.Euler(new Vector3(0, cum_rotation, 0)), current_rmc.transform);
-
-    //List<Mesh> meshes = GetPrefabMeshList(mirrored, Prefab);
+    Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
     GetPrefabMesh(mirrored, Prefab);
-    Tiles_to_RMC_Cast(Prefab, mirrored);
-
+    if(Service.Isloading)
+      Tiles_to_RMC_Cast(Prefab, mirrored, Height);
+    else
+      Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
     current_rmc.layer = 9;
-    Service.TilePlacementArray[LDpos.z / 4, LDpos.x / 4].t_verts = GetRmcIndices(current_rmc);
-
-    if (Service.Isloading)
+    if (!Service.Isloading)
     {
-      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(LDpos.x / 4, 0, LDpos.z / 4));
-      return current_rmc;
+      UpdateTiles(rmcsToUpdate);
+      return null;
     }
     else
-      return null;
+    {
+      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(BLpos.x / 4, 0, BLpos.z / 4), Height);
+      return current_rmc;
+    }
   }
-
+  bool IsTherePlaceForQuarter(Vector3Int BLpos)
+  {
+    BLpos.x += 2; BLpos.z += 2; BLpos.y = Service.maxHeight;
+    if (Physics.Raycast(BLpos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
+      return false;
+    else
+      return true;
+  }
   private GameObject GetRMC(string nazwa_tilesa)
   {
     // unity loads models with -x axis??
@@ -590,10 +897,6 @@ public class Build : MonoBehaviour
     return RMC;
   }
 
-  /// <summary>
-  /// Lista meshów. \-/ dziecka prefaba zaznacz MarkDynamic(), zainwersjuj, dodaj do listy. Jeśli nie ma dzieci, to prefab dodaj do listy meshów
-  /// returns nested meshes of given tile in simple list
-  /// </summary>
   static void GetPrefabMesh(bool mirrored, GameObject prefab)
   {
     prefab.GetComponent<MeshFilter>().mesh.MarkDynamic();
@@ -602,51 +905,54 @@ public class Build : MonoBehaviour
   }
 
   /// <summary>
-  /// getPzero dla nazwa_tilesa, \-/ z meshes ray na 10. Jeśli nie trafił to na 8, jak nie trafił to podstawową wysokością jest Bounding height
-  /// Logic for placing tile onto RMC. Used in PlacePrefab and UpdateTiles
+  /// getPzero for prefab, mark rmc with layer 10. If raycast wasn't successful then try layer 8 (grass), if still wasn't successful, then set height of 0
+  /// Raycast logic for placing tile onto RMC. Used in PlacePrefab and UpdateTiles
   /// </summary>
-  static void Tiles_to_RMC_Cast(GameObject prefab, bool inwersja)
+  static void Tiles_to_RMC_Cast(GameObject prefab, bool inwersja, byte Height = 0)
   {
     Mesh mesh = prefab.GetComponent<MeshFilter>().mesh;
     float pzero = GetPzero(prefab.name);
     // Raycast tiles(H) \ rmc
-      Vector3[] verts = mesh.vertices;
-      for (int i = 0; i < mesh.vertices.Length; i++)
-      {
-        Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
-        if (Physics.Raycast(new Vector3(v.x, Service.maxHeight + 1, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
-        { // own rmc
+    Vector3[] verts = mesh.vertices;
+    for (int i = 0; i < mesh.vertices.Length; i++)
+    {
+      Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
+      if (Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
+      { // own rmc
+        verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
+      }
+      else
+      if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight, v.z), 0.005f, Vector3.down, out hit, Service.rayHeight, 1 << 10))
+      { // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
+        verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
+      }
+      else
+      { // when tile vertex is out of its dimensions (eg crane), cast on foreign rmc or map
+        if (Physics.SphereCast(new Vector3(v.x, Service.minHeight - 1, v.z), 0.2f, Vector3.up, out hit, Service.rayHeight, 1 << 9 | 1 << 8))
           verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-        }
-        else
-        if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight + 1, v.z), 0.005f, Vector3.down, out hit, Service.rayHeight, 1 << 10))
-        { // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
-          verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-        }
-        else
-        { // when tile vertex is out of its dimensions (eg crane), cast on foreign rmc or map
-          if (Physics.SphereCast(new Vector3(v.x, Service.minHeight - 1, v.z), 0.2f, Vector3.up, out hit, Service.rayHeight, 1 << 9 | 1 << 8))
-            verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-          else // out of map boundaries: height of closest edge
-            verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Service.current_heights[0] + v.y - pzero, v.z));
-        }
+        else // out of map boundaries: height of closest edge
+          verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Service.current_heights[0] + v.y - pzero, v.z));
+      }
       mesh.vertices = verts;
       mesh.RecalculateBounds();
       mesh.RecalculateNormals();
+      prefab.SetActive(false);
+      prefab.SetActive(true);
+      prefab.transform.position = new Vector3(prefab.transform.position.x, Height / 5f, prefab.transform.position.z);
     }
-    UpdateBushes(prefab, inwersja);
+    //UpdateBushes(prefab, inwersja);
   }
 
   public static void UpdateBushes(GameObject prefab, bool inwersja)
   {
-    // TODO
+    // Nobody really needs it
     //foreach (Vegetation V in TileManager.TileListInfo[prefab.name].Bushes)
     //{
     //  GameObject tree_PRE = Resources.Load<GameObject>("vege/" + V.Name);
     //  Vector3 v = V.Position / 5f;
     //  v.x = (inwersja) ? -v.x : v.x;
     //  v = prefab.transform.TransformPoint(v);
-    //  Physics.Raycast(new Vector3(v.x, Service.maxHeight + 1, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10);
+    //  Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10);
     //  v.y = hit.point.y + tree_PRE.GetComponent<MeshFilter>().sharedMesh.bounds.extents.y / 5f;
     //  GameObject tree = Instantiate(tree_PRE, v, prefab.transform.rotation, prefab.transform);
     //}
@@ -663,7 +969,7 @@ public class Build : MonoBehaviour
         if (prefab.transform.GetChild(i).name == "main")
           return prefab.transform.GetChild(i).GetComponent<MeshFilter>().mesh;
 
-      return null; // <-- Never going to end up here, hopefully
+      return null; // <-- hopefully Never going to end up here
     }
     else
       return prefab.GetComponent<MeshFilter>().mesh;
@@ -672,104 +978,53 @@ public class Build : MonoBehaviour
   /// Toggles off visibility of terrain chunk laying under tile of bottom-left x,z. 
   /// Updates current_heights array. Layer of RMC has to be 10.
   /// </summary>
-  public static void Schowaj_8(int x, int z, Vector3Int LDpos, ref bool anythingchanged)
+  public static void Hide_Inside(int x, int z, Vector3Int LDpos)
   {
     x += LDpos.x;
     z += LDpos.z; //Mamy x,y są teraz globalne
     int index = x + 4 * z * Service.TRACK.Width + z;
     Vector3 v = new Vector3(x, Service.minHeight - 1, z);
-    if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.rayHeight, 1 << 10) && Mathf.Abs(Service.current_heights[index] - hit.point.y) > 0.01f)
+    if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.rayHeight, 1 << 10))
     {
       Service.current_heights[index] = hit.point.y;
-      anythingchanged = true;
     }
-
-    RaycastHit[] hits = Physics.SphereCastAll(v, 0.01f, Vector3.up, Service.rayHeight, 1 << 8);
-    foreach (RaycastHit h in hits)
-      h.transform.gameObject.GetComponent<MeshRenderer>().enabled = false;
   }
   /// <summary>
   /// Matches up height of terrain to height of vertex of current RMC (layer = 10)
   /// </summary>
-  public static List<GameObject> Match_boundaries(int x, int z, Vector3Int LDpos, ref bool anythingchanged, List<GameObject> toUpdate = null)
+  public static List<GameObject> Match_boundaries(int x, int z, Vector3Int LDpos)
   {
     x += LDpos.x;
     z += LDpos.z;
-    Vector3Int v = new Vector3Int(x, Service.maxHeight + 1, z);
+    Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
     int index = (x + 4 * z * Service.TRACK.Width + z);
-    if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10) && Mathf.Abs(Service.current_heights[index] - hit.point.y) > 0.1f)
+    if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
     {
-      anythingchanged = true;
       Service.current_heights[index] = hit.point.y;
-
-    }
-    if (toUpdate != null)
-    {
-      RaycastHit[] hits_to_update = Physics.SphereCastAll(v, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
-      foreach (RaycastHit h in hits_to_update)
-      {
-        if (!toUpdate.Contains(h.transform.gameObject))
-          toUpdate.Add(h.transform.gameObject);
-      }
-      return toUpdate;
     }
     return null;
   }
   /// <summary>
-  /// Matches vertices of RMCs one to another
+  /// Matches vertices of RMCs one to another. rmc_o layer = 10
   /// </summary>
   public static void Match_rmc2rmc(GameObject rmc_o)
   {
-
     Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
     Vector3[] verts = rmc.vertices;
     for (int index = 0; index < verts.Length; index++)
     {
       Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(rmc.vertices[index]));
-      if (Physics.Raycast(new Vector3(v.x, Service.maxHeight + 1, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
+      if (Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
       {
-        //Mamy znaczniki i tutaj jest punkt zmienionej wysokości (czerwony kwadracik)
-        if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight + 1, v.z), 0.005f, Vector3.down, out RaycastHit sgnHit, Service.rayHeight, 1 << 11) && sgnHit.transform.name == "on")
-        {
-          //Sprawdź czy rmc layer=9 ma tutaj vertexa.
-          {
-            bool rmc9matuvertexa = false;
-            foreach (Vector3 vo in hit.transform.gameObject.GetComponent<MeshFilter>().mesh.vertices)
-            {
-              Vector3Int vert = Vector3Int.RoundToInt(hit.transform.gameObject.transform.TransformPoint(vo));
-              if (vert.x + 4 * vert.z * Service.TRACK.Width + vert.z == v.x + 4 * v.z * Service.TRACK.Width + v.z)
-              {
-                rmc9matuvertexa = true;
-                break;
-              }
-            }
-            if (rmc9matuvertexa)
-            {
-              //Debug.DrawLine(new Vector3(v.x, Terenowanie.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.red, Terenowanie.rayHeight);
-              verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
-            }
-            else
-            {
-              //Debug.DrawLine(new Vector3(v.x, Terenowanie.maxHeight+1, v.z), new Vector3(v.x, 0, v.z), Color.gray, Terenowanie.rayHeight);
-              verts[index].y = hit.point.y;
-              //Helper.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z] = hit.point.y;
-            }
-          }
-
-        }
-        else // Normalne dorównanko
-        {
-          verts[index].y = hit.point.y;
-          //Helper.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z] = hit.point.y;
-        }
-
+        verts[index].y = hit.point.y;
+        Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z] = hit.point.y;
       }
     }
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
-    //rmc_o.SetActive(false);
-    //rmc_o.SetActive(true);
+    rmc_o.SetActive(false);
+    rmc_o.SetActive(true);
   }
 }
 
