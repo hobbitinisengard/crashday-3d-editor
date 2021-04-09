@@ -8,20 +8,15 @@ public class TilePlacement
   public bool Inversion;
   public byte Height;
   /// <summary>
-  /// signalizes that to place this element, its pos Y has to be decremented
-  /// </summary>
-  public bool BottomTop;
-  /// <summary>
   /// terrain vertices = list of vertices' indexes that this element contains
   /// </summary>
   public int [] t_verts;
-  public void Set(string nazwa, int rotacja, bool inwersja, byte Height, bool BottomTop = false)
+  public void Set(string nazwa, int rotacja, bool inwersja, byte Height)
   {
     this.Name = nazwa;
     this.Inversion = inwersja;
     this.Rotation = rotacja;
     this.Height = Height;
-    this.BottomTop = BottomTop;
   }
 
 }

@@ -144,7 +144,7 @@ public static class Service
         mc.GetComponent<MeshFilter>().mesh = mc.GetComponent<MeshCollider>().sharedMesh;
         mc.GetComponent<MeshCollider>().enabled = false;
         mc.GetComponent<MeshCollider>().enabled = true;
-       // mc.SetActive(false);
+        //mc.SetActive(false);
         //mc.SetActive(true);
       }
     }
@@ -174,7 +174,8 @@ public static class Service
   public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
   {
     rmc_pos.y = Service.maxHeight;
-    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 8);
+    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), 
+      Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 8);
     List<GameObject> mcs = new List<GameObject>();
     foreach (RaycastHit hit in hits)
     {

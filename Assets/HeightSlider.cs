@@ -96,6 +96,8 @@ public class HeightSlider : MonoBehaviour
   /// </summary>
   void Mousewheelcheck()
   {
+    if (!FlyCamera.isStandardCam)
+      return;
     if (Input.GetKey(KeyCode.R))
       return;
     if (Input.GetAxis("Mouse ScrollWheel") != 0 && IsEnteringKeypadValue)

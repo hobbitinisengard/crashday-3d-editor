@@ -32,12 +32,10 @@ public class Loader : MonoBehaviour
       {
         for (int x = 0; x < Service.TRACK.Width; x++)
         {
+          TrackTileSavable tile = Service.TRACK.TrackTiles[Service.TRACK.Height - z - 1][x];
           //  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as grass fields (FieldId = 0)  
-          if (Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].FieldId < Service.TRACK.FieldFiles.Count && Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].FieldId != 0)
+          if (tile.FieldId < Service.TRACK.FieldFiles.Count && tile.FieldId != 0)
           {
-            // assignment for clarity
-            TrackTileSavable tile = Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x];
-
             // without .cfl suffix
             string TileName = Service.TRACK.FieldFiles[tile.FieldId].Substring(0, Service.TRACK.FieldFiles[tile.FieldId].Length - 4);
             // ignore strange grass tiles
@@ -62,7 +60,8 @@ public class Loader : MonoBehaviour
                 Service.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
             }
             else
-              Service.TilePlacementArray[z - dim.y + 1, Service.TRACK.Width - 1 - x - dim.x + 1].Set(TileName, 360 - Rotation, !Inversion, Height);
+              Service.TilePlacementArray[z, Service.TRACK.Width - 1 - x - dim.x + 1].Set(
+                TileName, 360 - Rotation, !Inversion, Height);
           }
         }
       }
@@ -184,11 +183,8 @@ public class Loader : MonoBehaviour
       {
         if (Service.TilePlacementArray[z, x].Name == null)
           continue;
-        Vector3Int tilepos;
-        if (Service.TilePlacementArray[z, x].BottomTop)
-          tilepos = new Vector3Int(4 * x, 0, 4 * (z - 1));
-        else
-          tilepos = new Vector3Int(4 * x, 0, 4 * z);
+        Vector3Int tilepos = new Vector3Int(4 * x, 0, 4 * (z + 1));
+
         to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(tilepos, 
           Service.TilePlacementArray[z, x].Name, Service.TilePlacementArray[z, x].Rotation, 
           Service.TilePlacementArray[z, x].Inversion, Service.TilePlacementArray[z,x].Height));

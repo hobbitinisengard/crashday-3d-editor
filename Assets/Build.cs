@@ -61,7 +61,7 @@ public class Build : MonoBehaviour
         PickUpTileUnderCursor();// Pick up tile under cursor
 
       if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space))
-      {
+      { 
         if (!Highlight.over)
         {
           if (nad_wczesniej)
@@ -198,10 +198,13 @@ public class Build : MonoBehaviour
     if (current_rmc != null)
     {
       Unhide_trawkas(current_rmc.transform.position);
-      Vector3Int pos = Vpos2epos(current_rmc);
+      Vector3Int pos = Vpos2tpos(current_rmc);
+      //Debug.Log("Del Last:" + pos);
       List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
       DestroyImmediate(current_rmc);
-      RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
+      int[] t_verts = Service.TilePlacementArray[pos.z, pos.x].t_verts;
+      if(t_verts != null)
+        RecoverTerrain(t_verts.ToList());
       UpdateTiles(surroundings);
     }
   }
@@ -210,7 +213,7 @@ public class Build : MonoBehaviour
     bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
     if (traf && hit.transform.gameObject != current_rmc)
     {
-      Vector3Int pos = Vpos2epos(hit.transform.gameObject);
+      Vector3Int pos = Vpos2tpos(hit.transform.gameObject);
 
       if (IsCheckpoint(Service.TilePlacementArray[pos.z, pos.x].Name))
       {
@@ -256,24 +259,30 @@ public class Build : MonoBehaviour
     foreach (RaycastHit hit in hits)
       hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = false;
   }
-  public static Vector3Int Vpos2epos(GameObject rmc)
+  /// <summary>
+  /// Converts vertex pos to tile pos
+  /// </summary>
+  /// <param name="rmc"></param>
+  /// <returns></returns>
+  public static Vector3Int Vpos2tpos(GameObject rmc)
   {
     Vector3Int to_return = new Vector3Int();
-    Vector3 dim = GetTileDims(rmc);
-    to_return.x = (int)((rmc.transform.position.x - 2 - 2 * (dim.x - 1)) / 4f);
-    to_return.z = Mathf.RoundToInt((rmc.transform.position.z - 2 - 2 * (dim.z - 1)) / 4f);
+    Vector3Int dim = GetTileDims(rmc);
+    to_return.x = ((int)rmc.transform.position.x - 2 - 2 * (dim.x - 1)) / 4;
+
+    to_return.z = ((int)rmc.transform.position.z - 2 + 4 * (dim.z - 1)) / 4;
     return to_return;
   }
   public static int[] GetRmcIndices(GameObject rmc)
   {
     List<int> to_return = new List<int>();
-    Vector3Int LD = GetBLPos(rmc);
+    Vector3Int TL = GetTLPos(rmc);
     Vector3Int tileDims = GetTileDims(current_rmc);
     for (int z = 0; z <= 4 * tileDims.z; z++)
     {
       for (int x = 0; x <= 4 * tileDims.x; x++)
       {
-        to_return.Add(LD.x + x + 4 * Service.TRACK.Width * (LD.z + z) + LD.z + z);
+        to_return.Add(Service.PosToIndex(TL.x + x,TL.z -z));
       }
     }
     return to_return.ToArray();
@@ -328,15 +337,15 @@ public class Build : MonoBehaviour
     return to_return;
   }
   /// <summary>
-  /// Returns bottom left point of tile in global coords
+  /// Returns top left point of tile in global coords
   /// </summary>
-  public static Vector3Int GetBLPos(GameObject rmc_o)
+  public static Vector3Int GetTLPos(GameObject rmc_o)
   {
     Vector3Int to_return = new Vector3Int();
     Vector3 el_pos = rmc_o.transform.position;
     Vector3 dim = GetTileDims(rmc_o);
     to_return.x = Mathf.RoundToInt(el_pos.x - 2 - 2 * (dim.x - 1));
-    to_return.z = Mathf.RoundToInt(el_pos.z - 2 - 2 * (dim.z - 1));
+    to_return.z = Mathf.RoundToInt(el_pos.z + 2 + 2 * (dim.z - 1));
 
     if (to_return.z % 4 != 0 || to_return.z % 4 != 0)
     {
@@ -359,14 +368,17 @@ public class Build : MonoBehaviour
   /// <param name="nazwa"></param>
   /// <param name="inwersja"></param>
   /// <param name="rotacja"></param>
-  /// <param name="p"></param>
-  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int p, byte Height = 0)
+  /// <param name="TLpos"></param>
+  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int TLpos, byte Height = 0)
   {
-    Service.TilePlacementArray[p.z, p.x].Set(nazwa, rotacja, inwersja, Height);
+    TLpos.z -= 1;
+    //Debug.Log("saved to:" + TLpos);
+    Service.TilePlacementArray[TLpos.z, TLpos.x].Set(nazwa, rotacja, inwersja, Height);
 
-    if (TileManager.TileListInfo[nazwa].IsCheckpoint)// && !Service.TRACK.Checkpoints.Contains((ushort)(p.x + (Service.TRACK.Height - 1 - p.z) * Service.TRACK.Width)))
+    if (TileManager.TileListInfo[nazwa].IsCheckpoint 
+      && !Service.TRACK.Checkpoints.Contains((ushort)(TLpos.x + (Service.TRACK.Height - 1 - TLpos.z) * Service.TRACK.Width)))
     {
-      Service.TRACK.Checkpoints.Add((ushort)(p.x + (Service.TRACK.Height - 1 - p.z) * Service.TRACK.Width));
+      Service.TRACK.Checkpoints.Add((ushort)(TLpos.x + (Service.TRACK.Height - 1 - TLpos.z) * Service.TRACK.Width));
       Service.TRACK.CheckpointsNumber++;
     }
   }
@@ -399,12 +411,17 @@ public class Build : MonoBehaviour
   /// Center of tile. real dimensions of tile.
   /// Checks if tile isn't sticking out of map boundaries
   /// </summary>
-  static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int tileDims)
+  static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int dims)
   {
     pos.y = Service.maxHeight;
+    // out of grass
     if (pos.z <= 0 || pos.z >= 4 * Service.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Service.TRACK.Width)
       return false;
-    if (Physics.BoxCast(pos, new Vector3(4 * tileDims.x * 0.4f, 1, 4 * tileDims.z * 0.4f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9))
+    // quarter of tile sticking out of bounds
+    if ((dims.z == 2 && pos.z < 4) || (dims.x == 2 && pos.x == 4 * Service.TRACK.Width))
+      return false;
+    // other tiles block
+    if (Physics.BoxCast(pos, new Vector3(4 * dims.x * 0.4f, 1, 4 * dims.z * 0.4f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9))
       return false;
     else
       return true;
@@ -719,7 +736,7 @@ public class Build : MonoBehaviour
 
       // Match RMC up and take care of current_heights table
       Match_rmc2rmc(rmc_o);
-      Vector3Int pos = Vpos2epos(rmc_o);
+      Vector3Int pos = Vpos2tpos(rmc_o);
       bool Mirrored = Service.TilePlacementArray[pos.z, pos.x].Inversion;
       int Rotation = Service.TilePlacementArray[pos.z, pos.x].Rotation;
       byte Height = Service.TilePlacementArray[pos.z, pos.x].Height;
@@ -729,7 +746,7 @@ public class Build : MonoBehaviour
       GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform);
 
       Vector3Int tileDims = GetTileDims(rmc_o);
-      Vector3Int LDpos = GetBLPos(rmc_o);
+      Vector3Int TLpos = GetTLPos(rmc_o);
 
       Hide_trawkas(rmc_o.transform.position);
       //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
@@ -739,11 +756,11 @@ public class Build : MonoBehaviour
         {
           if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
           {
-            Match_boundaries(x, z, LDpos); // borders
+            Match_boundaries(x, -z, TLpos); // borders
           }
           else
           {
-            Hide_Inside(x, z, LDpos);
+            Hide_Inside(x, -z, TLpos);
           }
         }
       }
@@ -785,7 +802,7 @@ public class Build : MonoBehaviour
   /// <summary>
   /// Instantiates rmc with no correct placing and no prefab. Rest of the work is delegated to UpdateTiles function
   /// </summary>
-  public GameObject PlaceTile(Vector3Int BLpos, string name, int cum_rotation, bool mirrored = false, byte Height = 0)
+  public GameObject PlaceTile(Vector3Int TLpos, string name, int cum_rotation, bool mirrored = false, byte Height = 0)
   {
     // Placing tile with LMB cannot be accepted if X is pressed or there's no place 4 tile 
     AllowLMB = false;
@@ -803,15 +820,15 @@ public class Build : MonoBehaviour
       tileDims.z = pom;
 
     }
-    Vector3Int rmcPlacement = new Vector3Int(BLpos.x + 2 + 2 * (tileDims.x - 1), 0, BLpos.z + 2 + 2 * (tileDims.z - 1));
-
+    Vector3Int rmcPlacement = new Vector3Int(TLpos.x + 2 + 2 * (tileDims.x - 1), 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
+    if (rmcPlacement.z < 0)
+      return null;
     if (!Service.Isloading)
     {
       if (enableMixing)
       {
-        if (!IsTherePlaceForQuarter(BLpos))
-        {
-
+        if (!IsTherePlaceForQuarter(TLpos))
+        { 
           return null;
         }
       }
@@ -835,18 +852,25 @@ public class Build : MonoBehaviour
     for (int index = 0; index < rmc.vertices.Length; index++)
     {
       Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(rmc.vertices[index]));
-      verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
+      try
+      {
+        verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
+      }
+      catch
+      { // rmc out of bounds
+        verts[index].y = 0;
+      }
     }
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
     MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
-    Service.TilePlacementArray[BLpos.z / 4, BLpos.x / 4].t_verts = GetRmcIndices(current_rmc);
+    Vector3Int pos = Vpos2tpos(current_rmc);
+    Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
 
     List<GameObject> rmcsToUpdate = Get_surrounding_tiles(current_rmc);
     GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
     current_rmc.layer = 10;
-    Vector3Int LDpos = GetBLPos(current_rmc);
 
     Hide_trawkas(current_rmc.transform.position);
     //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
@@ -856,11 +880,11 @@ public class Build : MonoBehaviour
       {
         if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
         {
-          Match_boundaries(x, z, LDpos); // borders
+          Match_boundaries(x, -z, TLpos); // borders
         }
         else
         {
-          Hide_Inside(x, z, LDpos);
+          Hide_Inside(x, -z, TLpos);
         }
       }
     }
@@ -878,14 +902,14 @@ public class Build : MonoBehaviour
     }
     else
     {
-      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(BLpos.x / 4, 0, BLpos.z / 4), Height);
+      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4), Height);
       return current_rmc;
     }
   }
-  bool IsTherePlaceForQuarter(Vector3Int BLpos)
+  bool IsTherePlaceForQuarter(Vector3Int TLpos)
   {
-    BLpos.x += 2; BLpos.z += 2; BLpos.y = Service.maxHeight;
-    if (Physics.Raycast(BLpos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
+    TLpos.x += 2; TLpos.z -= 2; TLpos.y = Service.maxHeight;
+    if (Physics.Raycast(TLpos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
       return false;
     else
       return true;
@@ -978,10 +1002,10 @@ public class Build : MonoBehaviour
   /// Toggles off visibility of terrain chunk laying under tile of bottom-left x,z. 
   /// Updates current_heights array. Layer of RMC has to be 10.
   /// </summary>
-  public static void Hide_Inside(int x, int z, Vector3Int LDpos)
+  public static void Hide_Inside(int x, int z, Vector3Int TLpos)
   {
-    x += LDpos.x;
-    z += LDpos.z; //Mamy x,y są teraz globalne
+    x += TLpos.x;
+    z = TLpos.z + z; //x,y are global
     int index = x + 4 * z * Service.TRACK.Width + z;
     Vector3 v = new Vector3(x, Service.minHeight - 1, z);
     if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.rayHeight, 1 << 10))
@@ -992,10 +1016,10 @@ public class Build : MonoBehaviour
   /// <summary>
   /// Matches up height of terrain to height of vertex of current RMC (layer = 10)
   /// </summary>
-  public static List<GameObject> Match_boundaries(int x, int z, Vector3Int LDpos)
+  public static List<GameObject> Match_boundaries(int x, int z, Vector3Int TLpos)
   {
-    x += LDpos.x;
-    z += LDpos.z;
+    x += TLpos.x;
+    z = TLpos.z + z;
     Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
     int index = (x + 4 * z * Service.TRACK.Width + z);
     if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))

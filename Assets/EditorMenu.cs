@@ -1,11 +1,8 @@
 ﻿using SFB;
-using System.DrawingCore;
-using System.DrawingCore.Imaging;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Linq;
-using System.Collections.Generic;
 //Handles all variables essential for editor
 public class DuVecInt
 {
@@ -37,7 +34,7 @@ public class EditorMenu : MonoBehaviour
   /// <summary>
   /// tile name we are currently placing in building mode
   /// </summary>
-  
+
   public static string tile_name = "NULL";
   private void Start()
   {
@@ -53,7 +50,7 @@ public class EditorMenu : MonoBehaviour
   {
     if (Input.GetKeyDown(KeyCode.F5))
     {
-      ToggleSaveMenu(); 
+      ToggleSaveMenu();
     }
     if (!save.activeSelf)
     {
@@ -162,27 +159,35 @@ public class EditorMenu : MonoBehaviour
             rotacja = (byte)(4 - rotacja);
           byte height = Service.TilePlacementArray[z, x].Height;
           Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
-          //Base part
-          Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x].Set(fieldId, rotacja, inwersja, height);
+          //Base part - Left Top
+          Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(fieldId, rotacja, inwersja, height);
           //Left Bottom
           if (dim.y == 2)
             //Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
-            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x, 1, rotacja, inwersja, height));
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x, 1, rotacja, inwersja, height));
           ////Right top
           if (dim.x == 2)
             //  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
-            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z + 1 - dim.y, x+1, 2, rotacja, inwersja, height));
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 2, rotacja, inwersja, height));
           ////Right bottom
           if (dim.x == 2 && dim.y == 2)
             //  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
-            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 0, rotacja, inwersja, height));
+            QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x + 1, 0, rotacja, inwersja, height));
         }
       }
     }
-    foreach(QuarterData q in QuartersToSave)
+    foreach (QuarterData q in QuartersToSave)
     {
-      if(Service.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
-        Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1? (ushort)65471 : (ushort)65472, q.rotacja, q.inwersja, q.height);
+      try
+      {
+        if (Service.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
+          Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1 ? (ushort)65471 : (ushort)65472,
+              q.rotacja, q.inwersja, q.height);
+      }
+      catch
+      {
+        Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
+      }
     }
     MapParser.SaveMap(Service.TRACK, path + "\\" + Service.UpperBarTrackName + ".trk");
   }

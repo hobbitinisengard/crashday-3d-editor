@@ -13,7 +13,11 @@ public class FlyCamera : MonoBehaviour
   private Vector3 lastMouse = new Vector3(0, 0, 0); //kind of in the middle of the screen, rather than at the top (play)
   private float totalRun = 1.0f;
   private int flag = 0;
-  bool isStandardCam = true;
+  int Rotation = 0;
+  /// <summary>
+  /// Whether cam is standard or birds-eye
+  /// </summary>
+  public static bool isStandardCam = true;
   float Ordinary_cam_last_height = 20f;
   public GameObject SaveMenu;
 
@@ -74,16 +78,22 @@ public class FlyCamera : MonoBehaviour
   void birdseyecamera()
   {
     GetComponent<Camera>().orthographic = true;
-    if (Input.GetKey(KeyCode.PageUp))
+    transform.rotation = Quaternion.Euler(new Vector3(90, Rotation, 0));
+    if (Input.GetAxis("Mouse ScrollWheel") > 0)
       GetComponent<Camera>().orthographicSize += 1;
-    if (Input.GetKey(KeyCode.PageDown))
+    else if (Input.GetAxis("Mouse ScrollWheel") < 0)
     {
       if (GetComponent<Camera>().orthographicSize - 3 > 0)
         GetComponent<Camera>().orthographicSize -= 1;
     }
+    if (Input.GetKeyUp(KeyCode.Alpha1))
+      Rotation = 45;
+    else if (Input.GetKeyUp(KeyCode.Alpha2))
+      Rotation = 0;
+    else if (Input.GetKeyUp(KeyCode.Alpha3))
+      Rotation = -45;
 
-    transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
-    //Ruch
+    //o
     Vector3 p = GetBaseInput();
 
     transform.Translate(p, Space.World);

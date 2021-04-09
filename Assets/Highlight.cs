@@ -4,7 +4,7 @@ using UnityEngine;
 public class Highlight : MonoBehaviour
 {
   /// <summary>
-  /// Vertexowy wymiar Lewego Dolnego Rogu trawki
+  /// Vertex dimension of Bottom left of grass
   /// </summary>
   public static Vector3Int t = new Vector3Int();
   /// <summary>
@@ -25,8 +25,8 @@ public class Highlight : MonoBehaviour
     }
     else
     {
-      t.x = 4 * Mathf.FloorToInt(pos.x / 4f); // Get BottomLeft of current 1x1 tile
-      t.z = 4 * Mathf.FloorToInt(pos.z / 4f);
+      t.x = 4*Mathf.FloorToInt(pos.x / 4); // Get TopLeft of current 1x1 tile
+      t.z = 4*Mathf.FloorToInt(pos.z / 4) + 4;
       over = true;
     }
   }
