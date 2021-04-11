@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public enum SelectionState { NOSELECTION, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, BL_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, to_slider_keep, copy }
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy }
 /// <summary>
 /// Hooked to ShapeMenu
 /// </summary>
@@ -146,6 +147,9 @@ public class ShapeMenu : MonoBehaviour
   {
     if (selectionState == SelectionState.WAITING4LD)
     {
+      // to slider button doesn't require BL selection
+      if(LastSelected == FormButton.to_slider)
+        StateSwitch(SelectionState.BL_SELECTED);
       foreach (GameObject mrk in markings)
       {
         mrk.GetComponent<BoxCollider>().enabled = true;
@@ -283,7 +287,6 @@ public class ShapeMenu : MonoBehaviour
   void ApplyFormingFunction()
   {
     RaycastHit hit;
-    // to Height button check (always checks BL even if KeepShape is off - I'm s lazy fuck)
     if(LastSelected == FormButton.to_slider)
     {
       FormMenu_toSlider();
@@ -513,6 +516,8 @@ public class ShapeMenu : MonoBehaviour
   }
   void MarkVertices()
   {
+    if (Input.GetKeyUp(KeyCode.I))
+      InverseSelection();
     if (Input.GetMouseButtonDown(0))
     { // Beginning of selection..
       StateSwitch(SelectionState.SELECTING_NOW);
@@ -543,6 +548,24 @@ public class ShapeMenu : MonoBehaviour
       StateSwitch(SelectionState.WAITING4LD);
 
   }
+
+  private void InverseSelection()
+  {
+    foreach (var z in markings)
+    {
+      if (z.name == "on")
+      {
+        z.name = "off";
+        z.GetComponent<MeshRenderer>().sharedMaterial = white;
+      }
+      else
+      {
+        z.name = "on";
+        z.GetComponent<MeshRenderer>().sharedMaterial = red;
+      }
+    }
+  }
+
   void OnGUI()
   {
     if (selectionState == SelectionState.SELECTING_NOW)

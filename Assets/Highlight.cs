@@ -1,12 +1,13 @@
-﻿using System.IO;
+﻿
+using System.IO;
 using UnityEngine;
 //Handles constant position marking
 public class Highlight : MonoBehaviour
 {
   /// <summary>
-  /// Vertex dimension of Bottom left of grass
+  /// Vertex dimension of Top left of grass
   /// </summary>
-  public static Vector3Int t = new Vector3Int();
+  public static Vector3Int TL = new Vector3Int();
   /// <summary>
   /// Is mouse pointer currently over map?
   /// </summary>
@@ -25,8 +26,8 @@ public class Highlight : MonoBehaviour
     }
     else
     {
-      t.x = 4*Mathf.FloorToInt(pos.x / 4); // Get TopLeft of current 1x1 tile
-      t.z = 4*Mathf.FloorToInt(pos.z / 4) + 4;
+      TL.x = 4*Mathf.FloorToInt(pos.x / 4); // Get TopLeft of current 1x1 tile
+      TL.z = 4*Mathf.FloorToInt(pos.z / 4) + 4;
       over = true;
     }
   }

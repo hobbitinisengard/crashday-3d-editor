@@ -79,30 +79,29 @@ public class Build : MonoBehaviour
           if (!nad_wczesniej)
           {
             //Debug.Log("cursor: void -> terrain");
-            PlaceTile(Highlight.t, EditorMenu.tile_name, cum_rotation, inversion);
-            last_trawa = Highlight.t;
+            PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
+            last_trawa = Highlight.TL;
             nad_wczesniej = true;
           }
-          else if (last_trawa.x != Highlight.t.x || last_trawa.z != Highlight.t.z)
+          else if (last_trawa.x != Highlight.TL.x || last_trawa.z != Highlight.TL.z)
           {
             //Debug.Log("cursor: terrain chunk -> terrain chunk");
             if (!LMBclicked)//If element hasn't been placed
               DelLastPrefab();
-            PlaceTile(Highlight.t, EditorMenu.tile_name, cum_rotation, inversion);
-            last_trawa = Highlight.t;
+            PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
+            last_trawa = Highlight.TL;
             LMBclicked = false;
           }
-
           else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && AllowLMB)
           {//Place currently showed tile on terrain
             LMBclicked = true;
-            Save_tile_properties(EditorMenu.tile_name, inversion, cum_rotation, 
-              new Vector3Int(Highlight.t.x / 4, 0, Highlight.t.z / 4), enableMixing ? MixingHeight : (byte)0);
+            Save_tile_properties(EditorMenu.tile_name, inversion, cum_rotation,
+              new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), enableMixing ? MixingHeight : (byte)0);
           }
           if (Input.GetMouseButtonDown(1) && Highlight.over && !LMBclicked)
           {//Rotation with RMB
             DelLastPrefab();
-            PlaceTile(Highlight.t, EditorMenu.tile_name, cum_rotation, inversion);
+            PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
             nad_wczesniej = true;
           }
         }
@@ -110,7 +109,9 @@ public class Build : MonoBehaviour
       else if (Input.GetKey(KeyCode.Space))
       {//Delete currently showed element when moving camera with spacebar
         if (!LMBclicked)
+        {
           DelLastPrefab();
+        }
         else
           LMBclicked = false;
         nad_wczesniej = false;
@@ -153,7 +154,7 @@ public class Build : MonoBehaviour
     Destroy(preview.GetComponent<BoxCollider>());
     preview.GetComponent<MeshRenderer>().material = partiallytransparent;
     preview.transform.localScale = new Vector3(3f, 0.05f, 3);
-    preview.transform.position = new Vector3(2 + Highlight.t.x, MixingHeight/5f, 2 + Highlight.t.z);
+    preview.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight/5f, 2 + Highlight.TL.z);
     Destroy(preview, 2);
   }
   /// <summary>
@@ -197,9 +198,8 @@ public class Build : MonoBehaviour
   {
     if (current_rmc != null)
     {
-      Unhide_trawkas(current_rmc.transform.position);
+      Unhide_trawkas(current_rmc);
       Vector3Int pos = Vpos2tpos(current_rmc);
-      //Debug.Log("Del Last:" + pos);
       List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
       DestroyImmediate(current_rmc);
       int[] t_verts = Service.TilePlacementArray[pos.z, pos.x].t_verts;
@@ -208,27 +208,7 @@ public class Build : MonoBehaviour
       UpdateTiles(surroundings);
     }
   }
-  public static void Del_underlying_element()
-  {
-    bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
-    if (traf && hit.transform.gameObject != current_rmc)
-    {
-      Vector3Int pos = Vpos2tpos(hit.transform.gameObject);
-
-      if (IsCheckpoint(Service.TilePlacementArray[pos.z, pos.x].Name))
-      {
-        Service.TRACK.Checkpoints.Remove((ushort)(pos.x * (SliderHeight.val - 1 - pos.y)));
-        Service.TRACK.CheckpointsNumber--;
-      }
-
-      Unhide_trawkas(hit.transform.position);
-      List<GameObject> to_restore = Get_surrounding_tiles(hit.transform.gameObject);
-      DestroyImmediate(hit.transform.gameObject);
-      Service.TilePlacementArray[pos.z, pos.x].Name = null;
-      RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
-      UpdateTiles(to_restore);
-    }
-  }
+  
   void PickUpTileUnderCursor()
   {
     Vector3 v = Highlight.pos;
@@ -244,13 +224,23 @@ public class Build : MonoBehaviour
   {
     return TileManager.TileListInfo[nazwa_tilesa].IsCheckpoint;
   }
-
-  static void Unhide_trawkas(Vector3 pos)
+  // Shows only trawkas that are not occupied by tiles (which could be mixed)
+  static void Unhide_trawkas(GameObject rmc)
   {
+    rmc.layer = 10;
+    Vector3 pos = rmc.transform.position;
     pos.y = Service.maxHeight;
     RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.rayHeight, 1 << 8);
     foreach (RaycastHit hit in hits)
-      hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = true;
+    {
+      pos = hit.transform.position;
+      pos.x += 2;
+      pos.z += 2;
+      pos.y = Service.maxHeight;
+      if (!Physics.Raycast(pos, Vector3.down, Service.rayHeight, 1 << 9))
+        hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = true;
+    }
+    rmc.layer = 9;
   }
   static void Hide_trawkas(Vector3 pos)
   {
@@ -269,7 +259,6 @@ public class Build : MonoBehaviour
     Vector3Int to_return = new Vector3Int();
     Vector3Int dim = GetTileDims(rmc);
     to_return.x = ((int)rmc.transform.position.x - 2 - 2 * (dim.x - 1)) / 4;
-
     to_return.z = ((int)rmc.transform.position.z - 2 + 4 * (dim.z - 1)) / 4;
     return to_return;
   }
@@ -362,23 +351,14 @@ public class Build : MonoBehaviour
     Vector2Int dimVec = TileManager.GetRealDims(rmc_o.name, isRotated);
     return new Vector3Int(dimVec.x, 0, dimVec.y);
   }
-  /// <summary>
-  /// Pass name as string "null" save only inversion and rotation without name
-  /// </summary>
-  /// <param name="nazwa"></param>
-  /// <param name="inwersja"></param>
-  /// <param name="rotacja"></param>
-  /// <param name="TLpos"></param>
-  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int TLpos, byte Height = 0)
+  static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int arraypos, byte Height = 0)
   {
-    TLpos.z -= 1;
-    //Debug.Log("saved to:" + TLpos);
-    Service.TilePlacementArray[TLpos.z, TLpos.x].Set(nazwa, rotacja, inwersja, Height);
+    Service.TilePlacementArray[arraypos.z, arraypos.x].Set(nazwa, rotacja, inwersja, Height);
 
     if (TileManager.TileListInfo[nazwa].IsCheckpoint 
-      && !Service.TRACK.Checkpoints.Contains((ushort)(TLpos.x + (Service.TRACK.Height - 1 - TLpos.z) * Service.TRACK.Width)))
+      && !Service.TRACK.Checkpoints.Contains((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width)))
     {
-      Service.TRACK.Checkpoints.Add((ushort)(TLpos.x + (Service.TRACK.Height - 1 - TLpos.z) * Service.TRACK.Width));
+      Service.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width));
       Service.TRACK.CheckpointsNumber++;
     }
   }
@@ -426,16 +406,6 @@ public class Build : MonoBehaviour
     else
       return true;
   }
-
-  static bool CheckPosition(int offsetx, int offsetz)
-  {
-    Vector3 v = new Vector3(Highlight.t.x + 2f + 4 * offsetx, Service.maxHeight, Highlight.t.z + 2f + 4 * offsetz);
-    //Vector3 x = new Vector3(v.x, -5, v.z);
-    //Debug.DrawLine(v, x, Color.yellow, 500);
-    bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9 | 1 << 8);
-    return (traf && hit.transform.gameObject.layer == 8) ? true : false;
-  }
-
   //Looks over 'Pzero' height by tile name
   public static float GetPzero(string nazwa)
   {
@@ -818,7 +788,6 @@ public class Build : MonoBehaviour
       int pom = tileDims.x;
       tileDims.x = tileDims.z;
       tileDims.z = pom;
-
     }
     Vector3Int rmcPlacement = new Vector3Int(TLpos.x + 2 + 2 * (tileDims.x - 1), 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
     if (rmcPlacement.z < 0)
@@ -827,8 +796,9 @@ public class Build : MonoBehaviour
     {
       if (enableMixing)
       {
-        if (!IsTherePlaceForQuarter(TLpos))
-        { 
+        if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
+        {
+          current_rmc = null;
           return null;
         }
       }
@@ -867,11 +837,7 @@ public class Build : MonoBehaviour
     MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
     Vector3Int pos = Vpos2tpos(current_rmc);
     Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
-
-    List<GameObject> rmcsToUpdate = Get_surrounding_tiles(current_rmc);
-    GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
     current_rmc.layer = 10;
-
     Hide_trawkas(current_rmc.transform.position);
     //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
     for (int z = 0; z <= 4 * tileDims.z; z++)
@@ -888,31 +854,58 @@ public class Build : MonoBehaviour
         }
       }
     }
-    Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
-    GetPrefabMesh(mirrored, Prefab);
-    if(Service.Isloading)
-      Tiles_to_RMC_Cast(Prefab, mirrored, Height);
-    else
-      Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
     current_rmc.layer = 9;
+    //Tiles_to_RMC_Cast(Prefab, mirrored, Height
     if (!Service.Isloading)
     {
-      UpdateTiles(rmcsToUpdate);
+      GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
+      Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
+      GetPrefabMesh(mirrored, Prefab);
+      Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
+      UpdateTiles(Get_surrounding_tiles(current_rmc));
       return null;
     }
     else
     {
-      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4), Height);
+      Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4 - 1), Height);
       return current_rmc;
     }
   }
-  bool IsTherePlaceForQuarter(Vector3Int TLpos)
+  bool IsTherePlaceForQuarter(Vector3Int TLpos, Vector3Int rmc_pos, Vector3Int dims)
   {
-    TLpos.x += 2; TLpos.z -= 2; TLpos.y = Service.maxHeight;
-    if (Physics.Raycast(TLpos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
+    // out of grass
+    if (rmc_pos.z <= 0 || rmc_pos.z >= 4 * Service.TRACK.Height || rmc_pos.x <= 0 || rmc_pos.x >= 4 * Service.TRACK.Width)
       return false;
-    else
+    // quarter of tile sticking out of bounds
+    if ((dims.z == 2 && rmc_pos.z < 4) || (dims.x == 2 && rmc_pos.x == 4 * Service.TRACK.Width))
+      return false;
+    TLpos.x /= 4;
+    TLpos.z /= 4;
+    TLpos.z--; //get BL not TL for array check
+    if(Service.TilePlacementArray[TLpos.z, TLpos.x].Name == null)
       return true;
+    else
+      return false;
+  }
+  public static void Del_underlying_element()
+  {
+    bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+    if (traf && hit.transform.gameObject != current_rmc)
+    {
+      Vector3Int pos = Vpos2tpos(hit.transform.gameObject);
+      if (IsCheckpoint(Service.TilePlacementArray[pos.z, pos.x].Name))
+      {
+        Service.TRACK.Checkpoints.Remove((ushort)(pos.x * (SliderHeight.val - 1 - pos.y)));
+        Service.TRACK.CheckpointsNumber--;
+      }
+
+      Unhide_trawkas(hit.transform.gameObject);
+      List<GameObject> to_restore = Get_surrounding_tiles(hit.transform.gameObject);
+      DestroyImmediate(hit.transform.gameObject);
+      Service.TilePlacementArray[pos.z, pos.x].Name = null;
+      RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
+      UpdateTiles(to_restore);
+    }
   }
   private GameObject GetRMC(string nazwa_tilesa)
   {
@@ -1021,8 +1014,12 @@ public class Build : MonoBehaviour
     x += TLpos.x;
     z = TLpos.z + z;
     Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
-    int index = (x + 4 * z * Service.TRACK.Width + z);
-    if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
+
+    int index = Service.PosToIndex(x, z);
+    if (index == -1)
+      return null;
+    if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10)
+      && Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1f)
     {
       Service.current_heights[index] = hit.point.y;
     }

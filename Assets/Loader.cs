@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Diagnostics;
 // 2nd script. First in editor scene.
 /// <summary>
 /// Takes care of creating and loading track
@@ -176,6 +177,8 @@ public class Loader : MonoBehaviour
 
   void PlaceLoadedTilesOnMap()
   {
+    Stopwatch sw = Stopwatch.StartNew();
+    int elements = 0;
     List<GameObject> to_update = new List<GameObject>();
     for (int z = 0; z < Service.TRACK.Height; z++)
     {
@@ -183,14 +186,17 @@ public class Loader : MonoBehaviour
       {
         if (Service.TilePlacementArray[z, x].Name == null)
           continue;
-        Vector3Int tilepos = new Vector3Int(4 * x, 0, 4 * (z + 1));
-
-        to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(tilepos, 
+        Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z+1));
+        elements++;
+        to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos, 
           Service.TilePlacementArray[z, x].Name, Service.TilePlacementArray[z, x].Rotation, 
           Service.TilePlacementArray[z, x].Inversion, Service.TilePlacementArray[z,x].Height));
       }
     }
     Build.UpdateTiles(to_update);
     Service.Isloading = false;
+    sw.Stop();
+    if(sw.Elapsed.Seconds != 0)
+      UnityEngine.Debug.Log("Loading time [elements/s]" + elements / sw.Elapsed.Seconds);
   }
 }
