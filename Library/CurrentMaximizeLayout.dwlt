@@ -25,7 +25,7 @@ MonoBehaviour:
   m_MinSize: {x: 583, y: 222}
   m_MaxSize: {x: 12008, y: 8022}
   vertical: 0
-  controlID: 12
+  controlID: 221
 --- !u!114 &2
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -54,7 +54,7 @@ MonoBehaviour:
   m_ViewDataDictionary: {fileID: 0}
   m_VSyncEnabled: 1
   m_MaximizeOnPlay: 0
-  m_Gizmos: 0
+  m_Gizmos: 1
   m_Stats: 0
   m_SelectedSizes: 05000000000000000000000000000000000000000000000000000000000000000000000000000000
   m_TargetDisplay: 0
@@ -131,7 +131,7 @@ MonoBehaviour:
   m_MinSize: {x: 102, y: 222}
   m_MaxSize: {x: 4002, y: 8022}
   vertical: 1
-  controlID: 13
+  controlID: 222
 --- !u!114 &4
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -196,9 +196,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 63.209763, y: -27.637104, z: 45.319504}
+    m_Target: {x: 48.144966, y: -403.28137, z: 237.80775}
     speed: 2
-    m_Value: {x: 63.209763, y: -27.637104, z: 45.319504}
+    m_Value: {x: 48.144966, y: -403.28137, z: 237.80775}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -227,13 +227,13 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
   m_Rotation:
-    m_Target: {x: 0.1858224, y: 0.44563663, z: -0.095154665, w: 0.870559}
+    m_Target: {x: 0.4915147, y: 0.081258796, z: -0.046181444, w: 0.8658735}
     speed: 2
-    m_Value: {x: 0.18581781, y: 0.44562563, z: -0.09515232, w: 0.8705375}
+    m_Value: {x: 0.4915001, y: 0.08125638, z: -0.046180073, w: 0.8658478}
   m_Size:
-    m_Target: 70.39162
+    m_Target: 478.77603
     speed: 2
-    m_Value: 70.39162
+    m_Value: 478.77603
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -251,7 +251,7 @@ MonoBehaviour:
     m_DynamicClip: 0
     m_OcclusionCulling: 0
   m_ShowGlobalGrid: 1
-  m_LastSceneViewRotation: {x: 0.41928542, y: 0.31180173, z: -0.15600838, w: 0.83826166}
+  m_LastSceneViewRotation: {x: 0.1858224, y: 0.44563663, z: -0.095154665, w: 0.870559}
   m_LastSceneViewOrtho: 0
   m_ReplacementShader: {fileID: 0}
   m_ReplacementString: 
@@ -349,20 +349,20 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets
+    - Assets/scenes
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets
+  - Assets/scenes
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\Pr0 Haxx00r\Desktop\3deditor
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 27}
-    m_SelectedIDs: d42a0000
-    m_LastClickedID: 10964
-    m_ExpandedIDs: 00000000d42a0000de2c0000722f0000fc330000
+    m_SelectedIDs: 06300000
+    m_LastClickedID: 12294
+    m_ExpandedIDs: 00000000d42a0000de2c0000722f0000fc33000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -415,24 +415,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 7c290000
-    m_LastClickedInstanceID: 10620
-    m_HadKeyboardFocusLastEvent: 0
+    m_SelectedInstanceIDs: 262e0000
+    m_LastClickedInstanceID: 11814
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: 564300006a400000020d000000500000f62600005c1b00004a270000d02f01006431000000000000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: 
-      m_OriginalName: 
+      m_Name: mainEditor
+      m_OriginalName: mainEditor
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 0
+      m_UserData: 11994
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 11
+      m_OriginalEventType: 0
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 7}
     m_CreateAssetUtility:
@@ -442,7 +442,7 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
     m_NewAssetIndexInList: -1
-    m_ScrollPosition: {x: 0, y: 115.99927}
+    m_ScrollPosition: {x: 0, y: 0}
     m_GridSize: 16
   m_DirectoriesAreaWidth: 200
 --- !u!114 &9
@@ -528,21 +528,21 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 8efbffff
+      m_ExpandedIDs: 8e0ff9ffc20ff9ffde10f9ffee10f9ff149ffafff2e4faff6440fbff4286fbff2865fdffd066fdff8efbffffa0420000a6420000e2420000504400002046000064460000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
-        m_Name: 
-        m_OriginalName: 
+        m_Name: b_buildtrack
+        m_OriginalName: b_buildtrack
         m_EditFieldRect:
           serializedVersion: 2
           x: 0
           y: 0
           width: 0
           height: 0
-        m_UserData: 0
+        m_UserData: 17840
         m_IsWaitingForDelay: 0
         m_IsRenaming: 0
-        m_OriginalEventType: 11
+        m_OriginalEventType: 0
         m_IsRenamingFilename: 0
         m_ClientGUIView: {fileID: 10}
       m_SearchString: 

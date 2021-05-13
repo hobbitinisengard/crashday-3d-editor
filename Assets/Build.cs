@@ -106,14 +106,9 @@ public class Build : MonoBehaviour
           }
         }
       }
-      else if (Input.GetKey(KeyCode.Space))
+      else if (Input.GetKey(KeyCode.Space) && !LMBclicked)
       {//Delete currently showed element when moving camera with spacebar
-        if (!LMBclicked)
-        {
-          DelLastPrefab();
-        }
-        else
-          LMBclicked = false;
+        DelLastPrefab();
         nad_wczesniej = false;
       }
     }
@@ -374,9 +369,9 @@ public class Build : MonoBehaviour
       Vector3 v = Service.IndexToPos(indexes[i]);
       v.y = Service.maxHeight;
       bool traf = Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
-      if (traf)
+      if (traf && Mathf.Abs(Service.former_heights[indexes[i]] - hit.point.y) > 0.1f)
       {
-        //Service.former_heights[indexes[i]] = hit.point.y;
+        Service.former_heights[indexes[i]] = hit.point.y;
         // Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
       }
       else
@@ -824,7 +819,7 @@ public class Build : MonoBehaviour
       Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(rmc.vertices[index]));
       try
       {
-        verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
+        verts[index].y = Service.current_heights[Service.PosToIndex(v)];
       }
       catch
       { // rmc out of bounds
@@ -839,7 +834,6 @@ public class Build : MonoBehaviour
     Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
     current_rmc.layer = 10;
     Hide_trawkas(current_rmc.transform.position);
-    //Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
     for (int z = 0; z <= 4 * tileDims.z; z++)
     {
       for (int x = 0; x <= 4 * tileDims.x; x++)
@@ -854,20 +848,20 @@ public class Build : MonoBehaviour
         }
       }
     }
-    current_rmc.layer = 9;
-    //Tiles_to_RMC_Cast(Prefab, mirrored, Height
     if (!Service.Isloading)
     {
       GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
-      Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
       GetPrefabMesh(mirrored, Prefab);
       Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
       UpdateTiles(Get_surrounding_tiles(current_rmc));
+      Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
+      current_rmc.layer = 9;
       return null;
     }
     else
     {
       Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4 - 1), Height);
+      current_rmc.layer = 9;
       return current_rmc;
     }
   }
@@ -938,8 +932,7 @@ public class Build : MonoBehaviour
       { // own rmc
         verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
       }
-      else
-      if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight, v.z), 0.005f, Vector3.down, out hit, Service.rayHeight, 1 << 10))
+      else if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight, v.z), 0.005f, Vector3.down, out hit, Service.rayHeight, 1 << 10))
       { // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
         verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
       }
@@ -957,24 +950,7 @@ public class Build : MonoBehaviour
       prefab.SetActive(true);
       prefab.transform.position = new Vector3(prefab.transform.position.x, Height / 5f, prefab.transform.position.z);
     }
-    //UpdateBushes(prefab, inwersja);
   }
-
-  public static void UpdateBushes(GameObject prefab, bool inwersja)
-  {
-    // Nobody really needs it
-    //foreach (Vegetation V in TileManager.TileListInfo[prefab.name].Bushes)
-    //{
-    //  GameObject tree_PRE = Resources.Load<GameObject>("vege/" + V.Name);
-    //  Vector3 v = V.Position / 5f;
-    //  v.x = (inwersja) ? -v.x : v.x;
-    //  v = prefab.transform.TransformPoint(v);
-    //  Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10);
-    //  v.y = hit.point.y + tree_PRE.GetComponent<MeshFilter>().sharedMesh.bounds.extents.y / 5f;
-    //  GameObject tree = Instantiate(tree_PRE, v, prefab.transform.rotation, prefab.transform);
-    //}
-  }
-
   /// <summary>
   ///Returns mesh "main" of tile or if tile doesn't have it, mesh of its meshfilter
   /// </summary>
@@ -1018,8 +994,8 @@ public class Build : MonoBehaviour
     int index = Service.PosToIndex(x, z);
     if (index == -1)
       return null;
-    if (Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10)
-      && Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1f)
+    if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10)
+      && Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
     {
       Service.current_heights[index] = hit.point.y;
     }
