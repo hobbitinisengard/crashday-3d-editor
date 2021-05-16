@@ -105,28 +105,6 @@ public class P3DModel
   public int P3DUserDataSize;
   public string P3DUserDataPtr;
 
-  public static Texture2D LoadTextureDXT(byte[] ddsBytes)
-  {
-    byte ddsSizeCheck = ddsBytes[4];
-    if (ddsSizeCheck != 124)
-      Debug.LogError("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
-
-    int height = ddsBytes[13] * 256 + ddsBytes[12];
-    int width = ddsBytes[17] * 256 + ddsBytes[16];
-
-    int DDS_HEADER_SIZE = 128;
-    byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
-    Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
-
-    TextureFormat tf = System.Text.Encoding.ASCII.GetString(new []{ddsBytes[87]}) == "5" ? TextureFormat.DXT5 : TextureFormat.DXT1;
-    Texture2D texture = new Texture2D(width, height, tf, false);
-    texture.LoadRawTextureData(dxtBytes);
-    
-    texture.Apply();
-
-    return texture;
-  }
-
   public Material[] CreateMaterials()
   {
     List<Material> materials = new List<Material>();
@@ -158,7 +136,7 @@ public class P3DModel
     if (path.EndsWith(".dds"))
     {
       if (File.Exists(path))
-        tex = LoadTextureDXT(File.ReadAllBytes(path));
+        tex = DDSDecoder.LoadTextureDXT(File.ReadAllBytes(path), TextureFormat.DXT5);
       else
         Debug.LogWarning(path + " | texture not found! Loading white texture instead.");
     }
@@ -172,7 +150,7 @@ public class P3DModel
     else
     {
       Debug.LogError("Failed to load. Loading default texture. Path: " + path);
-      tex = LoadTextureDXT(File.ReadAllBytes(IO.GetCrashdayPath() + "/data/content/textures/colwhite.dds"));
+      tex = DDSDecoder.LoadTextureDXT(File.ReadAllBytes(IO.GetCrashdayPath() + "/data/content/textures/colwhite.dds"), TextureFormat.DXT1);
     }
     tex.mipMapBias = -0.5f;
     tex.Apply(true);

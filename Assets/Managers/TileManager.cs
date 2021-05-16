@@ -99,7 +99,7 @@ public static class TileManager
           {
             string[] cat = Regex.Split(file[k + 3], " ");
             // example: RwToArenaFloor.p3d => rwtoarenafloor
-            string name = cat[0].Split(new char[] { '.' })[0].ToLower();
+            string name = cat[0].Remove(cat[0].IndexOf(".cfl")).ToLower();
             if (!TileListInfo.ContainsKey(name))
               TileListInfo.Add(name, new TileListEntry(setName));
           }
@@ -133,10 +133,10 @@ public static class TileManager
   /// <summary>
   /// Loads all Cfl files using directory
   /// </summary>
-  /// <param name="Directory"></param>
-  private static void ReadCflFiles(string Directory, string mod_id = null)
+  /// <param name="Dir"></param>
+  private static void ReadCflFiles(string Dir, string mod_id = null)
   {
-    string[] cfls = System.IO.Directory.GetFiles(Directory, "*.cfl");
+    string[] cfls = System.IO.Directory.GetFiles(Dir, "*.cfl");
     foreach (var File in cfls)
     {
       string[] cfl = System.IO.File.ReadAllLines(File);
@@ -144,7 +144,8 @@ public static class TileManager
       for (int j = 0; j < cfl.Length; j++)
         cfl[j] = IO.RemoveComment(cfl[j]);
 
-      string modelName = cfl[2].Split('.')[0].ToLower();
+      string modelName = cfl[2].Remove(cfl[2].LastIndexOf('.')).ToLower();
+
       // field is just block of grass. It's listed in cfl file but isn't showed. Mica used this tile as CP (weird right?) so I had to take this into consideration
       if ((modelName == "field" && mod_id == null) || modelName == "border1" || modelName == "border2")
         continue;
@@ -177,21 +178,33 @@ public static class TileManager
           //VegData.Add(new Vegetation(VegName, x, z, y));
         }
       }
-      string TexturePath = NavigateDirUp(Directory, 2) + "\\textures\\pictures\\tiles\\" + name + ".tga";
-      if (!System.IO.File.Exists(TexturePath))
+      // load icon of tile
+      Texture2D texture = Texture2D.blackTexture;
+      string[] files = Directory.GetFiles(NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\", name + ".*");
+      files = files.Where(f => f.Contains("dds") || f.Contains("tga")).ToArray();
+      if(files.Length == 0)
       {
-        TexturePath = IO.GetCrashdayPath() + "\\data\\content\\textures\\pictures\\tiles\\" + name + ".tga";
+        string datapath = IO.GetCrashdayPath() + "\\data\\content\\textures\\pictures\\tiles\\" + name + ".tga";
+        texture = TgaDecoder.LoadTGA(datapath);
       }
-      Texture2D texTga = TgaDecoder.LoadTGA(TexturePath);
-
-      string Model_path = NavigateDirUp(Directory, 2) + "\\models\\" + modelName + ".p3d";
+      else if (files[0].Contains(".tga")) // tga format
+        texture = TgaDecoder.LoadTGA(files[0]);
+      else
+      {
+        // file is in dds format
+        string ddsFilePath = NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\" + name + ".dds";
+        byte[] bytes = System.IO.File.ReadAllBytes(ddsFilePath);
+        texture = DDSDecoder.LoadTextureDXT(bytes, TextureFormat.DXT1);
+      }
+      
+      string Model_path = NavigateDirUp(Dir, 2) + "\\models\\" + modelName + ".p3d";
 
       if (!System.IO.File.Exists(Model_path))
       { // look for model in original files (used in mica's tiles)
         Model_path = IO.GetCrashdayPath() + "\\data\\content\\models\\" + modelName + ".p3d";
         if (!System.IO.File.Exists(Model_path))
         {
-          Debug.LogWarning(Model_path + " | No p3d file present! Continuing without this tile..");
+          Debug.LogWarning("No p3d for tile " + name);
           continue;
         }
       }
@@ -217,11 +230,11 @@ public static class TileManager
 
       if (!TileListInfo.ContainsKey(name))
       { // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
-        TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texTga, VegData.ToArray(), mod_id));
+        TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id));
         TileListInfo[name].TilesetName = Service.DefaultTilesetName;
       }
       else
-        TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texTga, VegData.ToArray(), mod_id);
+        TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id);
       if (IsCheckpoint)
         TileListInfo[name].TilesetName = Service.CheckpointString;
     }
@@ -256,7 +269,7 @@ public static class TileManager
       return "Nature";
     if (name == "$ID trkdata/editor/cps.cat CategorySet1")
       return Service.CheckpointString;
-
+    name = name.Replace('/', ' ').Replace("\\", "");
     return name;
   }
   /// <summary>

@@ -368,8 +368,8 @@ public class Build : MonoBehaviour
     {
       Vector3 v = Service.IndexToPos(indexes[i]);
       v.y = Service.maxHeight;
-      bool traf = Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
-      if (traf && Mathf.Abs(Service.former_heights[indexes[i]] - hit.point.y) > 0.1f)
+      bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+      if (traf) //&& Mathf.Abs(Service.former_heights[indexes[i]] - hit.point.y) > 0.1f)
       {
         Service.former_heights[indexes[i]] = hit.point.y;
         // Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
@@ -985,21 +985,23 @@ public class Build : MonoBehaviour
   /// <summary>
   /// Matches up height of terrain to height of vertex of current RMC (layer = 10)
   /// </summary>
-  public static List<GameObject> Match_boundaries(int x, int z, Vector3Int TLpos)
+  public static void Match_boundaries(int x, int z, Vector3Int TLpos)
   {
+    if (x % 4 == 0 && z % 4 == 0)
+      return;
     x += TLpos.x;
     z = TLpos.z + z;
     Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
 
     int index = Service.PosToIndex(x, z);
     if (index == -1)
-      return null;
-    if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10)
-      && Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
+      return;
+    if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
+      //&& Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
     {
       Service.current_heights[index] = hit.point.y;
     }
-    return null;
+    return;
   }
   /// <summary>
   /// Matches vertices of RMCs one to another. rmc_o layer = 10

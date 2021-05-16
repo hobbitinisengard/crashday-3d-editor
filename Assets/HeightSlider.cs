@@ -47,7 +47,7 @@ public class HeightSlider : MonoBehaviour
     Destroy(preview.GetComponent<BoxCollider>());
     preview.GetComponent<MeshRenderer>().material = partiallytransparent;
     preview.transform.localScale = new Vector3(3f, 0.05f, 3);
-    preview.transform.position = new Vector3(2 + Highlight.TL.x, y, 2 + Highlight.TL.z);
+    preview.transform.position = new Vector3(2 + Highlight.TL.x, y, Highlight.TL.z - 2);
     Destroy(preview, 2);
   }
   private void Hide_text_helper()

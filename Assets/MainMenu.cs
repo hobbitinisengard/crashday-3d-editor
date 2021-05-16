@@ -14,7 +14,7 @@ public class MainMenu : MonoBehaviour
   public GameObject loadScreen;
   public Button ManageTilesets_button;
   public ScrollRect ManageTilesets_ScrollView;
-  /// <summary>Whether new track dimensions don't exceed STATIC.TrackTileLimit</summary>
+  /// <summary>Whether new track dimensions don't exceed TrackTileLimit</summary>
   public static bool CanCreateTrack = true;
   void Awake()
   {
@@ -55,6 +55,29 @@ public class MainMenu : MonoBehaviour
         }
       }
     }
+  }
+  public void RemoveJustUnzippedFolder(GameObject Id_GO)
+  {
+    string Mod_id = Id_GO.GetComponent<Text>().text;
+
+    //remove custom tiles of this tileset
+    string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == Mod_id).Select(t => t.Key).ToArray();
+    foreach (var name in to_remove_names)
+      TileManager.TileListInfo.Remove(name);
+
+    //remove folder in moddata
+    Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\", true);
+
+    // remove entry in menu
+    DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(Mod_id).gameObject);
+
+    if (ManageTilesets_ScrollView.content.childCount == 1) // if we only have empty invisible manage_entry_template remaining
+    {
+      // disable menu
+      ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
+      ManageTilesets_button.interactable = false;
+    }
+
   }
   public void RemoveTileset(GameObject Id_GO)
   {

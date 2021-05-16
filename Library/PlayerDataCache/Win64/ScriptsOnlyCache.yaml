@@ -32,6 +32,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.ContentSizeFitter
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.GridLayoutGroup
+    - UnityEngine.UI.HorizontalLayoutGroup
     - UnityEngine.UI.Image
     - UnityEngine.UI.InputField
     - UnityEngine.UI.Mask
@@ -40,6 +41,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Slider
     - UnityEngine.UI.Text
     - UnityEngine.UI.Toggle
+    - UnityEngine.UI.VerticalLayoutGroup
     com.unity.multiplayer-hlapi.Runtime.dll:
     - UnityEngine.Networking.NetworkCallbacks
     - UnityEngine.Networking.NetworkIdentity
@@ -118,33 +120,33 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9688}
     - Class: 114
-      Script: {instanceID: 9770}
+      Script: {instanceID: 9772}
     - Class: 114
-      Script: {instanceID: 9800}
+      Script: {instanceID: 9802}
     - Class: 114
-      Script: {instanceID: 9840}
+      Script: {instanceID: 9842}
     - Class: 114
-      Script: {instanceID: 9950}
+      Script: {instanceID: 9952}
     - Class: 114
-      Script: {instanceID: 10012}
+      Script: {instanceID: 10014}
     - Class: 114
-      Script: {instanceID: 10046}
+      Script: {instanceID: 10048}
     - Class: 114
-      Script: {instanceID: 10280}
+      Script: {instanceID: 10282}
     - Class: 114
-      Script: {instanceID: 10354}
+      Script: {instanceID: 10356}
     - Class: 114
-      Script: {instanceID: 10358}
+      Script: {instanceID: 10360}
     - Class: 114
-      Script: {instanceID: 10420}
+      Script: {instanceID: 10422}
     - Class: 114
-      Script: {instanceID: 10510}
+      Script: {instanceID: 10512}
     - Class: 114
-      Script: {instanceID: 10620}
+      Script: {instanceID: 10622}
     - Class: 114
-      Script: {instanceID: 10712}
+      Script: {instanceID: 10714}
     - Class: 114
-      Script: {instanceID: 10924}
+      Script: {instanceID: 10926}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -217,9 +219,9 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9464}
     - Class: 114
-      Script: {instanceID: 9468}
-    - Class: 114
       Script: {instanceID: 9480}
+    - Class: 114
+      Script: {instanceID: 9482}
     - Class: 114
       Script: {instanceID: 9486}
     - Class: 114
@@ -237,6 +239,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9526}
     - Class: 114
+      Script: {instanceID: 9534}
+    - Class: 114
       Script: {instanceID: 9594}
     - Class: 114
       Script: {instanceID: 9600}
@@ -251,15 +255,15 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9736}
     - Class: 114
-      Script: {instanceID: 9760}
+      Script: {instanceID: 9762}
     - Class: 114
-      Script: {instanceID: 10170}
+      Script: {instanceID: 10172}
     - Class: 114
-      Script: {instanceID: 10432}
+      Script: {instanceID: 10434}
     - Class: 114
-      Script: {instanceID: 10490}
+      Script: {instanceID: 10492}
     - Class: 114
-      Script: {instanceID: 10808}
+      Script: {instanceID: 10810}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -779,6 +783,12 @@ ScriptsOnlyBuild:
     className: NetworkProximityChecker
   - hash:
       serializedVersion: 2
+      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: DDSDecoder
+  - hash:
+      serializedVersion: 2
       Hash: 7903cfb51a94e52e7ffb7cf211160f9c
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
@@ -1195,4 +1205,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Pr0 Haxx00r/Desktop/3d/3D Editor.exe
+  playerPath: C:/Users/User/Desktop/3deditor/3dtest/3D Editor.exe
