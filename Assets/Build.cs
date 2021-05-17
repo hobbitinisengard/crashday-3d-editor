@@ -58,7 +58,11 @@ public class Build : MonoBehaviour
       if (Input.GetKey(KeyCode.LeftAlt))
         SwitchToNULL();
       if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
+      {
         PickUpTileUnderCursor();// Pick up tile under cursor
+        return;
+      }
+        
 
       if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space))
       { 
@@ -296,6 +300,8 @@ public class Build : MonoBehaviour
     List<GameObject> to_return = new List<GameObject>();
     foreach (GameObject znacznik in znaczniki)
     {
+      if (znacznik.name == "off")
+        continue;
       Vector3 pos = znacznik.transform.position;
       pos.y = Service.maxHeight;
       RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
@@ -388,6 +394,7 @@ public class Build : MonoBehaviour
   /// </summary>
   static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int dims)
   {
+    
     pos.y = Service.maxHeight;
     // out of grass
     if (pos.z <= 0 || pos.z >= 4 * Service.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Service.TRACK.Width)
@@ -826,10 +833,19 @@ public class Build : MonoBehaviour
         verts[index].y = 0;
       }
     }
+    if(verts.Any(v => float.IsNaN(v.y)))
+    {
+      Destroy(current_rmc);
+      current_rmc = null;
+      return null;
+    }
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
+    
     MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
+    
+
     Vector3Int pos = Vpos2tpos(current_rmc);
     Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
     current_rmc.layer = 10;
@@ -881,6 +897,7 @@ public class Build : MonoBehaviour
     else
       return false;
   }
+
   public static void Del_underlying_element()
   {
     bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);

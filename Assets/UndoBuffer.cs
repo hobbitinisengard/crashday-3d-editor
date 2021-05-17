@@ -2,46 +2,73 @@
 using System.Linq;
 using UnityEngine;
 
-public class UndoBuffer : MonoBehaviour
+public static class UndoBuffer
 {
-
   /// <summary>
   /// Global coordinates of former vertices before last terrain operation
   /// </summary>
   private static List<Vector3> UndoZnaczniki = new List<Vector3>();
   /// <summary>
+  /// is this vertex already in UndoZnaczniki?
+  /// </summary>
+  private static Dictionary<int, bool> UndoCreated = new Dictionary<int, bool>();
+  /// <summary>
   /// Clear buffer before next call of AddZnacznik
   /// </summary>
   private static bool Clear_buffer_before_next_add = false;
 
-  public static void AddZnacznik(int x, int z)
+  private static void AddNewPoint(Vector3 point, bool ItIsAlreadyPresent = false)
   {
-    Vector3 mrk = new Vector3(x, 0, z);
-    if (Clear_buffer_before_next_add)
-    {
-      UndoZnaczniki.Clear();
-      Clear_buffer_before_next_add = false;
-    }
-    UndoZnaczniki.Add(mrk);
+    UndoZnaczniki.Add(point);
+    if(!ItIsAlreadyPresent)
+      UndoCreated.Add(Service.PosToIndex(point), true);
   }
+
+  private static bool IsAlreadyPresent(Vector3 point)
+  {
+    return UndoCreated.ContainsKey(Service.PosToIndex(point));
+  }
+
+  private static void ClearBuffer()
+  {
+    UndoZnaczniki.Clear();
+    UndoCreated.Clear();
+  }
+
+  public static void AddZnacznik(int x, int z, bool EnableOverwriting = false)
+  {
+    Vector3 mrk = new Vector3(x, Service.current_heights[Service.PosToIndex(x,z)], z);
+    AddZnacznik(mrk, EnableOverwriting);
+  }
+
   /// <summary>
   /// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
   /// </summary>
   /// <param name="mrk"></param>
-  public static void AddZnacznik(Vector3 mrk)
+  public static void AddZnacznik(Vector3 mrk, bool EnableOverwriting = false)
   {
     if (Clear_buffer_before_next_add)
     {
-      UndoZnaczniki.Clear();
+      ClearBuffer();
       Clear_buffer_before_next_add = false;
     }
-    UndoZnaczniki.Add(mrk);
+    bool ItIsAlreadyPresent = false;
+
+    if (IsAlreadyPresent(mrk))
+    {
+      if (EnableOverwriting)
+        ItIsAlreadyPresent = true;
+      else
+        return;
+    }
+    
+    AddNewPoint(mrk, ItIsAlreadyPresent);
   }
   /// <summary>
   /// Saves list of znaczniki to buffer as one operation to possible undo
   /// </summary>
   /// <param name="Mrks"></param>
-  public static void AddOperation(List<Vector3> Mrks)
+  public static void AddZnaczniki(List<Vector3> Mrks)
   {
     UndoZnaczniki = Mrks.ToList();
   }
@@ -50,19 +77,19 @@ public class UndoBuffer : MonoBehaviour
   /// </summary>
   public static void ApplyOperation()
   {
+    Debug.Log("Buffer::ApplyOperation");
     Clear_buffer_before_next_add = true;
     UndoZnaczniki = UndoZnaczniki.Distinct().ToList();
   }
   /// <summary>
-  /// Recovers all height points that were previously added to buffer as undo
+  /// When Ctrl + Z is clicked
   /// </summary>
   public static void PasteUndoZnaczniki()
   {
     //Indexes of vertices for UpdateMapColliders()
     List<int> indexes = new List<int>();
-
     // List of tiles lying onto vertices that are now being pasted
-    List<GameObject> to_update = new List<GameObject>();
+    List<GameObject> tiles_to_update = new List<GameObject>();
     foreach (var mrk in UndoZnaczniki)
     {
       if (Service.IsWithinMapBounds(mrk))
@@ -83,14 +110,14 @@ public class UndoBuffer : MonoBehaviour
         {
           RaycastHit tile;
           pom.y = Service.maxHeight;
-          if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.maxHeight - Service.minHeight, 1 << 9) && !to_update.Contains(tile.transform.gameObject))
-            to_update.Add(tile.transform.gameObject);
+          if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.maxHeight - Service.minHeight, 1 << 9) && !tiles_to_update.Contains(tile.transform.gameObject))
+            tiles_to_update.Add(tile.transform.gameObject);
         }
       }
     }
     Service.UpdateMapColliders(indexes);
-    Build.UpdateTiles(to_update);
-    UndoZnaczniki.Clear();
+    Build.UpdateTiles(tiles_to_update);
+    ClearBuffer();
   }
   
 }

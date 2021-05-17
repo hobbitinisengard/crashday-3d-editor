@@ -78,6 +78,7 @@
     <Compile Include="Assets\IO\DDSDecoder.cs" />
     <Compile Include="Assets\IO\IO.cs" />
     <Compile Include="Assets\IO\MapParser.cs" />
+    <Compile Include="Assets\IO\P3DModel.cs" />
     <Compile Include="Assets\IO\P3DParser.cs" />
     <Compile Include="Assets\IO\TextFileParser.cs" />
     <Compile Include="Assets\IO\TgaDecoder.cs" />
@@ -88,12 +89,13 @@
     <Compile Include="Assets\Managers\TileManager.cs" />
     <Compile Include="Assets\Managers\ZipManager.cs" />
     <Compile Include="Assets\MouseInputUIBlocker.cs" />
-    <Compile Include="Assets\P3DModel.cs" />
     <Compile Include="Assets\ProfileCreator.cs" />
     <Compile Include="Assets\RadiusSlider.cs" />
+    <Compile Include="Assets\SecretContainer.cs" />
     <Compile Include="Assets\Service.cs" />
     <Compile Include="Assets\ShapeMenu.cs" />
     <Compile Include="Assets\ShowTileName.cs" />
+    <Compile Include="Assets\SimpleSlider.cs" />
     <Compile Include="Assets\SingleMode.cs" />
     <Compile Include="Assets\SliderCase.cs" />
     <Compile Include="Assets\SliderHeight.cs" />
@@ -104,7 +106,6 @@
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserEditor.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserMac.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserWindows.cs" />
-    <Compile Include="Assets\StepSlider.cs" />
     <Compile Include="Assets\TilePlacement.cs" />
     <Compile Include="Assets\TrackSavable.cs" />
     <Compile Include="Assets\TrackTileSavable.cs" />
@@ -114,7 +115,9 @@
     <Compile Include="Assets\Vegetation.cs" />
     <None Include="Assets\Resources\_defcps.txt" />
     <None Include="Assets\Resources\DepthShader.shader" />
+    <None Include="Assets\Resources\RTSCircle.shader" />
     <None Include="Assets\Resources\AlwaysVisible.shader" />
+    <None Include="Assets\Resources\AdditiveTint.shader" />
     <None Include="Assets\Resources\Normal-Bumped.shader" />
     <None Include="Assets\StreamingAssets\path.txt" />
     <None Include="Assets\StreamingAssets\tilesets.txt" />

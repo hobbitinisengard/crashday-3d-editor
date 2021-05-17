@@ -79,18 +79,18 @@ public class FlyCamera : MonoBehaviour
   {
     GetComponent<Camera>().orthographic = true;
     transform.rotation = Quaternion.Euler(new Vector3(90, Rotation, 0));
-    if (Input.GetAxis("Mouse ScrollWheel") > 0)
+    if (Input.GetKey(KeyCode.PageDown))
       GetComponent<Camera>().orthographicSize += 1;
-    else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+    else if (Input.GetKey(KeyCode.PageUp))
     {
       if (GetComponent<Camera>().orthographicSize - 3 > 0)
         GetComponent<Camera>().orthographicSize -= 1;
     }
-    if (Input.GetKeyUp(KeyCode.Alpha1))
+    if (Input.GetKeyUp(KeyCode.F1))
       Rotation = 45;
-    else if (Input.GetKeyUp(KeyCode.Alpha2))
+    else if (Input.GetKeyUp(KeyCode.F2))
       Rotation = 0;
-    else if (Input.GetKeyUp(KeyCode.Alpha3))
+    else if (Input.GetKeyUp(KeyCode.F3))
       Rotation = -45;
 
     //o

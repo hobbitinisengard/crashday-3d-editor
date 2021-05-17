@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,42 +9,191 @@ using UnityEngine.UI;
 /// </summary>
 public class ArealMode : MonoBehaviour
 {
+  private enum ArealModes { Immediate, Incremental }
+  private ArealModes CurrentMode;
+  Color32 Color_selected = new Color32(219, 203, 178, 255);
   public Slider HeightSlider;
+  public Slider IntensitySlider;
+  public Slider DistortionSlider;
+  public Button SingleModeButton;
+  public Button SmoothModeButton;
   private GameObject indicator;
   private int index;
-
-  public void OnDisable()
+  void RemoveIndicator()
   {
     index = 0;
     if (indicator != null)
       Destroy(indicator);
   }
+  public void OnDisable()
+  {
+    RemoveIndicator();
+  }
   void Update()
   {
+    if (Input.GetKeyDown(KeyCode.Alpha1))
+      SwitchMode(0);
+    else if (Input.GetKeyDown(KeyCode.Alpha2))
+    {
+      SwitchMode(1);
+      RemoveIndicator();
+    }
+      
     if (!Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
     {
-      if (Input.GetMouseButtonUp(0))
-        UndoBuffer.ApplyOperation();
-
-      if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
+      if (CurrentMode == ArealModes.Immediate)
       {
-        index = 0;
-        if (indicator != null)
-          Destroy(indicator);
+        IntensitySlider.enabled = false;
+        DistortionSlider.enabled = false;
+
+        if (Input.GetMouseButtonUp(0) && !Input.GetKey(KeyCode.LeftAlt))
+          UndoBuffer.ApplyOperation();
+
+        if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
+        {
+          RemoveIndicator();
+        }
+        if (!MouseInputUIBlocker.BlockedByUI)
+        {
+          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+            Areal_vertex_manipulation(); // single-action
+          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+            Areal_vertex_manipulation(); //auto-fire
+          else if (Input.GetMouseButtonDown(1) && Highlight.over)
+            Make_areal_elevation();
+        }
       }
-      if (!MouseInputUIBlocker.BlockedByUI)
+      else if (CurrentMode == ArealModes.Incremental)
       {
-        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
-          Areal_vertex_manipulation(); // single-action
-        else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
-          Areal_vertex_manipulation(); //auto-fire
-        else if (Input.GetMouseButtonDown(1) && Highlight.over)
-          Make_areal_elevation();
+        IntensitySlider.enabled = true;
+        DistortionSlider.enabled = true;
+        if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+        {
+          if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
+            UndoBuffer.ApplyOperation();
 
+          if (!MouseInputUIBlocker.BlockedByUI)
+          {
+            if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+              Areal_smoothing(); // single-action
+            else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+              Areal_smoothing(); //auto-fire
+            else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
+              Areal_distortion(); // single-action
+            else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
+              Areal_distortion(); //auto-fire
+          }
+        }
       }
     }
   }
+  // buttons use this function
+  public void SwitchMode(float mode)
+  {
+    CurrentMode = (ArealModes)mode;
+    SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+    SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+    if (mode == 0)
+      SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
+    else
+      SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
+  }
+  private void Areal_distortion()
+  {
+    if (Service.IsWithinMapBounds(Highlight.pos))
+    {
+      // Highlight.pos is center vertex
+      List<int> indexes = new List<int>();
+      for (float z = Highlight.pos.z - RadiusSlider.Radius; z <= Highlight.pos.z + RadiusSlider.Radius; z++)
+      {
+        for (float x = Highlight.pos.x - RadiusSlider.Radius; x <= Highlight.pos.x + RadiusSlider.Radius; x++)
+        {
+          if (Service.IsWithinMapBounds(x, z))
+          {
+            int idx = Service.PosToIndex((int)x, (int)z);
+            Vector3 currentpos = Service.IndexToPos(idx);
+            float dist = Service.Distance(currentpos, Highlight.pos);
+            if (dist > RadiusSlider.Radius)
+              continue;
+            UndoBuffer.AddZnacznik(currentpos);
+            Vector3 pos = Highlight.pos;
+            pos.y = Service.maxHeight;
+            float dist_val = Service.SliderValue2RealHeight(DistortionSlider.value);
+            float h_val = Service.SliderValue2RealHeight(HeightSlider.value);
+            float value = UnityEngine.Random.Range(h_val - dist_val, h_val + dist_val);
+            float Hdiff = value - Highlight.pos.y;
+            float NewHeight = h_val + Hdiff * (IntensitySlider.value / 100f);
+            UndoBuffer.AddZnacznik(Highlight.pos);
+            Service.former_heights[idx] = NewHeight;
+            Service.current_heights[idx] = Service.former_heights[idx];
+            indexes.Add(idx);
+          }
+        }
+      }
+      Service.UpdateMapColliders(indexes);
+      //Search for any tiles 
+      RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+                                             new Vector3(RadiusSlider.Radius + 1, 1, RadiusSlider.Radius),
+                                              Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+      List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
+      Build.UpdateTiles(hitsList);
+    }
+  }
 
+  private void Areal_smoothing()
+  {
+    if (Service.IsWithinMapBounds(Highlight.pos))
+    {
+      // Highlight.pos is center vertex
+
+      List<int> indexes = new List<int>();
+      for (float z = Highlight.pos.z - RadiusSlider.Radius; z <= Highlight.pos.z + RadiusSlider.Radius; z++)
+      {
+        for (float x = Highlight.pos.x - RadiusSlider.Radius; x <= Highlight.pos.x + RadiusSlider.Radius; x++)
+        {
+          if (Service.IsWithinMapBounds(x, z))
+          {
+            int idx = Service.PosToIndex((int)x, (int)z);
+            Vector3 currentpos = Service.IndexToPos(idx);
+            float dist = Service.Distance(currentpos, Highlight.pos);
+            if (dist > RadiusSlider.Radius)
+              continue;
+            UndoBuffer.AddZnacznik(currentpos);
+            Vector3 pos = Highlight.pos;
+            pos.y = Service.maxHeight;
+            float height_sum = 0;
+            for (int xx = -1; xx <= 1; xx++)
+            {
+              for (int zz = -1; zz <= 1; zz++)
+              {
+                if (xx == 0 && xx == zz)
+                  continue;
+                pos.x = Highlight.pos.x + xx;
+                pos.z = Highlight.pos.z + zz;
+                if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 8))
+                  height_sum += hit.point.y;
+              }
+            }
+            float avg = height_sum / 8f;
+            float Hdiff = avg - Highlight.pos.y;
+            float NewHeight = Highlight.pos.y + Hdiff * (IntensitySlider.value / 100f);
+            UndoBuffer.AddZnacznik(Highlight.pos);
+            Service.former_heights[idx] = NewHeight;
+            Service.current_heights[idx] = Service.former_heights[idx];
+            indexes.Add(idx);
+          }
+        }
+      }
+      Service.UpdateMapColliders(indexes);
+      //Search for any tiles 
+      RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+                                             new Vector3(RadiusSlider.Radius + 1, 1, RadiusSlider.Radius),
+                                              Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+      List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
+      Build.UpdateTiles(hitsList);
+    }
+  }
+  
   void Areal_vertex_manipulation()
   {
     if (Service.IsWithinMapBounds(Highlight.pos))
@@ -58,16 +208,15 @@ public class ArealMode : MonoBehaviour
         {
           if (Service.IsWithinMapBounds(x, z))
           {
-            Vector3 currentpos = new Vector3(x, 0, z);
-            int idx = Service.PosToIndex(currentpos);
+            int idx = Service.PosToIndex((int)x, (int)z);
+            Vector3 currentpos = Service.IndexToPos(idx);
             float dist = Service.Distance(currentpos, Highlight.pos);
             if (dist > MaxRadius)
               continue;
-
             UndoBuffer.AddZnacznik(currentpos);
             float Hdiff = Service.SliderValue2RealHeight(HeightSlider.value) - Service.current_heights[idx];
 
-            float fullpossibleheight = Hdiff * StepSlider.GetPercent();
+            float fullpossibleheight = Hdiff * IntensitySlider.value / 100f;
             Service.former_heights[idx] += fullpossibleheight * Service.Smoothstep(0, 1, (MaxRadius - dist) / MaxRadius);
             Service.current_heights[idx] = Service.former_heights[idx];
             indexes.Add(idx);
@@ -81,7 +230,6 @@ public class ArealMode : MonoBehaviour
                                               Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
       List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
       Build.UpdateTiles(hitsList);
-      UndoBuffer.ApplyOperation();
     }
   }
   void Make_areal_elevation()
@@ -118,9 +266,8 @@ public class ArealMode : MonoBehaviour
             {
               if (Service.IsWithinMapBounds(x, z))
               {
-                Vector3 currentpos = new Vector3(x, 0, z);
-                int idx = x + 4 * z * Service.TRACK.Width + z;
-
+                int idx = Service.PosToIndex(x,z);
+                Vector3 currentpos = Service.IndexToPos(idx);
                 if (x >= LD.x && x <= PG.x && z >= LD.z && z <= PG.z)
                 {
                   Service.former_heights[idx] = Service.SliderValue2RealHeight(HeightSlider.value);

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public enum SelectionState { NOSELECTION, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, BL_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy }
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy,
+  infinity
+}
 /// <summary>
 /// Hooked to ShapeMenu
 /// </summary>
@@ -29,6 +31,7 @@ public class ShapeMenu : MonoBehaviour
   public Button Prostry;
   public Button JumperEnd;
   public Button Integral;
+  public Button Infinity;
   // modifiers
   public Toggle KeepShape;
   public Toggle Connect;
@@ -50,6 +53,7 @@ public class ShapeMenu : MonoBehaviour
   /// </summary>
   public static Vector3 BL;
   private Vector3 mousePosition1;
+  private bool WorkingOnTileMarkings;
   void Start()
   {
     toslider.onClick.AddListener(() => LastSelected = FormButton.to_slider);
@@ -58,6 +62,7 @@ public class ShapeMenu : MonoBehaviour
     Jumper.onClick.AddListener(() => LastSelected = FormButton.jump);
     JumperEnd.onClick.AddListener(() => LastSelected = FormButton.jumpend);
     Flatten.onClick.AddListener(() => LastSelected = FormButton.flatter);
+    Infinity.onClick.AddListener(() => LastSelected = FormButton.infinity);
   }
   public void OnDisable()
   {
@@ -148,7 +153,7 @@ public class ShapeMenu : MonoBehaviour
     if (selectionState == SelectionState.WAITING4LD)
     {
       // to slider button doesn't require BL selection
-      if(LastSelected == FormButton.to_slider)
+      if(LastSelected == FormButton.to_slider || LastSelected == FormButton.infinity)
         StateSwitch(SelectionState.BL_SELECTED);
       foreach (GameObject mrk in markings)
       {
@@ -181,10 +186,7 @@ public class ShapeMenu : MonoBehaviour
     surroundings = Build.Get_surrounding_tiles(markings);
     float elevateby = 0;
     float slider_realheight = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-    if (KeepShape.isOn)
-      elevateby = slider_realheight - BL.y;
-
-    //Aktualizuj teren
+    //Update terrain
     List<int> indexes = new List<int>();
     foreach (GameObject znacznik in markings)
     {
@@ -196,7 +198,11 @@ public class ShapeMenu : MonoBehaviour
         indexes.Add(index);
 
         if (KeepShape.isOn)
+        {
+          elevateby = slider_realheight - markings[0].transform.position.y;
           Service.current_heights[index] += elevateby;
+        }
+          
         else
           Service.current_heights[index] = slider_realheight;
 
@@ -212,6 +218,36 @@ public class ShapeMenu : MonoBehaviour
     Build.UpdateTiles(surroundings);
     surroundings.Clear();
 
+  }
+  /// <summary>
+  /// TO Infinity button logic
+  /// </summary>
+  void SetToInfinity()
+  {
+    // NaNs grass break tiles
+    surroundings = Build.Get_surrounding_tiles(markings);
+    if (surroundings.Count != 0)
+    {
+      surroundings.Clear();
+      return;
+    }
+      
+    //Update terrain
+    List<int> indexes = new List<int>();
+    foreach (GameObject znacznik in markings)
+    {
+      if (znacznik.name == "on")
+      {
+        Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
+        int index = Service.PosToIndex(v);
+        UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+        indexes.Add(index);
+        Service.current_heights[index] = float.NaN;
+        Service.former_heights[index] = Service.current_heights[index];
+      }
+    }
+    UndoBuffer.ApplyOperation();
+    Service.UpdateMapColliders(indexes);
   }
 
   void Go2High(float low, float high, ref int x)
@@ -292,6 +328,11 @@ public class ShapeMenu : MonoBehaviour
       FormMenu_toSlider();
       return;
     }
+    if(LastSelected == FormButton.infinity)
+    {
+      SetToInfinity();
+      return;
+    }
     //Flatter check
     if (LastSelected == FormButton.flatter)
     {
@@ -321,7 +362,7 @@ public class ShapeMenu : MonoBehaviour
         }
       }
       // for vertices on tiles
-      if (current)
+      if (WorkingOnTileMarkings)
       {
         if (BL.x < hiX)
         {
@@ -342,41 +383,43 @@ public class ShapeMenu : MonoBehaviour
             PG.Set(lowX, 0, lowZ);
         }
       }
-      // for vertices of grass
-      Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-      bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-      bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
-      if (D && Dhit.transform.name != "on")
-        D = false;
-      if (L && Lhit.transform.name != "on")
-        L = false;
-      if (D)
-      {
-        if (L)
-        {
-          BL.Set(hiX, BL.y, hiZ);
-          PG.Set(lowX, 0, lowZ);
-        }
-        else
-        {
-          BL.Set(lowX, BL.y, hiZ);
-          PG.Set(hiX, 0, lowZ);
-        }
-      }
       else
       {
-        if (L)
+        // for vertices of grass
+        Vector3 center = new Vector3(BL.x, BL.y, BL.z);
+        bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
+        bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
+        if (D && Dhit.transform.name != "on")
+          D = false;
+        if (L && Lhit.transform.name != "on")
+          L = false;
+        if (D)
         {
-          PG.Set(lowX, 0, hiZ);
-          BL.Set(hiX, BL.y, lowZ);
+          if (L)
+          {
+            BL.Set(hiX, BL.y, hiZ);
+            PG.Set(lowX, 0, lowZ);
+          }
+          else
+          {
+            BL.Set(lowX, BL.y, hiZ);
+            PG.Set(hiX, 0, lowZ);
+          }
         }
         else
         {
-          PG.Set(hiX, 0, hiZ);
-          BL.Set(lowX, BL.y, lowZ);
+          if (L)
+          {
+            PG.Set(lowX, 0, hiZ);
+            BL.Set(hiX, BL.y, lowZ);
+          }
+          else
+          {
+            PG.Set(hiX, 0, hiZ);
+            BL.Set(lowX, BL.y, lowZ);
+          }
         }
       }
-
       List<DuVec3> extremes = new List<DuVec3>();
       float slider_realheight = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
       float heightdiff = slider_realheight - BL.y;
@@ -423,6 +466,8 @@ public class ShapeMenu : MonoBehaviour
                 
                 if (KeepShape.isOn)
                   vertpos.y += old_Y - BL.y;
+                if (float.IsNaN(vertpos.y))
+                  return;
                 Service.former_heights[index] = vertpos.y;
                 Service.current_heights[index] = Service.former_heights[index];
                 GameObject znacznik = hit.transform.gameObject;
@@ -474,6 +519,8 @@ public class ShapeMenu : MonoBehaviour
                   vertpos.y = BL.y - TileManager.TileListInfo[current.name].FlatterPoints[step];
                 if (KeepShape.isOn)
                   vertpos.y += old_Y - BL.y;
+                if (vertpos.y == Mathf.Infinity)
+                  return;
                 Service.former_heights[index] = vertpos.y;
                 Service.current_heights[index] = Service.former_heights[index];
                 GameObject znacznik = hit.transform.gameObject;
@@ -583,7 +630,6 @@ public class ShapeMenu : MonoBehaviour
     Bounds viewportBounds = Utils.GetViewportBounds(camera, mousePosition1, Input.mousePosition);
     return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
   }
-
   void SpawnVertexBoxes(bool checkTerrain)
   {
     if (!Highlight.over)
@@ -591,8 +637,10 @@ public class ShapeMenu : MonoBehaviour
     if (selectionState != SelectionState.NOSELECTION)
       return;
     FormMenu.SetActive(true);
-    if (current != null && !checkTerrain)
-    { // working on tile markings
+
+    if (current != null && !checkTerrain) // working on tile markings
+    { 
+      WorkingOnTileMarkings = true;
       Mesh rmc = current.GetComponent<MeshFilter>().mesh;
       if (markings.Count != 0)
       {
@@ -608,19 +656,17 @@ public class ShapeMenu : MonoBehaviour
       }
       for (int i = 0; i < rmc.vertexCount; i++)
       {
-        GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        znacznik.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        znacznik.transform.position = current.transform.TransformPoint(rmc.vertices[i]);
-        znacznik.GetComponent<MeshRenderer>().material = white;
-        znacznik.GetComponent<BoxCollider>().enabled = true;
-        znacznik.layer = 11;
+        GameObject znacznik = Service.CreateMarking(white, current.transform.TransformPoint(rmc.vertices[i]));
         if (i == 0)
-          znacznik.name = current.name + "_mrk";
+          znacznik.name = "first";
+        else
+          znacznik.name = "off";
         markings.Add(znacznik);
       }
     }
     else // Working on Service.MarkerBounds (terrain vertices) 
     {
+      WorkingOnTileMarkings = false;
       Vector3 v = Highlight.pos;
       if (markings.Count != 0)
       {
@@ -639,6 +685,8 @@ public class ShapeMenu : MonoBehaviour
             GameObject znacznik = Service.CreateMarking(white, Service.IndexToPos(Service.PosToIndex(x, z)));
             if (markings.Count == 0)
               znacznik.name = "first";
+            else
+              znacznik.name = "off";
             markings.Add(znacznik);
           }
         }

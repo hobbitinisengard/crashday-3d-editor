@@ -225,7 +225,7 @@ public class CopyPaste : MonoBehaviour
     if (CopyClipboard.Count == 0)
       return;
 
-    UndoBuffer.AddOperation(CopyClipboard);
+    UndoBuffer.AddZnaczniki(CopyClipboard);
     //Indexes of vertices for UpdateMapColliders()
     List<int> indexes = new List<int>();
 

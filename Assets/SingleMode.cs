@@ -4,39 +4,140 @@ using UnityEngine.UI;
 
 public class SingleMode : MonoBehaviour
 {
+  private enum SingleModes { Immediate, Incremental }
+  private SingleModes CurrentMode;
+  Color32 Color_selected = new Color32(219, 203, 178, 255);
   public GameObject ArealMenu;
   public Slider HeightSlider;
+  public Slider IntensitySlider;
+  public Slider DistortionSlider;
+  public Slider RadiusSlider;
+  public Button SingleModeButton;
+  public Button SmoothModeButton;
+
   private GameObject indicator;
   private int index;
-
   public void OnDisable()
   {
     index = 0;
     if (indicator != null)
       Destroy(indicator);
   }
+  // buttons use this function
+  public void SwitchMode(float mode)
+  {
+    CurrentMode = (SingleModes)mode;
+    SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+    SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+    if (mode == 0)
+      SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
+    else
+      SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
+  }
+
   void Update()
   {
-    if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+    if (Input.GetKeyDown(KeyCode.Alpha1))
+      SwitchMode(0);
+    else if (Input.GetKeyDown(KeyCode.Alpha2))
+      SwitchMode(1);
+    if (CurrentMode == SingleModes.Immediate)
     {
-      if (Input.GetMouseButtonUp(0))
-        UndoBuffer.ApplyOperation();
+      IntensitySlider.enabled = false;
+      DistortionSlider.enabled = false;
+      if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+      {
+        if (Input.GetMouseButtonUp(0) && !Input.GetKey(KeyCode.LeftAlt))
+          UndoBuffer.ApplyOperation();
 
-      if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
-      {
-        index = 0;
-        if (indicator != null)
-          Destroy(indicator);
+        if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
+        {
+          index = 0;
+          if (indicator != null)
+            Destroy(indicator);
+        }
+        if (!MouseInputUIBlocker.BlockedByUI)
+        {
+          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+            Single_vertex_manipulation(); // single-action
+          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+            Single_vertex_manipulation(); //auto-fire
+          else if (Input.GetMouseButtonDown(1) && Highlight.over)
+            Make_elevation();
+        }
       }
-      if (!MouseInputUIBlocker.BlockedByUI)
+    }
+    else if (CurrentMode == SingleModes.Incremental)
+    {
+
+      IntensitySlider.enabled = true;
+      DistortionSlider.enabled = true;
+      if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
       {
-        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
-          Single_vertex_manipulation(); // single-action
-        else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
-          Single_vertex_manipulation(); //auto-fire
-        else if (Input.GetMouseButtonDown(1) && Highlight.over)
-          Make_elevation();
+        if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
+          UndoBuffer.ApplyOperation();
+
+        if (!MouseInputUIBlocker.BlockedByUI)
+        {
+          if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+            Single_smoothing(); // single-action
+          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+            Single_smoothing(); //auto-fire
+          else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
+            Single_distortion(); // single-action
+          else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
+            Single_distortion(); //auto-fire
+        }
       }
+    }
+  }
+  void Single_distortion()
+  {
+    if (Service.IsWithinMapBounds(Highlight.pos))
+    {
+      float dist_val = Service.SliderValue2RealHeight(DistortionSlider.value);
+      float h_val = Service.SliderValue2RealHeight(HeightSlider.value);
+      float value = Random.Range(h_val - dist_val, h_val + dist_val);
+      float Hdiff = value - Highlight.pos.y;
+      float NewHeight = h_val + Hdiff * (IntensitySlider.value / 100f);
+      int idx = Service.PosToIndex(Highlight.pos);
+      UndoBuffer.AddZnacznik(Highlight.pos);
+      Service.former_heights[idx] = NewHeight;
+      Service.current_heights[idx] = Service.former_heights[idx];
+      Service.UpdateMapColliders(new List<int> { idx });
+      var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
+      Build.UpdateTiles(tiles);
+    }
+  }
+  void Single_smoothing()
+  {
+    if (Service.IsWithinMapBounds(Highlight.pos))
+    {
+      Vector3 pos = Highlight.pos;
+      pos.y = Service.maxHeight;
+      float height_sum = 0;
+      for (int x = -1; x <= 1; x++)
+      {
+        for (int z = -1; z <= 1; z++)
+        {
+          if (x == 0 && x == z)
+            continue;
+          pos.x = Highlight.pos.x + x;
+          pos.z = Highlight.pos.z + z;
+          if(Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 8))
+            height_sum += hit.point.y;
+        }
+      }
+      float avg = height_sum / 8f;
+      float Hdiff = avg - Highlight.pos.y;
+      float NewHeight = Highlight.pos.y + Hdiff * (IntensitySlider.value / 100f);
+      int idx = Service.PosToIndex(Highlight.pos);
+      UndoBuffer.AddZnacznik(Highlight.pos);
+      Service.former_heights[idx] = NewHeight;
+      Service.current_heights[idx] = Service.former_heights[idx];
+      Service.UpdateMapColliders(new List<int> { idx });
+      var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
+      Build.UpdateTiles(tiles);
     }
   }
   /// <summary>
@@ -95,7 +196,7 @@ public class SingleMode : MonoBehaviour
   /// <summary>
   /// Handles quick sculpting mode
   /// </summary>
-  void Single_vertex_manipulation(bool SaveUndo = false)
+  void Single_vertex_manipulation()
   {
     if (Highlight.over && Service.IsWithinMapBounds(Highlight.pos))
     {

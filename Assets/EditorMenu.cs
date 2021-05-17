@@ -28,7 +28,6 @@ public class EditorMenu : MonoBehaviour
   public GameObject MissingTilesPanel_content;
   public GameObject editorPANEL;
   public GameObject formPANEL;
-  public Button formToBuildButton;
   public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
   public Text upperPanel_t_version;
   /// <summary>

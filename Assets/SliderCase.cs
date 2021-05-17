@@ -10,6 +10,7 @@ public class SliderCase : MonoBehaviour
   public GameObject TilesetContainer;
   private string Current_tileset = Service.CheckpointString;
   private string[] Tilesets;
+
   public void InitializeSlider(string[] tilesets)
   {
     Tilesets = tilesets;

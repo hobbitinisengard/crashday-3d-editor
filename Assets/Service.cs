@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 /// <summary>
 /// Static class containing fields that need to survive during scene change
 /// </summary>
 public static class Service
 {
   public readonly static string VERSION = "build 2";
-  public static bool HideOriginalTiles = false;
   /// <summary>Maximum tile limit</summary>
   public readonly static int TrackTileLimit = 8000;
   /// <summary>
@@ -22,7 +22,7 @@ public static class Service
   public static TilePlacement[,] TilePlacementArray { get; set; }
   ///<summary> String showed on the top bar of the editor during mapping </summary>
   public static string UpperBarTrackName { get; set; } = "Untitled";
-  public static string DefaultTilesetName { get; set; } = "Default";
+  public static string DefaultTilesetName { get; set; } = "Hidden";
   public static float[] former_heights;
   public static float[] current_heights;
   /// <summary>
@@ -81,13 +81,22 @@ public static class Service
   {
     GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
     znacznik.transform.localScale = new Vector3(0.2f, 0.01f, 0.2f);
-    znacznik.transform.position = (pos != null) ? (Vector3)pos : Highlight.pos;
+    Vector3 newposition = new Vector3();
+    if (pos == null)
+      newposition = Highlight.pos;
+    else if (float.IsNaN(pos.Value.y))
+      newposition.Set(pos.Value.x, 0, pos.Value.z);
+    else
+      newposition = (Vector3)pos;
+    znacznik.transform.position = newposition;
+
     if (hasCollider)
       znacznik.GetComponent<BoxCollider>().enabled = true;
     else
       Object.Destroy(znacznik.GetComponent<BoxCollider>());
+
     znacznik.GetComponent<MeshRenderer>().material = material;
-    
+
     znacznik.layer = 11;
     return znacznik;
   }
@@ -118,19 +127,20 @@ public static class Service
       foreach (GameObject znacznik in mcs)
       {
         Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
-        indexes.Add(v.x + 4 * v.z * Service.TRACK.Width + v.z);
+        indexes.Add(PosToIndex(v.x, v.z));
       }
       UpdateMapColliders(indexes, IsRecoveringTerrain);
 
     }
     else //Argumentami MapCollidery
     {
-      foreach (GameObject mc in mcs)
+      foreach (GameObject grass in mcs)
       {
-        Vector3[] verts = mc.GetComponent<MeshCollider>().sharedMesh.vertices;
+        Vector3[] verts = grass.GetComponent<MeshCollider>().sharedMesh.vertices;
+        bool HasNaNs = false;
         for (int i = 0; i < verts.Length; i++)
         {
-          Vector3Int v = Vector3Int.RoundToInt(mc.transform.TransformPoint(verts[i]));
+          Vector3Int v = Vector3Int.RoundToInt(grass.transform.TransformPoint(verts[i]));
           if (IsRecoveringTerrain)
           {
             verts[i].y = Service.former_heights[Service.PosToIndex(v)];
@@ -138,18 +148,43 @@ public static class Service
           }
           else
             verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+          if (float.IsNaN(verts[i].y))
+            HasNaNs = true;
         }
-        mc.GetComponent<MeshCollider>().sharedMesh.vertices = verts;
-        mc.GetComponent<MeshCollider>().sharedMesh.RecalculateBounds();
-        mc.GetComponent<MeshCollider>().sharedMesh.RecalculateNormals();
-        mc.GetComponent<MeshFilter>().mesh = mc.GetComponent<MeshCollider>().sharedMesh;
-        mc.GetComponent<MeshCollider>().enabled = false;
-        mc.GetComponent<MeshCollider>().enabled = true;
-        //mc.SetActive(false);
-        //mc.SetActive(true);
+        var mc = grass.GetComponent<MeshCollider>();
+        var mf = grass.GetComponent<MeshFilter>();
+
+        if (!HasNaNs)
+        {
+          mc.sharedMesh.vertices = verts;
+          mc.sharedMesh.RecalculateBounds();
+          mc.sharedMesh.RecalculateNormals();
+          mf.mesh = mc.sharedMesh;
+        }
+        else
+        {// mesh has to have a collider but it can't be displayed with NaNs so we create collider with lowest points so it can be cast on
+
+          // meshfilter has NaNs
+          mf.mesh.vertices = verts;
+          mf.mesh.RecalculateBounds();
+          mf.mesh.RecalculateNormals();
+
+          // mesh collider has lowestPoint flat mesh
+          float lowestPoint = 0;// verts.Select(v => v.y).Where(n => !float.IsNaN(n)).Min();
+          Vector3[] newverts = new Vector3[verts.Length];
+          for (int i = 0; i < verts.Length; i++)
+            newverts[i].Set(verts[i].x, lowestPoint, verts[i].z);
+          Mesh mcMesh = Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
+          mcMesh.vertices = newverts;
+          mcMesh.RecalculateBounds();
+          mc.sharedMesh = mcMesh;
+        }
+        mc.enabled = false;
+        mc.enabled = true;
       }
     }
   }
+
   /// <summary>
   /// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
   /// </summary>
@@ -175,7 +210,7 @@ public static class Service
   public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
   {
     rmc_pos.y = Service.maxHeight;
-    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f), 
+    RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f),
       Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 8);
     List<GameObject> mcs = new List<GameObject>();
     foreach (RaycastHit hit in hits)
