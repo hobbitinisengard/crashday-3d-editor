@@ -64,22 +64,55 @@ public class ShapeMenu : MonoBehaviour
     Flatten.onClick.AddListener(() => LastSelected = FormButton.flatter);
     Infinity.onClick.AddListener(() => LastSelected = FormButton.infinity);
   }
+  void CheckNumericShortuts()
+  {
+    if (Input.GetKeyDown(KeyCode.Alpha1))
+      LastSelected = FormButton.jump;
+    else if (Input.GetKeyDown(KeyCode.Alpha2))
+      LastSelected = FormButton.linear;
+    else if (Input.GetKeyDown(KeyCode.Alpha3))
+      LastSelected = FormButton.jumpend;
+    else if (Input.GetKeyDown(KeyCode.Alpha4))
+      LastSelected = FormButton.integral;
+    else if (Input.GetKeyDown(KeyCode.Alpha5))
+      LastSelected = FormButton.to_slider;
+    else if (Input.GetKeyDown(KeyCode.Alpha6))
+      LastSelected = FormButton.flatter;
+    else if (Input.GetKeyDown(KeyCode.F1))
+      KeepShape.isOn = !KeepShape.isOn;
+    else if (Input.GetKeyDown(KeyCode.F2))
+      Connect.isOn = !Connect.isOn;
+  }
   public void OnDisable()
   {
     StateSwitch(SelectionState.NOSELECTION);
   }
   private void Update()
   {
-    if (!MouseInputUIBlocker.BlockedByUI && !CopyPaste.isEnabled())
+    EnsureModifiersNAND();
+    if (!CopyPaste.isEnabled())
     {
-      if (Input.GetMouseButtonDown(0))
+      CheckNumericShortuts();
+      if (!MouseInputUIBlocker.BlockedByUI)
       {
-        UpdateCurrent();
-        SpawnVertexBoxes(Input.GetKey(KeyCode.Q));
+        if (Input.GetMouseButtonDown(0))
+        {
+          UpdateCurrent();
+          SpawnVertexBoxes(Input.GetKey(KeyCode.Q));
+        }
+        VertexSelectionState(); //selecting vertices state
+        Waiting4_Bottom_Left_state(); //  waiting for bottom left vertex state
+        SelectShape(); // apply selected shape
       }
-      VertexSelectionState(); //selecting vertices state
-      Waiting4_Bottom_Left_state(); //  waiting for bottom left vertex state
-      SelectShape(); // apply selected shape
+    }
+    
+  }
+  void EnsureModifiersNAND()
+  {
+    if(Connect.isOn && KeepShape.isOn == Connect.isOn)
+    {
+      Connect.isOn = false;
+      KeepShape.isOn = false;
     }
   }
   void UpdateCurrent()
@@ -141,8 +174,6 @@ public class ShapeMenu : MonoBehaviour
         ApplyFormingFunction();
         StateSwitch(SelectionState.SELECTING_VERTICES);
       }
-
-      KeepShape.isOn = false;
       LastSelected = FormButton.none;
     }
   }

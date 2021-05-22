@@ -17,6 +17,10 @@ public class SingleMode : MonoBehaviour
 
   private GameObject indicator;
   private int index;
+  private float TargetDistValue = 0;
+  private bool DistortionFirstValueSelected;
+  private Vector3 InitialPos;
+
   public void OnDisable()
   {
     index = 0;
@@ -74,8 +78,12 @@ public class SingleMode : MonoBehaviour
       DistortionSlider.enabled = true;
       if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
       {
+        if (Input.GetMouseButtonUp(1))
+          DistortionFirstValueSelected = false;
         if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
           UndoBuffer.ApplyOperation();
+        
+          
 
         if (!MouseInputUIBlocker.BlockedByUI)
         {
@@ -93,17 +101,21 @@ public class SingleMode : MonoBehaviour
   }
   void Single_distortion()
   {
+    
     if (Service.IsWithinMapBounds(Highlight.pos))
     {
       float dist_val = Service.SliderValue2RealHeight(DistortionSlider.value);
       float h_val = Service.SliderValue2RealHeight(HeightSlider.value);
-      float value = Random.Range(h_val - dist_val, h_val + dist_val);
-      float Hdiff = value - Highlight.pos.y;
-      float NewHeight = h_val + Hdiff * (IntensitySlider.value / 100f);
+
+      if (Highlight.pos.x != InitialPos.x || Highlight.pos.z != InitialPos.z)
+      { // vertex -> vertex
+        InitialPos = Highlight.pos;
+        TargetDistValue = Random.Range(h_val - dist_val, h_val + dist_val);
+      }
       int idx = Service.PosToIndex(Highlight.pos);
       UndoBuffer.AddZnacznik(Highlight.pos);
-      Service.former_heights[idx] = NewHeight;
-      Service.current_heights[idx] = Service.former_heights[idx];
+      Service.current_heights[idx] += (TargetDistValue - Service.current_heights[idx]) * IntensitySlider.value / 100f;
+      Service.former_heights[idx] = Service.current_heights[idx];
       Service.UpdateMapColliders(new List<int> { idx });
       var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
       Build.UpdateTiles(tiles);
@@ -115,6 +127,7 @@ public class SingleMode : MonoBehaviour
     {
       Vector3 pos = Highlight.pos;
       pos.y = Service.maxHeight;
+      
       float height_sum = 0;
       for (int x = -1; x <= 1; x++)
       {
@@ -129,11 +142,9 @@ public class SingleMode : MonoBehaviour
         }
       }
       float avg = height_sum / 8f;
-      float Hdiff = avg - Highlight.pos.y;
-      float NewHeight = Highlight.pos.y + Hdiff * (IntensitySlider.value / 100f);
       int idx = Service.PosToIndex(Highlight.pos);
       UndoBuffer.AddZnacznik(Highlight.pos);
-      Service.former_heights[idx] = NewHeight;
+      Service.former_heights[idx] += (avg - Service.former_heights[idx]) * IntensitySlider.value / 100f;
       Service.current_heights[idx] = Service.former_heights[idx];
       Service.UpdateMapColliders(new List<int> { idx });
       var tiles = Build.Get_surrounding_tiles(new List<int> { idx });

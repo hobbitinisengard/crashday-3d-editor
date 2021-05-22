@@ -77,7 +77,7 @@ public static class UndoBuffer
   /// </summary>
   public static void ApplyOperation()
   {
-    Debug.Log("Buffer::ApplyOperation");
+    Debug.Log("applu");
     Clear_buffer_before_next_add = true;
     UndoZnaczniki = UndoZnaczniki.Distinct().ToList();
   }

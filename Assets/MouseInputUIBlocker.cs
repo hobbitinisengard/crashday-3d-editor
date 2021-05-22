@@ -8,7 +8,7 @@ public class MouseInputUIBlocker : MonoBehaviour
 
   private EventTrigger eventTrigger;
 
-  private void Start()
+  private void OnEnable()
   {
     eventTrigger = GetComponent<EventTrigger>();
     if (eventTrigger != null)
@@ -26,7 +26,10 @@ public class MouseInputUIBlocker : MonoBehaviour
       eventTrigger.triggers.Add(exitUIEntry);
     }
   }
-
+  private void OnDisable()
+  { //XD
+    BlockedByUI = false;
+  }
   private void EnterUI()
   {
     BlockedByUI = true;

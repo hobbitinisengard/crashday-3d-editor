@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,11 +14,12 @@ public class Build : MonoBehaviour
   public GameObject editorPanel; //-> slidercase.cs
   public Text CURRENTELEMENT; //name of currently selected element on top of the building menu
   public Text BuildButtonText; // text 'build' in build button
+  public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
   public GameObject savePanel; // "save track scheme" menu
   public Material partiallytransparent;
 
-  public bool LMBclicked = false;
-  public bool AllowLMB = false;
+  bool LMBclicked = false;
+  bool AllowLMB = false;
   /// <summary>obj_rmc = current RMC</summary>
   public static GameObject current_rmc;
   public static bool enableMixing = false;
@@ -30,6 +32,8 @@ public class Build : MonoBehaviour
   int cum_rotation = 0;
   ///<summary> current inversion of an element that is currently being shown</summary>
   bool inversion = false;
+  private bool IsEnteringKeypadValue;
+
   private void OnDisable()
   {
     if (current_rmc != null)
@@ -43,9 +47,10 @@ public class Build : MonoBehaviour
   {
     if (!MouseInputUIBlocker.BlockedByUI)
     {
-      if (Input.GetMouseButtonDown(1))
+      // Ctrl + RMB - picks up mixing height in mixing mode so rotation with ctrl is forbidden
+      if (Input.GetMouseButtonDown(1) && !Input.GetKey(KeyCode.LeftControl))
         cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
-
+      
       CURRENTELEMENT.text = EditorMenu.tile_name;
       if (Input.GetKeyUp(KeyCode.M))
         SwitchMixingMode();
@@ -62,10 +67,19 @@ public class Build : MonoBehaviour
         PickUpTileUnderCursor();// Pick up tile under cursor
         return;
       }
-        
+      if (enableMixing && !IsEnteringKeypadValue && Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(1))
+      {// Pick up mixing height with RMB + ctrl
+        PickUpTileHeightUnderCursor();
+        StartCoroutine(DisplayMixingMessageText(MixingHeight.ToString(), 2));
+        return;
+      }
+      else if (enableMixing)
+      { // check for numeric enter in mixing mode
+        Numericenter();
+      }
 
       if (EditorMenu.tile_name != "NULL" && !Input.GetKey(KeyCode.Space))
-      { 
+      {
         if (!Highlight.over)
         {
           if (nad_wczesniej)
@@ -125,6 +139,45 @@ public class Build : MonoBehaviour
       nad_wczesniej = false;
     }
   }
+  /// <summary>
+  /// Handles setting sliderheight with keypad
+  /// </summary>
+  private void Numericenter()
+  {
+    if (Input.GetKeyDown(KeyCode.KeypadMultiply))
+    {
+      try
+      {
+        MixingHeight = byte.Parse(MixingInfoText.text, System.Globalization.CultureInfo.InvariantCulture);
+      }
+      catch
+      {
+        MixingHeight = 0;
+      }
+      IsEnteringKeypadValue = false;
+      MixingInfoText.text = "";
+      MixingInfoText.gameObject.SetActive(false);
+    }
+    KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
+    for (int i = 0; i < keyCodes.Length; i++)
+    {
+      if (Input.GetKeyDown(keyCodes[i]))
+      {
+        IsEnteringKeypadValue = true;
+        MixingInfoText.gameObject.SetActive(true);
+        MixingInfoText.text += i.ToString();
+        return;
+      }
+    }
+  }
+  IEnumerator DisplayMixingMessageText(string message, float delay)
+  {
+    MixingInfoText.text = message;
+    MixingInfoText.gameObject.SetActive(true);
+    yield return new WaitForSeconds(delay);
+    MixingInfoText.text = "";
+    MixingInfoText.gameObject.SetActive(false);
+  }
   void CtrlWithMousewheelWorks()
   {
     if (Input.GetAxis("Mouse ScrollWheel") != 0 && Input.GetKey(KeyCode.LeftControl))
@@ -149,11 +202,12 @@ public class Build : MonoBehaviour
   /// <summary>Displays transparent cuboid for 2 secs.</summary>
   public void MixingHeightPreview()
   {
+    StartCoroutine(DisplayMixingMessageText(MixingHeight.ToString(), 2));
     GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
     Destroy(preview.GetComponent<BoxCollider>());
     preview.GetComponent<MeshRenderer>().material = partiallytransparent;
     preview.transform.localScale = new Vector3(3f, 0.05f, 3);
-    preview.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight/5f, 2 + Highlight.TL.z);
+    preview.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight / 5f, Highlight.TL.z - 2);
     Destroy(preview, 2);
   }
   /// <summary>
@@ -202,12 +256,15 @@ public class Build : MonoBehaviour
       List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
       DestroyImmediate(current_rmc);
       int[] t_verts = Service.TilePlacementArray[pos.z, pos.x].t_verts;
-      if(t_verts != null)
+      if (t_verts != null)
         RecoverTerrain(t_verts.ToList());
       UpdateTiles(surroundings);
     }
   }
-  
+  void PickUpTileHeightUnderCursor()
+  {
+    MixingHeight = Service.TilePlacementArray[Highlight.TL.z / 4 - 1, Highlight.TL.x / 4].Height;
+  }
   void PickUpTileUnderCursor()
   {
     Vector3 v = Highlight.pos;
@@ -270,7 +327,7 @@ public class Build : MonoBehaviour
     {
       for (int x = 0; x <= 4 * tileDims.x; x++)
       {
-        to_return.Add(Service.PosToIndex(TL.x + x,TL.z -z));
+        to_return.Add(Service.PosToIndex(TL.x + x, TL.z - z));
       }
     }
     return to_return.ToArray();
@@ -355,8 +412,7 @@ public class Build : MonoBehaviour
   static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int arraypos, byte Height = 0)
   {
     Service.TilePlacementArray[arraypos.z, arraypos.x].Set(nazwa, rotacja, inwersja, Height);
-
-    if (TileManager.TileListInfo[nazwa].IsCheckpoint 
+    if (TileManager.TileListInfo[nazwa].IsCheckpoint
       && !Service.TRACK.Checkpoints.Contains((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width)))
     {
       Service.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width));
@@ -394,7 +450,7 @@ public class Build : MonoBehaviour
   /// </summary>
   static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int dims)
   {
-    
+
     pos.y = Service.maxHeight;
     // out of grass
     if (pos.z <= 0 || pos.z >= 4 * Service.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Service.TRACK.Width)
@@ -833,7 +889,7 @@ public class Build : MonoBehaviour
         verts[index].y = 0;
       }
     }
-    if(verts.Any(v => float.IsNaN(v.y)))
+    if (verts.Any(v => float.IsNaN(v.y)))
     {
       Destroy(current_rmc);
       current_rmc = null;
@@ -842,9 +898,9 @@ public class Build : MonoBehaviour
     rmc.vertices = verts;
     rmc.RecalculateBounds();
     rmc.RecalculateNormals();
-    
+
     MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
-    
+
 
     Vector3Int pos = Vpos2tpos(current_rmc);
     Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
@@ -892,7 +948,7 @@ public class Build : MonoBehaviour
     TLpos.x /= 4;
     TLpos.z /= 4;
     TLpos.z--; //get BL not TL for array check
-    if(Service.TilePlacementArray[TLpos.z, TLpos.x].Name == null)
+    if (Service.TilePlacementArray[TLpos.z, TLpos.x].Name == null)
       return true;
     else
       return false;
@@ -1014,7 +1070,7 @@ public class Build : MonoBehaviour
     if (index == -1)
       return;
     if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
-      //&& Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
+    //&& Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
     {
       Service.current_heights[index] = hit.point.y;
     }

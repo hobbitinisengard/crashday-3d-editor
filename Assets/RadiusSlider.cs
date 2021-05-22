@@ -6,8 +6,6 @@ public class RadiusSlider : MonoBehaviour
   public static int Radius = 5;
 
   private Slider slider;
-  public Text text;
-  public Text ApproxText;
   private void Start()
   {
     slider = GetComponent<Slider>();
@@ -28,8 +26,6 @@ public class RadiusSlider : MonoBehaviour
   }
   public void OnValueChanged(float val)
   {
-    text.text = val.ToString();
     Radius = (int)val;
-    ApproxText.text = "= " + (val / 4f).ToString(); 
   }
 }

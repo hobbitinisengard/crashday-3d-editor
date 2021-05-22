@@ -86,11 +86,11 @@ public class FlyCamera : MonoBehaviour
       if (GetComponent<Camera>().orthographicSize - 3 > 0)
         GetComponent<Camera>().orthographicSize -= 1;
     }
-    if (Input.GetKeyUp(KeyCode.F1))
+    if (Input.GetKeyUp(KeyCode.F5))
       Rotation = 45;
-    else if (Input.GetKeyUp(KeyCode.F2))
+    else if (Input.GetKeyUp(KeyCode.F6))
       Rotation = 0;
-    else if (Input.GetKeyUp(KeyCode.F3))
+    else if (Input.GetKeyUp(KeyCode.F7))
       Rotation = -45;
 
     //o

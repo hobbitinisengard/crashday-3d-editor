@@ -1,6 +1,7 @@
 ﻿using SFB;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 //Handles all variables essential for editor
@@ -21,7 +22,7 @@ public class DuVecInt
 public class EditorMenu : MonoBehaviour
 {
   private Material floor1;
-
+  public EventSystem eventsystem;
   public GameObject save;
   public GameObject help;
   public GameObject MissingTilesPanel;
@@ -63,10 +64,14 @@ public class EditorMenu : MonoBehaviour
       }
       if (Input.GetMouseButtonDown(2))
       {//MMB przełącza teren/budowanie
-        editorPANEL.SetActive(!editorPANEL.activeSelf);
-        formPANEL.SetActive(!formPANEL.activeSelf);
+        SwitchPanels();
       }
     }
+  }
+  void SwitchPanels()
+  {
+    editorPANEL.SetActive(!editorPANEL.activeSelf);
+    formPANEL.SetActive(!formPANEL.activeSelf);
   }
   public void ToggleSaveMenu()
   {
@@ -98,8 +103,7 @@ public class EditorMenu : MonoBehaviour
 
   public void SetMarkerDimsX(string val)
   {
-
-    Service.MarkerBounds.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
+      Service.MarkerBounds.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
   }
   public void SetMarkerDimsZ(string val)
   {
@@ -108,12 +112,8 @@ public class EditorMenu : MonoBehaviour
 
   public void Toggle_help()
   {
-    if (help.activeSelf)
-      help.SetActive(false);
-    else
-      help.SetActive(true);
+    help.SetActive(!help.activeSelf);
   }
-
 
   public void SaveMenu_works()
   {
