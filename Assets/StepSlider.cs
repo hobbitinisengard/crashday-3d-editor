@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class SimpleSlider : MonoBehaviour
+public class StepSlider : MonoBehaviour
 {
   public Text text;
   public void JustValue(float val)

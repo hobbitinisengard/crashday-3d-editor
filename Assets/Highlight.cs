@@ -39,7 +39,7 @@ public class Highlight : MonoBehaviour
     if (traf && hit.transform.gameObject.layer != 5)
     { // Raycast nie przejdzie przez elementy UI
       Vector3 to_return = Vector3Int.RoundToInt(hit.point);
-      to_return.y = hit.point.y;
+      to_return.y = Service.current_heights[Service.PosToIndex((int)to_return.x, (int)to_return.z)];
       return to_return;
     }
     else

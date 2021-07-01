@@ -165,7 +165,7 @@ public class MainMenu : MonoBehaviour
       string path = sourcepath[0];
       //Path can't have .trk suffix
       path = path.Substring(0, path.Length - 4);
-      Service.UpperBarTrackName = path.Substring(path.LastIndexOf('\\') + 1);
+      Service.UntitledString = path.Substring(path.LastIndexOf('\\') + 1);
       SaveTrackPath(path);
       Service.TRACK = MapParser.ReadMap(path + ".trk");
 
