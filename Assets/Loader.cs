@@ -20,8 +20,6 @@ public class Loader : MonoBehaviour
 	public Text nazwa_toru;
 	public GameObject editorPanel;
 
-	public static float multiplier = 1;
-
 	void Awake()
 	{
 		if (Service.Isloading)
@@ -74,13 +72,13 @@ public class Loader : MonoBehaviour
 			Service.TRACK = new TrackSavable((ushort)SliderWidth.val, (ushort)SliderHeight.val);
 			InitializeHeightArrays(Service.TRACK.Height, Service.TRACK.Width);
 			InitializeTilePlacementArray(SliderHeight.val, SliderWidth.val);
-			Service.UntitledString = "Untitled";
+			Service.Trackname = "Untitled";
 		}
 
 		if (Service.LoadMirrored)
-			Service.UntitledString += " (mirrored)";
+			Service.Trackname += " (mirrored)";
 
-		nazwa_toru.text = Service.UntitledString;
+		nazwa_toru.text = Service.Trackname;
 		CreateScatteredMeshColliders();
 
 		if (Service.Isloading)
@@ -156,7 +154,7 @@ public class Loader : MonoBehaviour
 				else
 					i = x + z * (4 * Service.TRACK.Width + 1);
 
-				Service.current_heights[i] = multiplier * Service.TRACK.Heightmap[4 * Service.TRACK.Height - z][x] / 5f - Service.TRACK.Heightmap[0][0] / 5f;
+				Service.current_heights[i] = Service.TRACK.Heightmap[4 * Service.TRACK.Height - z][x] / 5f - Service.TRACK.Heightmap[0][0] / 5f;
 				Service.former_heights[i] = Service.current_heights[i];
 			}
 		}
@@ -203,6 +201,8 @@ public class Loader : MonoBehaviour
 						Service.TilePlacementArray[z, x].Inversion, Service.TilePlacementArray[z, x].Height));
 			}
 		}
+		// when PlaceTile tries to place a tile sticking out of map bounds (because of resizing), it returns null. Nulls have to be removed from to_update
+		to_update.RemoveAll(go => go == null);
 		Build.UpdateTiles(to_update);
 		Build.current_rmc = null;
 		Service.Isloading = false;

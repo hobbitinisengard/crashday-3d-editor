@@ -117,11 +117,11 @@ public class HeightSlider : MonoBehaviour
     {
       if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.maxHeight)
       {
-        HSlider.value += 0.25f;
+        HSlider.value += 0.1f;
       }
       else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.minHeight)
       {
-        HSlider.value -= 0.25f;
+        HSlider.value -= 0.1f;
       }
     }
     else if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.maxHeight)

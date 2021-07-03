@@ -5,60 +5,60 @@ using System.Xml.Serialization;
 public class TrackSavable
 {
 	[XmlAttribute("time")]
-    public int CurrentTime;         //unused
+	public int CurrentTime;         //unused
 	[XmlAttribute("author")]
-    public string Author;
+	public string Author;
 	[XmlAttribute("comment")]
-    public string Comment;
-    /*
-     * 5times
-     * 
-     * int32 Best2MinStuntScore 
-     * char* Best2MinStuntScorePlayers (NULL terminated string) 
-     * int32 Best3MinStuntScore 
-     * char* Best3MinStuntScorePlayers (NULL terminated string) 
-     * int32 Best5MinStuntScore 
-     * char* Best5MinStuntScorePlayers (NULL terminated string) 
-     * int32 BestRacingLapTime 
-     * char* BestRacingLapTimePlayers (NULL terminated string)
-     */
+	public string Comment;
+	/*
+		* 5times
+		* 
+		* int32 Best2MinStuntScore 
+		* char* Best2MinStuntScorePlayers (NULL terminated string) 
+		* int32 Best3MinStuntScore 
+		* char* Best3MinStuntScorePlayers (NULL terminated string) 
+		* int32 Best5MinStuntScore 
+		* char* Best5MinStuntScorePlayers (NULL terminated string) 
+		* int32 BestRacingLapTime 
+		* char* BestRacingLapTimePlayers (NULL terminated string)
+		*/
 	[XmlAttribute("style")]
-    public byte Style;
+	public byte Style;
 	[XmlAttribute("ambience")]
-    public string Ambience;
+	public string Ambience;
 
 	[XmlAttribute("fieldFilesNum")]
-    public ushort FieldFilesNumber;
+	public ushort FieldFilesNumber;
 	[XmlAttribute("fieldFiles")]
-    public List<string> FieldFiles;
+	public List<string> FieldFiles;
 	[XmlAttribute("width")]
-    public ushort Width;
+	public ushort Width;
 	[XmlAttribute("height")]
-    public ushort Height;
+	public ushort Height;
 	[XmlAttribute("trackTiles")]
-    public List<List<TrackTileSavable>> TrackTiles;
+	public List<List<TrackTileSavable>> TrackTiles;
 
 	[XmlAttribute("dynobjsfilesnum")]
-    public ushort DynamicObjectFilesNumber;
+	public ushort DynamicObjectFilesNumber;
 	[XmlAttribute("dynobjsfiles")]
-    public List<string> DynamicObjectFiles;
+	public List<string> DynamicObjectFiles;
 	[XmlAttribute("dynobjsnum")]
-    public ushort DynamicObjectsNumber;
+	public ushort DynamicObjectsNumber;
 	[XmlAttribute("dynobjs")]
-    public List<DynamicObjectSavable> DynamicObjects;
+	public List<DynamicObjectSavable> DynamicObjects;
 
 	[XmlAttribute("checkpointnumber")]
-    public ushort CheckpointsNumber;
+	public ushort CheckpointsNumber;
 	[XmlAttribute("checkpoints")]
-    public List<ushort> Checkpoints;
+	public List<ushort> Checkpoints;
 	[XmlAttribute("permission")]
-    public byte Permission;
+	public byte Permission;
 	[XmlAttribute("bumpyness")]
-    public float GroundBumpyness;
+	public float GroundBumpyness;
 	[XmlAttribute("scenery")]
-    public byte Scenery;
+	public byte Scenery;
 	[XmlAttribute("heightmap")]
-    public List<List<float>> Heightmap;
+	public List<List<float>> Heightmap;
 
 
 	/// <summary>
@@ -82,10 +82,10 @@ public class TrackSavable
 
 		TrackTiles = new List<List<TrackTileSavable>>(Height);
 
-		for (int y = 0; y <  Height; y++)
+		for (int y = 0; y < Height; y++)
 		{
 			TrackTiles.Add(new List<TrackTileSavable>(Width));
-			for (int x = 0; x <  Width; x++)
+			for (int x = 0; x < Width; x++)
 			{
 				TrackTiles[y].Add(new TrackTileSavable(old.TrackTiles[y][x]));
 			}
@@ -110,18 +110,106 @@ public class TrackSavable
 		GroundBumpyness = old.GroundBumpyness;
 		Scenery = old.Scenery;
 
-		Heightmap = new List<List<float>>(Height*4+1);
+		Heightmap = new List<List<float>>(Height * 4 + 1);
 
-		for (int y = 0; y <  Height*4 + 1; y++)
+		for (int y = 0; y < Height * 4 + 1; y++)
 		{
-			Heightmap.Add(new List<float>(Width*4+1));
-			for (int x = 0; x <  Width*4 + 1; x++)
+			Heightmap.Add(new List<float>(Width * 4 + 1));
+			for (int x = 0; x < Width * 4 + 1; x++)
 			{
 				Heightmap[y].Add(old.Heightmap[y][x]);
 			}
 		}
 	}
+	/// <summary>
+	/// creates new resized track using tiles of old track as feed. Checkpoints are not loaded.
+	/// </summary>
+	/// <param name="old"></param>
+	/// <param name="newwidth"></param>
+	/// <param name="newheight"></param>
+	// info about checkpoints is ignored and is completely rebuilt depending on gameobjects in world, not on trk file
+	public TrackSavable(TrackSavable old, int plusR, int plusL, int plusUp, int plusDown)
+	{
+		CheckpointsNumber = 0;
+		Checkpoints = new List<ushort>();
 
+		Author = old.Author;
+		Comment = old.Comment;
+		Style = old.Style;
+		Ambience = old.Ambience;
+
+		Height = (ushort)(old.Height + plusUp + plusDown);
+		Width = (ushort)(old.Width + plusR + plusL);
+
+		FieldFilesNumber = 1;
+		FieldFiles = new List<string>() { "field.cfl" };
+
+		TrackTiles = new List<List<TrackTileSavable>>(Height);
+		for (int y = 0; y < Height; y++)
+		{
+			TrackTiles.Add(new List<TrackTileSavable>(Width));
+			for (int x = 0; x < Width; x++)
+			{
+				// place trackpiece to translated location. If exceeding old dims, place grass
+				if (y - plusUp >= 0 && y - plusUp < old.Height && x - plusL >= 0 && x - plusL < old.Width)
+					TrackTiles[y].Add(new TrackTileSavable(old.TrackTiles[y - plusUp][x - plusL])); 
+				else
+					TrackTiles[y].Add(new TrackTileSavable(0, 0, 0, 0));
+
+				// update fieldID (ignore quarters and grass)
+				if (TrackTiles[y][x].FieldId != 0 && TrackTiles[y][x].FieldId < 65400)
+				{
+					string tilename = old.FieldFiles[TrackTiles[y][x].FieldId];
+
+					bool found = false;
+					for (ushort i = 0; i < FieldFiles.Count; i++)
+					{
+						if (tilename == FieldFiles[i])
+						{
+							TrackTiles[y][x].FieldId = i;
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+					{
+						FieldFiles.Add(tilename);
+						TrackTiles[y][x].FieldId = FieldFilesNumber;
+						FieldFilesNumber++;
+					}
+				}
+			}
+		}
+
+		DynamicObjectFilesNumber = old.DynamicObjectFilesNumber;
+		DynamicObjectFiles = new List<string>(DynamicObjectFilesNumber);
+		foreach (var dof in old.DynamicObjectFiles)
+			DynamicObjectFiles.Add(dof);
+
+		DynamicObjectsNumber = old.DynamicObjectsNumber;
+		DynamicObjects = new List<DynamicObjectSavable>(DynamicObjectsNumber);
+		foreach (var d in old.DynamicObjects)
+			DynamicObjects.Add(d);
+
+		Permission = old.Permission;
+		GroundBumpyness = old.GroundBumpyness;
+		Scenery = old.Scenery;
+
+		Heightmap = new List<List<float>>(Height * 4 + 1);
+		for (int y = 0; y <= Height * 4; y++)
+		{
+			Heightmap.Add(new List<float>(Width * 4 + 1));
+			for (int x = 0; x <= Width * 4 ; x++)
+			{
+				if(x == 0 || x == 4 * Width || y == 0 || y == 4* Height)
+					Heightmap[y].Add(old.Heightmap[0][0]);
+				else if (y - 4 * plusUp >= 0 && y - 4 * plusUp <= old.Height * 4 && x - 4 * plusL >= 0 && x - 4 * plusL <= old.Width * 4)
+					Heightmap[y].Add(old.Heightmap[y - 4 * plusUp][x - 4 * plusL]);
+				else
+					Heightmap[y].Add(0);
+			}
+		}
+	}
 	/// <summary>
 	/// Default constructor
 	/// </summary>
@@ -144,14 +232,14 @@ public class TrackSavable
 
 		TrackTiles = new List<List<TrackTileSavable>>(5);
 
-		for (int y = 0; y <  Height; y++)
+		for (int y = 0; y < Height; y++)
 		{
 			TrackTiles.Add(new List<TrackTileSavable>(5));
-			for (int x = 0; x <  Width; x++)
+			for (int x = 0; x < Width; x++)
 			{
-				TrackTileSavable tile = new TrackTileSavable(0,0,0,0);
-				if(x == 2 && y == 2)
-					tile = new TrackTileSavable(1,0,0,0);
+				TrackTileSavable tile = new TrackTileSavable(0, 0, 0, 0);
+				if (x == 2 && y == 2)
+					tile = new TrackTileSavable(1, 0, 0, 0);
 				TrackTiles[y].Add(tile);
 			}
 		}
@@ -174,63 +262,63 @@ public class TrackSavable
 
 		Heightmap = new List<List<float>>(21);
 
-		for (int y = 0; y <  Height*4 + 1; y++)
+		for (int y = 0; y < Height * 4 + 1; y++)
 		{
 			Heightmap.Add(new List<float>(21));
-			for (int x = 0; x <  Width*4 + 1; x++)
+			for (int x = 0; x < Width * 4 + 1; x++)
 			{
 				Heightmap[y].Add(0.0f);
 			}
 		}
 	}
 
-    public TrackSavable(ushort newwidth, ushort newheight)
-    {
-        Author = "";
-        Comment = "";
-        Style = 0;
-        Ambience = "day.amb";
+	public TrackSavable(ushort newwidth, ushort newheight)
+	{
+		Author = "";
+		Comment = "";
+		Style = 0;
+		Ambience = "day.amb";
 
-        FieldFilesNumber = 1;
-        FieldFiles = new List<string>()
-        {
-            "field.cfl",
-        };
+		FieldFilesNumber = 1;
+		FieldFiles = new List<string>()
+								{
+												"field.cfl",
+								};
 
-        Height = newheight;
-        Width = newwidth;
+		Height = newheight;
+		Width = newwidth;
 
-        TrackTiles = new List<List<TrackTileSavable>>(Height);
+		TrackTiles = new List<List<TrackTileSavable>>(Height);
 
-        for (int y = 0; y < Height; y++)
-        {
-            TrackTiles.Add(new List<TrackTileSavable>(Width));
-            for (int x = 0; x < Width; x++)
-                TrackTiles[y].Add(new TrackTileSavable(0, 0, 0, 0));
-        }
+		for (int y = 0; y < Height; y++)
+		{
+			TrackTiles.Add(new List<TrackTileSavable>(Width));
+			for (int x = 0; x < Width; x++)
+				TrackTiles[y].Add(new TrackTileSavable(0, 0, 0, 0));
+		}
 
-        DynamicObjectFilesNumber = 0;
-        DynamicObjectFiles = new List<string>();
+		DynamicObjectFilesNumber = 0;
+		DynamicObjectFiles = new List<string>();
 
-        DynamicObjectsNumber = 0;
-        DynamicObjects = new List<DynamicObjectSavable>();
+		DynamicObjectsNumber = 0;
+		DynamicObjects = new List<DynamicObjectSavable>();
 
-        CheckpointsNumber = 0;
-        Checkpoints = new List<ushort>();
+		CheckpointsNumber = 0;
+		Checkpoints = new List<ushort>();
 
-        Permission = 0;
-        GroundBumpyness = 1.0f;
-        Scenery = 0;
+		Permission = 0;
+		GroundBumpyness = 1.0f;
+		Scenery = 0;
 
-        Heightmap = new List<List<float>>(4 * Height + 1);
+		Heightmap = new List<List<float>>(4 * Height + 1);
 
-        for (int y = 0; y < Height * 4 + 1; y++)
-        {
-            Heightmap.Add(new List<float>(4 * Width + 1));
-            for (int x = 0; x < Width * 4 + 1; x++)
-            {
-                Heightmap[y].Add(0);
-            }
-        }
-    }
+		for (int y = 0; y < Height * 4 + 1; y++)
+		{
+			Heightmap.Add(new List<float>(4 * Width + 1));
+			for (int x = 0; x < Width * 4 + 1; x++)
+			{
+				Heightmap[y].Add(0);
+			}
+		}
+	}
 }

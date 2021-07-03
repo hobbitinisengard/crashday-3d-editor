@@ -273,20 +273,20 @@ public class CopyPaste : MonoBehaviour
 		{
 			if (Input.GetAxis("Mouse ScrollWheel") > 0)
 			{
-				fixed_height += 0.25f;
+				fixed_height += 1;
 			}
 			else if (Input.GetAxis("Mouse ScrollWheel") < 0)
 			{
-				fixed_height -= 0.25f;
+				fixed_height -= 1;
 			}
 		}
 		else if (Input.GetAxis("Mouse ScrollWheel") > 0)
 		{
-			fixed_height += 1;
+			fixed_height += 5;
 		}
 		else if (Input.GetAxis("Mouse ScrollWheel") < 0)
 		{
-			fixed_height -= 1;
+			fixed_height -= 5;
 		}
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
 			UpdatePreview();

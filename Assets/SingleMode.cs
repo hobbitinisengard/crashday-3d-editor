@@ -18,7 +18,6 @@ public class SingleMode : MonoBehaviour
 	private GameObject indicator;
 	private int index;
 	private float TargetDistValue = 0;
-	private bool DistortionFirstValueSelected;
 	private Vector3 InitialPos;
 
 	public void OnDisable()
@@ -83,8 +82,6 @@ public class SingleMode : MonoBehaviour
 			DistortionSlider.enabled = true;
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
-				if (Input.GetMouseButtonUp(1))
-					DistortionFirstValueSelected = false;
 				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
 					UndoBuffer.ApplyOperation();
 

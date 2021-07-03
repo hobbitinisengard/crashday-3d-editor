@@ -141,8 +141,8 @@ public class EditorMenu : MonoBehaviour
 		if (path == "")
 			return;
 		MainMenu.SaveTrackPath(path);
-		Service.UntitledString = NameOfTrack.text;
-		GetComponent<Loader>().nazwa_toru.text = Service.UntitledString;
+		Service.Trackname = NameOfTrack.text;
+		GetComponent<Loader>().nazwa_toru.text = Service.Trackname;
 		// save currently set gravity value to static variable to remember last dropdown selection
 		Service.GravityValue = GravityEffectDropdown.value * 1000;
 
@@ -201,15 +201,14 @@ public class EditorMenu : MonoBehaviour
 			try
 			{
 				if (Service.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
-					Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1 ? (ushort)65471 : (ushort)65472,
-									q.rotacja, q.inwersja, q.height);
+					Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1 ? (ushort)65471 : (ushort)65472, q.rotation, q.mirror, q.height);
 			}
 			catch
 			{
 				Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
 			}
 		}
-		MapParser.SaveMap(Service.TRACK, path + "\\" + Service.UntitledString + ".trk");
+		MapParser.SaveMap(Service.TRACK, path + "\\" + Service.Trackname + ".trk");
 	}
 	ushort SetAndGetFieldId(string name)
 	{
@@ -229,17 +228,17 @@ public class EditorMenu : MonoBehaviour
 		public int Y;
 		public int X;
 		public byte ID;
-		public byte rotacja;
-		public byte inwersja;
+		public byte rotation;
+		public byte mirror;
 		public byte height;
 
-		public QuarterData(int v1, int v2, int v3, byte rotacja, byte inwersja, byte height)
+		public QuarterData(int v1, int v2, int v3, byte rotation, byte mirror, byte height)
 		{
 			this.Y = v1;
 			this.X = v2;
 			this.ID = (byte)v3;
-			this.rotacja = rotacja;
-			this.inwersja = inwersja;
+			this.rotation = rotation;
+			this.mirror = mirror;
 			this.height = height;
 		}
 	}

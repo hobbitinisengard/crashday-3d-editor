@@ -362,7 +362,7 @@ public class Build : MonoBehaviour
 				if (znacznik.name != "on")
 					continue;
 			}
-			
+
 			Vector3 pos = znacznik.transform.position;
 			pos.y = Service.maxHeight;
 			RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
@@ -416,12 +416,15 @@ public class Build : MonoBehaviour
 	static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int arraypos, byte Height = 0)
 	{
 		Service.TilePlacementArray[arraypos.z, arraypos.x].Set(nazwa, rotacja, inwersja, Height);
+
 		if (TileManager.TileListInfo[nazwa].IsCheckpoint
-				&& !Service.TRACK.Checkpoints.Contains((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width)))
+			&& !Service.TRACK.Checkpoints.Contains((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width)))
 		{
 			Service.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width));
 			Service.TRACK.CheckpointsNumber++;
 		}
+
+
 	}
 	/// <summary>
 	/// Recover terrain before "matching" terrain up. Tile whom terrain is recovered has to be already destroyed!
@@ -435,9 +438,11 @@ public class Build : MonoBehaviour
 			Vector3 v = Service.IndexToPos(indexes[i]);
 			v.y = Service.maxHeight;
 			bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
-			if (traf) //&& Mathf.Abs(Service.former_heights[indexes[i]] - hit.point.y) > 0.1f)
+			if (traf)
 			{
-				Service.former_heights[indexes[i]] = hit.point.y;
+				Service.current_heights[indexes[i]] = hit.point.y;
+				//Service.current_heights[indexes[i]] = Service.former_heights[indexes[i]];
+				//Service.former_heights[indexes[i]] = hit.point.y;
 				// Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
 			}
 			else
@@ -854,9 +859,8 @@ public class Build : MonoBehaviour
 		Vector3Int rmcPlacement = new Vector3Int(TLpos.x + 2 + 2 * (tileDims.x - 1), 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
 		if (rmcPlacement.z < 0)
 			return null;
-		if (!Service.Isloading)
-		{
-			if (enableMixing)
+
+			if (!Service.Isloading && enableMixing)
 			{
 				if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
 				{
@@ -867,9 +871,12 @@ public class Build : MonoBehaviour
 			else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
 			{
 				current_rmc = null;
+			if (Service.Isloading)
+				Service.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
 				return null;
 			}
-		}
+		
+		
 
 		AllowLMB = true;
 
@@ -1053,7 +1060,9 @@ public class Build : MonoBehaviour
 	{
 		x += TLpos.x;
 		z = TLpos.z + z; //x,y are global
-		int index = x + 4 * z * Service.TRACK.Width + z;
+		if (!Service.IsWithinMapBounds(x, z))
+			return;
+		int index = Service.PosToIndex(x, z);
 		Vector3 v = new Vector3(x, Service.minHeight - 1, z);
 		if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.rayHeight, 1 << 10))
 		{
@@ -1070,14 +1079,15 @@ public class Build : MonoBehaviour
 		x += TLpos.x;
 		z = TLpos.z + z;
 		Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
-
+		if (!Service.IsWithinMapBounds(x, z))
+			return;
 		int index = Service.PosToIndex(x, z);
 		if (index == -1)
 			return;
 		if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
 		//&& Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
 		{
-			Service.current_heights[index] = hit.point.y;
+				Service.current_heights[index] = hit.point.y;
 		}
 		return;
 	}

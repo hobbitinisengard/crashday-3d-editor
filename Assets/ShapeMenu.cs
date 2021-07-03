@@ -3,7 +3,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, BL_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity }
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,
+	amplify
+}
 /// <summary>
 /// Hooked to ShapeMenu
 /// </summary>
@@ -27,6 +29,7 @@ public class ShapeMenu : MonoBehaviour
 	public Button JumperEnd;
 	public Button Integral;
 	public Button Infinity;
+	public Button Amplify;
 	// modifiers
 	public Toggle KeepShape;
 	public Toggle Connect;
@@ -56,6 +59,7 @@ public class ShapeMenu : MonoBehaviour
 		JumperEnd.onClick.AddListener(() => LastSelected = FormButton.jumpend);
 		Flatten.onClick.AddListener(() => LastSelected = FormButton.flatter);
 		Infinity.onClick.AddListener(() => LastSelected = FormButton.infinity);
+		Amplify.onClick.AddListener(() => LastSelected = FormButton.amplify);
 	}
 	void CheckNumericShortuts()
 	{
@@ -71,10 +75,13 @@ public class ShapeMenu : MonoBehaviour
 			LastSelected = FormButton.to_slider;
 		else if (Input.GetKeyDown(KeyCode.Alpha6))
 			LastSelected = FormButton.flatter;
+		else if (Input.GetKeyDown(KeyCode.K))
+			LastSelected = FormButton.amplify;
 		else if (Input.GetKeyDown(KeyCode.F1))
 			KeepShape.isOn = !KeepShape.isOn;
 		else if (Input.GetKeyDown(KeyCode.F2))
 			Connect.isOn = !Connect.isOn;
+		
 	}
 	public void OnDisable()
 	{
@@ -91,7 +98,7 @@ public class ShapeMenu : MonoBehaviour
 				if (Input.GetMouseButtonUp(0))
 				{
 					UpdateCurrent();
-					SpawnVertexBoxes(Input.GetKey(KeyCode.Q));
+					SpawnVertexBoxes(Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
 				}
 				VerticesVisibleState(); // wait for left ctrl release
 				VertexSelectionState(); //selecting vertices state
@@ -498,7 +505,8 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
-
+								else if (LastSelected == FormButton.amplify)
+									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
@@ -552,6 +560,8 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
+								else if (LastSelected == FormButton.amplify)
+									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn)
 									vertpos.y += old_Y - BL.y;
 								if (vertpos.y == Mathf.Infinity)
@@ -598,7 +608,7 @@ public class ShapeMenu : MonoBehaviour
 	}
 	void MarkVertices()
 	{
-		if (Input.GetKeyUp(KeyCode.LeftAlt))
+		if (Input.GetKeyUp(KeyCode.E))
 			InverseSelection();
 		if (Input.GetMouseButtonDown(0))
 		{ // Beginning of selection..
@@ -666,7 +676,7 @@ public class ShapeMenu : MonoBehaviour
 		Bounds viewportBounds = Utils.GetViewportBounds(camera, mousePosition1, Input.mousePosition);
 		return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
 	}
-	void SpawnVertexBoxes(bool checkTerrain)
+	void SpawnVertexBoxes(bool checkTerrain, bool ForceMapVertices)
 	{
 
 		if (!Highlight.over)
@@ -678,7 +688,7 @@ public class ShapeMenu : MonoBehaviour
 			else if (selected_tiles.Count == 0)
 				CreateTerrainMarkings();
 			else
-				CreateNewSetOfMarkingsFromTile();
+				CreateNewSetOfMarkingsFromTile(ForceMapVertices);
 		}
 
 		//local functions
@@ -698,51 +708,51 @@ public class ShapeMenu : MonoBehaviour
 			}
 			StateSwitch(SelectionState.SELECTING_VERTICES);
 		}
-		void CreateNewSetOfMarkingsFromTile() // creates markings based on all markings over rmc of area
+		void CreateNewSetOfMarkingsFromTile(bool ForceMapVerticesForTile = false) // creates markings based on all markings over rmc of area
 		{
-			var Last = selected_tiles[selected_tiles.Count - 1];
-			Vector3 v = Last.transform.position;
-			v.y = Service.maxHeight;
-			var hits = Physics.RaycastAll(v, Vector3.down, Service.rayHeight, 1 << 8);
-			foreach(var hit in hits)
-			{
-				GameObject map = hit.transform.gameObject;
-				Mesh rmc = map.GetComponent<MeshFilter>().mesh;
+			if (ForceMapVerticesForTile)
+			{ // force map vertices for this tile
+				var Last = selected_tiles[selected_tiles.Count - 1];
+				Vector3 v = Last.transform.position;
+				v.y = Service.maxHeight;
+				var hits = Physics.RaycastAll(v, Vector3.down, Service.rayHeight, 1 << 8);
+				foreach (var hit in hits)
+				{
+					GameObject map = hit.transform.gameObject;
+					Mesh rmc = map.GetComponent<MeshFilter>().mesh;
+					// if last sensitive vertex point isn't the same as last marking -> add new points
+					Vector3 SomePoint = map.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
+
+					if (markings.Count == 0 || SomePoint != markings[markings.Count - 1].transform.position)
+					{
+						for (int i = 0; i < rmc.vertexCount; i++)
+						{
+							SomePoint = map.transform.TransformPoint(rmc.vertices[i]);
+							if (!Physics.Raycast(new Vector3(SomePoint.x, Service.maxHeight, SomePoint.z), Vector3.down, Service.rayHeight, 1 << 11))
+								markings.Add(Service.CreateMarking(white, map.transform.TransformPoint(rmc.vertices[i])));
+						}
+					}
+				}
+			}
+			else
+			{ // normal tile selection
+				var Last = selected_tiles[selected_tiles.Count - 1];
+				Mesh rmc = Last.GetComponent<MeshFilter>().mesh;
 				// if last sensitive vertex point isn't the same as last marking -> add new points
-				Vector3 SomePoint = map.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
+				Vector3 SomePoint = Last.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
 
 				if (markings.Count == 0 || SomePoint != markings[markings.Count - 1].transform.position)
 				{
 					for (int i = 0; i < rmc.vertexCount; i++)
 					{
-						SomePoint = map.transform.TransformPoint(rmc.vertices[i]);
+						SomePoint = Last.transform.TransformPoint(rmc.vertices[i]);
 						if (!Physics.Raycast(new Vector3(SomePoint.x, Service.maxHeight, SomePoint.z), Vector3.down, Service.rayHeight, 1 << 11))
-							markings.Add(Service.CreateMarking(white, map.transform.TransformPoint(rmc.vertices[i])));
+							markings.Add(Service.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
 					}
 				}
 			}
-			
 			StateSwitch(SelectionState.VERTICES_EMERGED);
 		}
-		//void CreateNewSetOfMarkingsFromTile() // creates markings based on RMC (sensitive vertices)
-		//{
-		//	// add new points from tile
-		//	var Last = selected_tiles[selected_tiles.Count - 1];
-		//	Mesh rmc = Last.GetComponent<MeshFilter>().mesh;
-		//	// if last sensitive vertex point isn't the same as last marking -> add new points
-		//	Vector3 SomePoint = Last.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
-
-		//	if (markings.Count == 0|| SomePoint != markings[markings.Count - 1].transform.position)
-		//	{
-		//		for (int i = 0; i < rmc.vertexCount; i++)
-		//		{
-		//			SomePoint = Last.transform.TransformPoint(rmc.vertices[i]);
-		//			if (!Physics.Raycast(new Vector3(SomePoint.x, Service.maxHeight, SomePoint.z), Vector3.down, Service.rayHeight, 1 << 11))
-		//				markings.Add(Service.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
-		//		}
-		//	}
-		//	StateSwitch(SelectionState.VERTICES_EMERGED);
-		//}
 	}
 
 	public void Del_znaczniki()
@@ -779,7 +789,10 @@ public class ShapeMenu : MonoBehaviour
 		}
 		else if (newstate == SelectionState.WAITING4LD)
 		{
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for bottom-left vertex..");
+			if(LastSelected == FormButton.amplify)
+				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Select h0 vertex ..");
+			else
+				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for bottom-left vertex..");
 		}
 		else if (newstate == SelectionState.BL_SELECTED)
 		{

@@ -5,9 +5,9 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-	public readonly static string VERSION = "build 4";
+	public readonly static string VERSION = "build 5";
 	/// <summary>Maximum tile limit</summary>
-	public readonly static int TrackTileLimit = 8000;
+	public readonly static int MaxElements = 8000;
 	public static int GravityValue = 0;
 	/// <summary>
 	/// visible vertices in second form mode
@@ -21,7 +21,7 @@ public static class Service
 	///<summary> array representing placed elements during mapping </summary>
 	public static TilePlacement[,] TilePlacementArray { get; set; }
 	///<summary> String showed on the top bar of the editor during mapping </summary>
-	public static string UntitledString { get; set; } = "Untitled";
+	public static string Trackname { get; set; } = "Untitled";
 	public static string DefaultTilesetName { get; set; } = "Hidden";
 	public static float[] former_heights;
 	public static float[] current_heights;
@@ -43,7 +43,7 @@ public static class Service
 	}
 	public static bool IsWithinMapBounds(float x, float z)
 	{
-		return (x > 0 && x < 4 * Service.TRACK.Width && z > 0 && z < 4 * Service.TRACK.Height) ? true : false;
+		return x > 0 && x < 4 * Service.TRACK.Width && z > 0 && z < 4 * Service.TRACK.Height;
 	}
 	/// <summary>
 	/// Distance on 2D map between 3D points
