@@ -192,7 +192,6 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-
 	private void Waiting4_Bottom_Left_state()
 	{
 		if (selectionState == SelectionState.WAITING4LD)
@@ -230,8 +229,9 @@ public class ShapeMenu : MonoBehaviour
 	void FormMenu_toSlider()
 	{
 		surroundings = Build.Get_surrounding_tiles(markings);
-		float elevateby = 0;
+		
 		float slider_realheight = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float elevateby = slider_realheight - markings[0].transform.position.y;
 		//Update terrain
 		List<int> indexes = new List<int>();
 		foreach (GameObject znacznik in markings)
@@ -245,10 +245,8 @@ public class ShapeMenu : MonoBehaviour
 
 				if (KeepShape.isOn)
 				{
-					elevateby = slider_realheight - markings[0].transform.position.y;
 					Service.current_heights[index] += elevateby;
 				}
-
 				else
 					Service.current_heights[index] = slider_realheight;
 

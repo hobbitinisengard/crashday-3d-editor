@@ -440,14 +440,14 @@ public class Build : MonoBehaviour
 			bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
 			if (traf)
 			{
-				Service.current_heights[indexes[i]] = hit.point.y;
-				//Service.current_heights[indexes[i]] = Service.former_heights[indexes[i]];
 				//Service.former_heights[indexes[i]] = hit.point.y;
+				//Service.current_heights[indexes[i]] = Service.former_heights[indexes[i]];
 				// Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
 			}
 			else
 			{
-				//Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.yellow, 5);
+				if(v.x % 4 == 0 || v.z % 4 == 0)
+					Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.yellow, 5);
 			}
 		}
 		Service.UpdateMapColliders(indexes, true);
