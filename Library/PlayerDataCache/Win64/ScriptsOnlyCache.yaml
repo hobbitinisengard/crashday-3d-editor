@@ -15,11 +15,11 @@ ScriptsOnlyBuild:
     - MouseInputUIBlocker
     - ProfileCreator
     - ShapeMenu
+    - SimpleSlider
     - SingleMode
     - SliderCase
     - SliderHeight
     - SliderWidth
-    - StepSlider
     UnityEditor.TestRunner.dll:
     - UnityEditor.TestTools.TestRunner.TestListCacheData
     UnityEngine.UI.dll:
@@ -313,7 +313,7 @@ ScriptsOnlyBuild:
     className: TMP_Dropdown
   - hash:
       serializedVersion: 2
-      Hash: 2d81540e70284ebeea0d376952588d09
+      Hash: 2c706bc5c2a900dd5422cbe4285e1e81
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: ShapeMenu
@@ -793,7 +793,7 @@ ScriptsOnlyBuild:
     className: DDSDecoder
   - hash:
       serializedVersion: 2
-      Hash: 7903cfb51a94e52e7ffb7cf211160f9c
+      Hash: e1c23614e53ac8c301d6642505188234
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: MainMenu
@@ -1060,7 +1060,7 @@ ScriptsOnlyBuild:
       Hash: 4ce15e99c635d2567873d27549d1f16f
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
-    className: StepSlider
+    className: SimpleSlider
   - hash:
       serializedVersion: 2
       Hash: 5455126194c7fb60e2136719105446c8
@@ -1203,4 +1203,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Pr0 Haxx00r/Desktop/3deditor/build4/3D Editor.exe
+  playerPath: C:/Users/Kuba/Desktop/3deditor/build5/3D Editor.exe

@@ -693,10 +693,10 @@ PlayerSettings:
   facebookXfbml: 0
   facebookFrictionlessRequests: 1
   apiCompatibilityLevel: 3
-  cloudProjectId: efef3053-72be-4ef9-9105-27415fcae7c4
+  cloudProjectId: 991537ee-9366-4478-b0d0-f7c518801580
   framebufferDepthMemorylessMode: 0
-  projectName: HE2.0
-  organizationId: neoking_unity
+  projectName: 3D Editor
+  organizationId: avidpl
   cloudEnabled: 0
   enableNativePlatformBackendsForNewInputSystem: 0
   disableOldInputManagerSupport: 0
