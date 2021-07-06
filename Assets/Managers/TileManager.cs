@@ -235,7 +235,7 @@ public static class TileManager
       }
       else
         TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id);
-      if (IsCheckpoint)
+      if (IsCheckpoint	)
         TileListInfo[name].TilesetName = Service.CheckpointString;
     }
 
