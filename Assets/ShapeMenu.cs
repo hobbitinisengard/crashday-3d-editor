@@ -504,7 +504,7 @@ public class ShapeMenu : MonoBehaviour
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
-									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
+									vertpos.y += FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
@@ -559,10 +559,10 @@ public class ShapeMenu : MonoBehaviour
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
-									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
+									vertpos.y += FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
-								if (vertpos.y == Mathf.Infinity)
+								if (float.IsNaN(vertpos.y))
 									return;
 								Service.former_heights[index] = vertpos.y;
 								Service.current_heights[index] = Service.former_heights[index];
