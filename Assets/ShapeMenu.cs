@@ -197,7 +197,7 @@ public class ShapeMenu : MonoBehaviour
 		if (selectionState == SelectionState.WAITING4LD)
 		{
 			// to slider and infinity buttons don't require BL selection
-			if (LastSelected == FormButton.to_slider || LastSelected == FormButton.infinity)
+			if (LastSelected == FormButton.infinity || LastSelected == FormButton.to_slider)
 				StateSwitch(SelectionState.BL_SELECTED);
 
 			foreach (GameObject mrk in markings)
@@ -230,8 +230,7 @@ public class ShapeMenu : MonoBehaviour
 	{
 		surroundings = Build.Get_surrounding_tiles(markings);
 		
-		float slider_realheight = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-		float elevateby = slider_realheight - markings[0].transform.position.y;
+		float slider_value = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
 		//Update terrain
 		List<int> indexes = new List<int>();
 		foreach (GameObject znacznik in markings)
@@ -245,10 +244,10 @@ public class ShapeMenu : MonoBehaviour
 
 				if (KeepShape.isOn)
 				{
-					Service.current_heights[index] += elevateby;
+					Service.current_heights[index] += slider_value;
 				}
 				else
-					Service.current_heights[index] = slider_realheight;
+					Service.current_heights[index] = slider_value;
 
 				znacznik.transform.position = new Vector3(znacznik.transform.position.x, Service.current_heights[index], znacznik.transform.position.z);
 				Service.former_heights[index] = Service.current_heights[index];
