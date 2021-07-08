@@ -262,31 +262,31 @@ public class CopyPaste : MonoBehaviour
 		{
 			if (Input.GetAxis("Mouse ScrollWheel") > 0)
 			{
-				fixed_height += 10;
+				fixed_height += Service.SliderValue2RealHeight(10);
 			}
 			else if (Input.GetAxis("Mouse ScrollWheel") < 0)
 			{
-				fixed_height -= 10;
+				fixed_height -= Service.SliderValue2RealHeight(10);
 			}
 		}
 		else if (Input.GetKey(KeyCode.LeftAlt))
 		{
 			if (Input.GetAxis("Mouse ScrollWheel") > 0)
 			{
-				fixed_height += 1;
+				fixed_height += Service.SliderValue2RealHeight(1);
 			}
 			else if (Input.GetAxis("Mouse ScrollWheel") < 0)
 			{
-				fixed_height -= 1;
+				fixed_height -= Service.SliderValue2RealHeight(1);
 			}
 		}
 		else if (Input.GetAxis("Mouse ScrollWheel") > 0)
 		{
-			fixed_height += 5;
+			fixed_height += Service.SliderValue2RealHeight(5);
 		}
 		else if (Input.GetAxis("Mouse ScrollWheel") < 0)
 		{
-			fixed_height -= 5;
+			fixed_height -= Service.SliderValue2RealHeight(5);
 		}
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
 			UpdatePreview();

@@ -22,9 +22,9 @@ public class Loader : MonoBehaviour
 
 	void Awake()
 	{
+		Service.MissingTilesNames.Clear();
 		if (Service.Isloading)
 		{
-			Service.MissingTilesNames.Clear();
 			InitializeTilePlacementArray(Service.TRACK.Height, Service.TRACK.Width);
 			// Load tiles layout from TRACK to TilePlacementArray
 			for (int z = 0; z < Service.TRACK.Height; z++)
@@ -90,6 +90,7 @@ public class Loader : MonoBehaviour
 		// -----------------------------------------------------------------
 		// Create empty tileset tabs
 		string[] Tilesets = TileManager.TileListInfo.Select(t => t.Value.TilesetName).Distinct().ToArray();
+		Tilesets = Tilesets.Where(t => t != null).ToArray();
 		editorPanel.GetComponent<SliderCase>().InitializeSlider(Tilesets);
 		foreach (var tileset_name in Tilesets)
 		{
@@ -102,6 +103,8 @@ public class Loader : MonoBehaviour
 		{
 			try
 			{
+				if (t.Value.Model == null)
+					continue;
 				GameObject NewTile = Instantiate(Tile1x1Template, TilesetContainer.transform.Find(t.Value.TilesetName).GetComponent<ScrollRect>().content);
 				NewTile.transform.GetChild(0).GetComponent<Image>().sprite = Sprite.Create(t.Value.Icon,
 						new Rect(Vector2.zero, new Vector2(t.Value.Icon.width, t.Value.Icon.height)), Vector2.zero);
@@ -116,7 +119,7 @@ public class Loader : MonoBehaviour
 
 			}
 		}
-		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Service.CheckpointString);
+		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Service.CHKPOINTS_STR);
 	}
 	private void InitializeHeightArrays(int Height, int Width)
 	{

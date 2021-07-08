@@ -35,7 +35,7 @@ public class Highlight : MonoBehaviour
   //Returns position of map's vertex that is closest to pointer
   Vector3 Get_valid_init_vector(Ray r)
   {
-    bool traf = Physics.Raycast(r.origin, r.direction, out hit, Service.rayHeight, 1 << 8);
+    bool traf = Physics.Raycast(r.origin, r.direction, out hit, Service.RAY_H, 1 << 8);
     if (traf && hit.transform.gameObject.layer != 5)
     { // Raycast nie przejdzie przez elementy UI
       Vector3 to_return = Vector3Int.RoundToInt(hit.point);

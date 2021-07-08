@@ -171,9 +171,9 @@ public class ArealMode : MonoBehaviour
 			}
 			Service.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -203,7 +203,7 @@ public class ArealMode : MonoBehaviour
 							continue;
 						UndoBuffer.AddZnacznik(currentpos);
 						Vector3 pos = Highlight.pos;
-						pos.y = Service.maxHeight;
+						pos.y = Service.MAX_H;
 						float avg;
 						if (TargetSmoothValues.ContainsKey(idx))
 							avg = TargetSmoothValues[idx];
@@ -218,7 +218,7 @@ public class ArealMode : MonoBehaviour
 										continue;
 									pos.x = Highlight.pos.x + xx;
 									pos.z = Highlight.pos.z + zz;
-									if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 8))
+									if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 8))
 										height_sum += hit.point.y;
 								}
 							}
@@ -234,9 +234,9 @@ public class ArealMode : MonoBehaviour
 			}
 			Service.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -264,9 +264,9 @@ public class ArealMode : MonoBehaviour
 			}
 			Service.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -302,9 +302,9 @@ public class ArealMode : MonoBehaviour
 			}
 			Service.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -368,9 +368,9 @@ public class ArealMode : MonoBehaviour
 				}
 				Destroy(indicator);
 				index = 0;
-				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight, 0.5f * (a.z + b.z)),
+				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.MAX_H, 0.5f * (a.z + b.z)),
 						new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
-						Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9); //Search for tiles
+						Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9); //Search for tiles
 				Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
 				UndoBuffer.ApplyOperation();
 			}

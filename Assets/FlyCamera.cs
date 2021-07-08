@@ -78,7 +78,7 @@ public class FlyCamera : MonoBehaviour
 		{ // switch to birds eye
 			Ordinary_cam_last_height = transform.position.y;
 			//  
-			transform.position = new Vector3(transform.position.x, Service.maxHeight, transform.position.z);
+			transform.position = new Vector3(transform.position.x, Service.MAX_H, transform.position.z);
 		}
 		else
 		{ //switch to ordinary

@@ -12,8 +12,8 @@ public class HeightSlider : MonoBehaviour
   bool IsEnteringKeypadValue = false; // used in numericenter();
   private void Start()
   {
-    HSlider.minValue = Service.minHeight;
-    HSlider.maxValue = Service.maxHeight;
+    HSlider.minValue = Service.MIN_H;
+    HSlider.maxValue = Service.MAX_H;
   }
   private void Update()
   {
@@ -104,31 +104,31 @@ public class HeightSlider : MonoBehaviour
     }
     if (Input.GetKey(KeyCode.LeftShift))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.maxHeight)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
       {
         HSlider.value += 10;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.minHeight)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
       {
         HSlider.value -= 10;
       }
     }
     else if (Input.GetKey(KeyCode.LeftAlt))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.maxHeight)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
       {
         HSlider.value += 0.1f;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.minHeight)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
       {
         HSlider.value -= 0.1f;
       }
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.maxHeight)
+    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
     {
       HSlider.value += 1;
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.minHeight)
+    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
     {
       HSlider.value -= 1;
     }

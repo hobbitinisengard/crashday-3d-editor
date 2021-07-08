@@ -208,14 +208,14 @@ public class MainMenu : MonoBehaviour
 		int newwidth = int.Parse(ResizeMenu_Right.text) + int.Parse(ResizeMenu_Left.text);
 		int newheight = int.Parse(ResizeMenu_Up.text) + int.Parse(ResizeMenu_Down.text);
 		Resizemenu_Size_str.text = "Size: " + (Service.TRACK.Width + newwidth) + " x " + (Service.TRACK.Height + newheight);
-		Resizemenu_Elements_str.text = "Elements: " + (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) + " / " + Service.MaxElements;
+		Resizemenu_Elements_str.text = "Elements: " + (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) + " / " + Service.MAX_ELEMENTS;
 	}
 	public void Resize_n_Load()
 	{
 		int newwidth = int.Parse(ResizeMenu_Right.text) + int.Parse(ResizeMenu_Left.text);
 		int newheight = int.Parse(ResizeMenu_Up.text) + int.Parse(ResizeMenu_Down.text);
 		if (Service.TRACK.Width + newwidth < 3 || Service.TRACK.Height + newheight < 3 || 
-		 (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) > Service.MaxElements)
+		 (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) > Service.MAX_ELEMENTS)
 			return;
 		TrackSavable ResizedMap = new TrackSavable(Service.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
 			int.Parse(ResizeMenu_Up.text), int.Parse(ResizeMenu_Down.text));

@@ -129,7 +129,7 @@ public class SingleMode : MonoBehaviour
 			Vector3 v = Highlight.pos;
 			int index = Service.PosToIndex(v);
 			UndoBuffer.AddZnacznik(Service.IndexToPos(index));
-			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.maxHeight, v.z), 0.5f, Vector3.down, Service.rayHeight, 1 << 9);
+			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
@@ -179,7 +179,7 @@ public class SingleMode : MonoBehaviour
 		if (Service.IsWithinMapBounds(Highlight.pos))
 		{
 			Vector3 pos = Highlight.pos;
-			pos.y = Service.maxHeight;
+			pos.y = Service.MAX_H;
 
 			float height_sum = 0;
 			for (int x = -1; x <= 1; x++)
@@ -190,7 +190,7 @@ public class SingleMode : MonoBehaviour
 						continue;
 					pos.x = Highlight.pos.x + x;
 					pos.z = Highlight.pos.z + z;
-					if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 8))
+					if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 8))
 						height_sum += hit.point.y;
 				}
 			}
@@ -247,7 +247,7 @@ public class SingleMode : MonoBehaviour
 				}
 				Destroy(indicator);
 				index = 0;
-				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.maxHeight, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
+				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.MAX_H, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
 				List<GameObject> to_update = new List<GameObject>();
 				foreach (RaycastHit hit in hits)
 					to_update.Add(hit.transform.gameObject);
@@ -267,7 +267,7 @@ public class SingleMode : MonoBehaviour
 			Vector3 v = Highlight.pos;
 			int index = Service.PosToIndex(v);
 			UndoBuffer.AddZnacznik(Service.IndexToPos(index));
-			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.maxHeight, v.z), 0.5f, Vector3.down, Service.rayHeight, 1 << 9);
+			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
@@ -277,7 +277,7 @@ public class SingleMode : MonoBehaviour
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
 					Service.current_heights[index] = Service.SliderValue2RealHeight(HeightSlider.value);
-					//Helper.current_heights[index] = Helper.former_heights[index];
+					Service.former_heights[index] = Service.current_heights[index];
 					Service.UpdateMapColliders(new List<int> { index });
 					Build.UpdateTiles(to_update);
 				}

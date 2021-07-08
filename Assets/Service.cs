@@ -5,16 +5,18 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-	public readonly static string VERSION = "build 5";
+	public readonly static string VERSION = "build 6";
 	/// <summary>Maximum tile limit</summary>
-	public readonly static int MaxElements = 8000;
+	public readonly static int MAX_ELEMENTS = 8000;
+	internal static readonly string CHKPOINTS_STR = "Checkpoints";
+	public readonly static int MAX_H = 20000;
+	public readonly static int MIN_H = -MAX_H;
+	public readonly static int RAY_H = MAX_H - MIN_H + 5;
 	public static int GravityValue = 0;
 	/// <summary>
 	/// visible vertices in second form mode
 	/// </summary>
 	public static Vector2Int MarkerBounds = new Vector2Int(60, 60);
-	internal static readonly string CheckpointString = "Checkpoints";
-
 	public static TrackSavable TRACK { get; set; }
 	///<summary> Is editor loading map? </summary>
 	public static bool Isloading { get; set; } = false;
@@ -29,14 +31,7 @@ public static class Service
 	/// Load track by inversing elements
 	/// </summary>
 	public static bool LoadMirrored = false;
-	public readonly static int maxHeight = 20000;
-	public readonly static int minHeight = -maxHeight;
-	/// <summary>
-	/// rayHeight = maxHeight - minHeight + 5
-	/// </summary>
-	public readonly static int rayHeight = maxHeight - minHeight + 5;
 	public static List<string> MissingTilesNames = new List<string>();
-
 	public static bool IsWithinMapBounds(Vector3 v)
 	{
 		return (v.x > 0 && v.x < 4 * Service.TRACK.Width && v.z > 0 && v.z < 4 * Service.TRACK.Height) ? true : false;
@@ -105,8 +100,8 @@ public static class Service
 	/// </summary>
 	public static GameObject MarkAndReturnZnacznik(Vector3 z_pos)
 	{
-		z_pos.y = Service.maxHeight;
-		if (Physics.Raycast(z_pos, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 11))
+		z_pos.y = Service.MAX_H;
+		if (Physics.Raycast(z_pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 11))
 		{
 			if (hit.transform.name == "on")
 				return hit.transform.gameObject;
@@ -195,8 +190,9 @@ public static class Service
 	}
 	/// <summary>
 	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
+	/// If recovering, the only indexes that are going to be recovered are those from indexes list
 	/// </summary>
-	public static void UpdateMapColliders(List<int> indexes, bool przywrocenie_terenu = false)
+	public static void UpdateMapColliders(List<int> indexes, bool IsRecoveringTerrain = false)
 	{
 		if (indexes.Count == 0)
 			return;
@@ -204,22 +200,75 @@ public static class Service
 		foreach (int i in indexes)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(Service.IndexToPos(i));
-			v.y = Service.maxHeight;
-			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Service.rayHeight, 1 << 8);
+			v.y = Service.MAX_H;
+			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Service.RAY_H, 1 << 8);
 			foreach (RaycastHit hit in hits)
 				if (!mcs.Contains(hit.transform.gameObject))
 				{
 					mcs.Add(hit.transform.gameObject);
 				}
-
 		}
-		UpdateMapColliders(mcs, przywrocenie_terenu);
+		foreach (GameObject grass in mcs)
+		{
+			Vector3[] verts = grass.GetComponent<MeshCollider>().sharedMesh.vertices;
+			bool HasNaNs = false;
+			for (int i = 0; i < verts.Length; i++)
+			{
+				Vector3Int v = Vector3Int.RoundToInt(grass.transform.TransformPoint(verts[i]));
+				if (IsRecoveringTerrain)
+				{
+					if (indexes.Contains(Service.PosToIndex(v)))
+					{ // Recover only listed indexes ...
+						verts[i].y = Service.former_heights[Service.PosToIndex(v)];
+						Service.current_heights[Service.PosToIndex(v)] = Service.former_heights[Service.PosToIndex(v)];
+					}
+					else
+					{ // ... rest is assigned from current_heights
+						verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+					}
+				}
+				else
+					verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+				if (float.IsNaN(verts[i].y))
+					HasNaNs = true;
+			}
+			var mc = grass.GetComponent<MeshCollider>();
+			var mf = grass.GetComponent<MeshFilter>();
+
+			if (!HasNaNs)
+			{
+				mc.sharedMesh.vertices = verts;
+				mc.sharedMesh.RecalculateBounds();
+				mc.sharedMesh.RecalculateNormals();
+				mf.mesh = mc.sharedMesh;
+			}
+			else
+			{// mesh has to have a collider but it can't be displayed with NaNs so we create collider with lowest points so it can be cast on
+
+				// meshfilter has NaNs
+				mf.mesh.vertices = verts;
+				mf.mesh.RecalculateBounds();
+				mf.mesh.RecalculateNormals();
+
+				// mesh collider has lowestPoint flat mesh
+				float lowestPoint = 0;// verts.Select(v => v.y).Where(n => !float.IsNaN(n)).Min();
+				Vector3[] newverts = new Vector3[verts.Length];
+				for (int i = 0; i < verts.Length; i++)
+					newverts[i].Set(verts[i].x, lowestPoint, verts[i].z);
+				Mesh mcMesh = Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
+				mcMesh.vertices = newverts;
+				mcMesh.RecalculateBounds();
+				mc.sharedMesh = mcMesh;
+			}
+			mc.enabled = false;
+			mc.enabled = true;
+		}
 	}
 	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
 	{
-		rmc_pos.y = Service.maxHeight;
+		rmc_pos.y = Service.MAX_H;
 		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f),
-				Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 8);
+				Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 8);
 		List<GameObject> mcs = new List<GameObject>();
 		foreach (RaycastHit hit in hits)
 		{
@@ -233,7 +282,6 @@ public static class Service
 			return 0;
 		// Scale to 0 - 1
 		x = (x - edge0) / (edge1 - edge0);
-		//return (x * x * x * (x * (x * 6f - 15f) + 10f));
 		return x * x * (3 - 2 * x);
 	}
 }

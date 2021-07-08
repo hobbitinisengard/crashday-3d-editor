@@ -769,12 +769,6 @@ ScriptsOnlyBuild:
     className: SignalAsset
   - hash:
       serializedVersion: 2
-      Hash: fcef2f5e20088c14b1d4881c4e2f493f
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: 
-    className: SecretContainer
-  - hash:
-      serializedVersion: 2
       Hash: f08a111e17bb701f9c9ec57bb78d9920
     assemblyName: Unity.Timeline.dll
     namespaceName: UnityEngine.Timeline
@@ -1203,4 +1197,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Kuba/Desktop/3deditor/build5/3D Editor.exe
+  playerPath: C:/Users/Kuba/Desktop/build6/3D Editor.exe

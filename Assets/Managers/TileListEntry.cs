@@ -14,7 +14,6 @@ public class TileListEntry
   /// string with H1
   /// </summary>
   public string RMCname { get; set; }
-  ///<summary>relative 0 height</summary>
   /// <summary>
   /// points of tiles that can be 'flattened' (e.g tunnel entry), else null
   /// </summary>

@@ -195,7 +195,7 @@ public class ProfileCreator : MonoBehaviour
     {
       for (int z = zmin; z <= zmax; z++)
       {
-        if (Physics.Raycast(new Vector3(x, Service.maxHeight, z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 14))
+        if (Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 14))
         {
           int idx = Service.PosToIndex(x, z);
           UndoBuffer.AddZnacznik(x, z);

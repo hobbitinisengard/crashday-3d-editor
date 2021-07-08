@@ -130,8 +130,8 @@ public class ShapeMenu : MonoBehaviour
 	{
 		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.VERTICES_EMERGED)
 		{
-			if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z),
-				Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9)
+			if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
+				Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9)
 				&& hit.transform.gameObject.layer == 9
 				&& !selected_tiles.Contains(hit.transform.gameObject))
 			{
@@ -208,7 +208,7 @@ public class ShapeMenu : MonoBehaviour
 
 			if (Input.GetMouseButtonUp(0)) //First click
 			{
-				if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 11) && hit.transform.gameObject.name == "on")
+				if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 11) && hit.transform.gameObject.name == "on")
 				{
 					BL = Vector3Int.RoundToInt(hit.point);
 					BL.y = hit.transform.gameObject.transform.position.y;
@@ -300,7 +300,7 @@ public class ShapeMenu : MonoBehaviour
 	/// helper function ensuring that:
 	/// x goes from bottom left pos (considering rotation of selection; see: bottom-left vertex) to (upper)-right pos
 	/// </summary>
-	bool Ld_aims4_pg(float ld, float pg, int x)
+	bool BL_aims4_TR(float ld, float pg, int x)
 	{
 		return (ld < pg) ? x <= pg : x >= pg;
 	}
@@ -313,7 +313,7 @@ public class ShapeMenu : MonoBehaviour
 		List<DuVec3> Extremes = new List<DuVec3>();
 		if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
 		{ // equal heights along Z axis ||||
-			for (int z = (int)LD.z; Ld_aims4_pg(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
+			for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
 			{
 				Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
 				Vector3 P2 = new Vector3(float.MinValue, 0, 0);
@@ -328,16 +328,16 @@ public class ShapeMenu : MonoBehaviour
 					}
 				}
 				if (P1.x == LD.x)
-					Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
+					Extremes.Add(new DuVec3(P1, P2));
 				else
-					Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
+					Extremes.Add(new DuVec3(P2, P1));
 			}
 		}
 		else
 		{
 			//equal heights along X axis _---
 			//string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
-			for (int x = (int)LD.x; Ld_aims4_pg(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
+			for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
 			{
 				Vector3 P1 = new Vector3(0, 0, float.MaxValue);
 				Vector3 P2 = new Vector3(0, 0, float.MinValue);
@@ -352,9 +352,9 @@ public class ShapeMenu : MonoBehaviour
 					}
 				}
 				if (P1.z == LD.z)
-					Extremes.Add(new DuVec3(new Vector3(P1.x, P1.y, P1.z), new Vector3(P2.x, P2.y, P2.z)));
+					Extremes.Add(new DuVec3(P1, P2));
 				else
-					Extremes.Add(new DuVec3(new Vector3(P2.x, P2.y, P2.z), new Vector3(P1.x, P1.y, P1.z)));
+					Extremes.Add(new DuVec3(P2, P1));
 			}
 		}
 		return Extremes;
@@ -429,8 +429,8 @@ public class ShapeMenu : MonoBehaviour
 			{
 				// for vertices of grass
 				Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-				bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-				bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.maxHeight, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
+				bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
+				bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
 				if (D && Dhit.transform.name != "on")
 					D = false;
 				if (L && Lhit.transform.name != "on")
@@ -473,9 +473,9 @@ public class ShapeMenu : MonoBehaviour
 				int step = 0;
 				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
 				{
-					for (int x = (int)BL.x; Ld_aims4_pg(BL.x, PG.x, x); Go2High(BL.x, PG.x, ref x))
+					for (int x = (int)BL.x; BL_aims4_TR(BL.x, PG.x, x); Go2High(BL.x, PG.x, ref x))
 					{
-						for (int z = (int)BL.z; Ld_aims4_pg(BL.z, PG.z, z); Go2High(BL.z, PG.z, ref z))
+						for (int z = (int)BL.z; BL_aims4_TR(BL.z, PG.z, z); Go2High(BL.z, PG.z, ref z))
 						{
 							// check for elements 
 							if (Connect.isOn)
@@ -486,7 +486,7 @@ public class ShapeMenu : MonoBehaviour
 								slider_realheight = extremes[ext_index].P2.y;
 								BL.y = extremes[ext_index].P1.y;
 							}
-							bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
+							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
 							index = Service.PosToIndex(x, z);
 							UndoBuffer.AddZnacznik(Service.IndexToPos(index));
 							Vector3 vertpos = Service.IndexToPos(index);
@@ -505,7 +505,7 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
 									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
-								if (KeepShape.isOn)
+								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
 									return;
@@ -526,9 +526,9 @@ public class ShapeMenu : MonoBehaviour
 				int step = 0;
 				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
 				{
-					for (int z = (int)BL.z; Ld_aims4_pg(BL.z, PG.z, z); Go2High(BL.z, PG.z, ref z))
+					for (int z = (int)BL.z; BL_aims4_TR(BL.z, PG.z, z); Go2High(BL.z, PG.z, ref z))
 					{
-						for (int x = (int)BL.x; Ld_aims4_pg(BL.x, PG.x, x); Go2High(BL.x, PG.x, ref x))
+						for (int x = (int)BL.x; BL_aims4_TR(BL.x, PG.x, x); Go2High(BL.x, PG.x, ref x))
 						{
 							if (Connect.isOn)
 							{
@@ -539,7 +539,7 @@ public class ShapeMenu : MonoBehaviour
 								BL.y = extremes[ext_index].P1.y;
 							}
 							//Debug.DrawLine(new Vector3(x, Terenowanie.Service.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
-							bool traf = Physics.Raycast(new Vector3(x, Service.maxHeight, z), Vector3.down, out hit, Service.rayHeight, 1 << 11);
+							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
 							index = Service.PosToIndex(x, z);
 							UndoBuffer.AddZnacznik(Service.IndexToPos(index));
 							Vector3 vertpos = Service.IndexToPos(index);
@@ -560,7 +560,7 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
 									vertpos.y = FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
-								if (KeepShape.isOn)
+								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
 								if (vertpos.y == Mathf.Infinity)
 									return;
@@ -592,7 +592,7 @@ public class ShapeMenu : MonoBehaviour
 	public bool IsMarkingVisible(GameObject mrk)
 	{
 		Ray r = Camera.main.ScreenPointToRay(Camera.main.WorldToScreenPoint(mrk.transform.position));
-		if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Service.rayHeight, 1 << 11 | 1 << 8))
+		if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Service.RAY_H, 1 << 11 | 1 << 8))
 		{
 			float hitDistance = Vector3.Distance(hit.transform.position, mainCamera.transform.position);
 			float realDistance = Vector3.Distance(mrk.transform.position, mainCamera.transform.position);
@@ -712,8 +712,8 @@ public class ShapeMenu : MonoBehaviour
 			{ // force map vertices for this tile
 				var Last = selected_tiles[selected_tiles.Count - 1];
 				Vector3 v = Last.transform.position;
-				v.y = Service.maxHeight;
-				var hits = Physics.RaycastAll(v, Vector3.down, Service.rayHeight, 1 << 8);
+				v.y = Service.MAX_H;
+				var hits = Physics.RaycastAll(v, Vector3.down, Service.RAY_H, 1 << 8);
 				foreach (var hit in hits)
 				{
 					GameObject map = hit.transform.gameObject;
@@ -726,7 +726,7 @@ public class ShapeMenu : MonoBehaviour
 						for (int i = 0; i < rmc.vertexCount; i++)
 						{
 							SomePoint = map.transform.TransformPoint(rmc.vertices[i]);
-							if (!Physics.Raycast(new Vector3(SomePoint.x, Service.maxHeight, SomePoint.z), Vector3.down, Service.rayHeight, 1 << 11))
+							if (!Physics.Raycast(new Vector3(SomePoint.x, Service.MAX_H, SomePoint.z), Vector3.down, Service.RAY_H, 1 << 11))
 								markings.Add(Service.CreateMarking(white, map.transform.TransformPoint(rmc.vertices[i])));
 						}
 					}
@@ -744,7 +744,7 @@ public class ShapeMenu : MonoBehaviour
 					for (int i = 0; i < rmc.vertexCount; i++)
 					{
 						SomePoint = Last.transform.TransformPoint(rmc.vertices[i]);
-						if (!Physics.Raycast(new Vector3(SomePoint.x, Service.maxHeight, SomePoint.z), Vector3.down, Service.rayHeight, 1 << 11))
+						if (!Physics.Raycast(new Vector3(SomePoint.x, Service.MAX_H, SomePoint.z), Vector3.down, Service.RAY_H, 1 << 11))
 							markings.Add(Service.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
 					}
 				}

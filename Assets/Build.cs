@@ -268,8 +268,8 @@ public class Build : MonoBehaviour
 	void PickUpTileUnderCursor()
 	{
 		Vector3 v = Highlight.pos;
-		v.y = Service.maxHeight;
-		bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+		v.y = Service.MAX_H;
+		bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
 		if (traf)
 		{
 			EditorMenu.tile_name = hit.transform.name;
@@ -285,23 +285,23 @@ public class Build : MonoBehaviour
 	{
 		rmc.layer = 10;
 		Vector3 pos = rmc.transform.position;
-		pos.y = Service.maxHeight;
-		RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.rayHeight, 1 << 8);
+		pos.y = Service.MAX_H;
+		RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.RAY_H, 1 << 8);
 		foreach (RaycastHit hit in hits)
 		{
 			pos = hit.transform.position;
 			pos.x += 2;
 			pos.z += 2;
-			pos.y = Service.maxHeight;
-			if (!Physics.Raycast(pos, Vector3.down, Service.rayHeight, 1 << 9))
+			pos.y = Service.MAX_H;
+			if (!Physics.Raycast(pos, Vector3.down, Service.RAY_H, 1 << 9))
 				hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = true;
 		}
 		rmc.layer = 9;
 	}
 	static void Hide_trawkas(Vector3 pos)
 	{
-		pos.y = Service.maxHeight;
-		RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.rayHeight, 1 << 8);
+		pos.y = Service.MAX_H;
+		RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Service.RAY_H, 1 << 8);
 		foreach (RaycastHit hit in hits)
 			hit.transform.gameObject.GetComponent<MeshRenderer>().enabled = false;
 	}
@@ -338,8 +338,8 @@ public class Build : MonoBehaviour
 		foreach (int index in indexes)
 		{
 			Vector3 pos = Service.IndexToPos(index);
-			pos.y = Service.maxHeight;
-			RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
+			pos.y = Service.MAX_H;
+			RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.RAY_H, 1 << 9);
 			foreach (RaycastHit hit in hits)
 				if (!to_return.Contains(hit.transform.gameObject))
 					to_return.Add(hit.transform.gameObject);
@@ -364,8 +364,8 @@ public class Build : MonoBehaviour
 			}
 
 			Vector3 pos = znacznik.transform.position;
-			pos.y = Service.maxHeight;
-			RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.rayHeight, 1 << 9);
+			pos.y = Service.MAX_H;
+			RaycastHit[] hits = Physics.SphereCastAll(pos, 0.1f, Vector3.down, Service.RAY_H, 1 << 9);
 			foreach (RaycastHit hit in hits)
 				if (!to_return.Contains(hit.transform.gameObject))
 					to_return.Add(hit.transform.gameObject);
@@ -381,7 +381,7 @@ public class Build : MonoBehaviour
 		List<GameObject> to_return = new List<GameObject>();
 		Vector3 extents = rmc_o.GetComponent<MeshFilter>().mesh.bounds.extents;
 		extents.y = 1; // bounding box for boxcast must have non-zero height
-		RaycastHit[] hits = Physics.BoxCastAll(rmc_o.transform.position, extents, Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9);
+		RaycastHit[] hits = Physics.BoxCastAll(rmc_o.transform.position, extents, Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 		foreach (RaycastHit hit in hits)
 			to_return.Add(hit.transform.gameObject);
 		rmc_o.layer = 9;
@@ -423,8 +423,6 @@ public class Build : MonoBehaviour
 			Service.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Service.TRACK.Height - 1 - arraypos.z) * Service.TRACK.Width));
 			Service.TRACK.CheckpointsNumber++;
 		}
-
-
 	}
 	/// <summary>
 	/// Recover terrain before "matching" terrain up. Tile whom terrain is recovered has to be already destroyed!
@@ -436,18 +434,13 @@ public class Build : MonoBehaviour
 		for (int i = 0; i < indexes.Count; i++)
 		{
 			Vector3 v = Service.IndexToPos(indexes[i]);
-			v.y = Service.maxHeight;
-			bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+			if (v.x % 4 == 0 && v.z % 4 == 0)
+				continue;
+			v.y = Service.MAX_H;
+			bool traf = Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
 			if (traf)
 			{
 				//Service.former_heights[indexes[i]] = hit.point.y;
-				//Service.current_heights[indexes[i]] = Service.former_heights[indexes[i]];
-				// Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.green, 5);
-			}
-			else
-			{
-				if(v.x % 4 == 0 || v.z % 4 == 0)
-					Debug.DrawLine(v, new Vector3(v.x, -5, v.z), Color.yellow, 5);
 			}
 		}
 		Service.UpdateMapColliders(indexes, true);
@@ -460,7 +453,7 @@ public class Build : MonoBehaviour
 	static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int dims)
 	{
 
-		pos.y = Service.maxHeight;
+		pos.y = Service.MAX_H;
 		// out of grass
 		if (pos.z <= 0 || pos.z >= 4 * Service.TRACK.Height || pos.x <= 0 || pos.x >= 4 * Service.TRACK.Width)
 			return false;
@@ -468,7 +461,7 @@ public class Build : MonoBehaviour
 		if ((dims.z == 2 && pos.z < 4) || (dims.x == 2 && pos.x == 4 * Service.TRACK.Width))
 			return false;
 		// other tiles block
-		if (Physics.BoxCast(pos, new Vector3(4 * dims.x * 0.4f, 1, 4 * dims.z * 0.4f), Vector3.down, Quaternion.identity, Service.rayHeight, 1 << 9))
+		if (Physics.BoxCast(pos, new Vector3(4 * dims.x * 0.4f, 1, 4 * dims.z * 0.4f), Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9))
 			return false;
 		else
 			return true;
@@ -632,8 +625,8 @@ public class Build : MonoBehaviour
 				// Mov vector has to take into consideration rotation of an object
 				Vector3 mov = GetMovVectorForBorder(b, dims, rmc);
 				mov += rmc.transform.position;
-				mov.y = Service.rayHeight;
-				if (Physics.SphereCast(mov, 0.005f, Vector3.down, out RaycastHit hit, Service.rayHeight + 1, 1 << 9))
+				mov.y = Service.RAY_H;
+				if (Physics.SphereCast(mov, 0.005f, Vector3.down, out RaycastHit hit, Service.RAY_H + 1, 1 << 9))
 				{
 					if (Does_this_tile_restrict_given_border(hit.transform.gameObject, mov))
 					{
@@ -761,8 +754,6 @@ public class Build : MonoBehaviour
 			rmc.RecalculateNormals();
 			rmc_mc = null;
 			rmc_mc = rmc;
-			rmc_o.SetActive(false);
-			rmc_o.SetActive(true);
 		}
 		//2. Matching edge of every rmc up if under or above given vertex already is another vertex (of another tile)
 		foreach (GameObject rmc_o in rmcs)
@@ -777,7 +768,7 @@ public class Build : MonoBehaviour
 			bool Mirrored = Service.TilePlacementArray[pos.z, pos.x].Inversion;
 			int Rotation = Service.TilePlacementArray[pos.z, pos.x].Rotation;
 			byte Height = Service.TilePlacementArray[pos.z, pos.x].Height;
-			//Delete old prefab and replace it with plain new.
+			//Delete old prefab and replace it with plain new
 			if (rmc_o.transform.childCount != 0)
 				DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
 			GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform);
@@ -786,14 +777,13 @@ public class Build : MonoBehaviour
 			Vector3Int TLpos = GetTLPos(rmc_o);
 
 			Hide_trawkas(rmc_o.transform.position);
-			//Debug.Log("LDpos po =" + LDpos.x + " " + LDpos.z);
 			for (int z = 0; z <= 4 * tileDims.z; z++)
 			{
 				for (int x = 0; x <= 4 * tileDims.x; x++)
 				{
 					if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 					{
-						Match_boundaries(x, -z, TLpos); // borders
+						Match_boundaries(x, -z, TLpos);
 					}
 					else
 					{
@@ -857,27 +847,29 @@ public class Build : MonoBehaviour
 			tileDims.z = pom;
 		}
 		Vector3Int rmcPlacement = new Vector3Int(TLpos.x + 2 + 2 * (tileDims.x - 1), 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
+
 		if (rmcPlacement.z < 0)
 			return null;
 
-			if (!Service.Isloading && enableMixing)
-			{
-				if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
-				{
-					current_rmc = null;
-					return null;
-				}
-			}
-			else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
+		if (enableMixing || Service.Isloading)
+		{
+			if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
 			{
 				current_rmc = null;
-			if (Service.Isloading)
-				Service.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
+				if (Service.Isloading)
+					Service.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
 				return null;
 			}
-		
-		
+		}
+		else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
+		{
+			if (Service.Isloading)
+				Service.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
+			current_rmc = null;
+			return null;
+		}
 
+		
 		AllowLMB = true;
 
 		// Instantiate RMC
@@ -912,7 +904,6 @@ public class Build : MonoBehaviour
 
 		MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
 
-
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
 		current_rmc.layer = 10;
@@ -935,9 +926,13 @@ public class Build : MonoBehaviour
 		{
 			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
 			GetPrefabMesh(mirrored, Prefab);
-			Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
+
+			
+			current_rmc.layer = 9;
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
+			current_rmc.layer = 10;
 			Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
+			Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
 			current_rmc.layer = 9;
 			return null;
 		}
@@ -956,6 +951,8 @@ public class Build : MonoBehaviour
 		// quarter of tile sticking out of bounds
 		if ((dims.z == 2 && rmc_pos.z < 4) || (dims.x == 2 && rmc_pos.x == 4 * Service.TRACK.Width))
 			return false;
+		if (Service.Isloading)
+			return true;
 		TLpos.x /= 4;
 		TLpos.z /= 4;
 		TLpos.z--; //get BL not TL for array check
@@ -967,7 +964,7 @@ public class Build : MonoBehaviour
 
 	public static void Del_underlying_element()
 	{
-		bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.maxHeight, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9);
+		bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
 		if (traf && hit.transform.gameObject != current_rmc)
 		{
 			Vector3Int pos = Vpos2tpos(hit.transform.gameObject);
@@ -980,7 +977,6 @@ public class Build : MonoBehaviour
 			Unhide_trawkas(hit.transform.gameObject);
 			List<GameObject> to_restore = Get_surrounding_tiles(hit.transform.gameObject);
 			DestroyImmediate(hit.transform.gameObject);
-			Debug.Log("pos.z" + pos.z + " pos.x=" + pos.x);
 			Service.TilePlacementArray[pos.z, pos.x].Name = null;
 			RecoverTerrain(Service.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
 			UpdateTiles(to_restore);
@@ -1013,17 +1009,13 @@ public class Build : MonoBehaviour
 		for (int i = 0; i < mesh.vertices.Length; i++)
 		{
 			Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
-			if (Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
-			{ // own rmc
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-			}
-			else if (Physics.SphereCast(new Vector3(v.x, Service.maxHeight, v.z), 0.005f, Vector3.down, out hit, Service.rayHeight, 1 << 10))
+			if (Physics.SphereCast(new Vector3(v.x, Service.MAX_H, v.z), 0.005f, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 10))
 			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else
 			{ // when tile vertex is out of its dimensions (eg crane), cast on foreign rmc or map
-				if (Physics.SphereCast(new Vector3(v.x, Service.minHeight - 1, v.z), 0.2f, Vector3.up, out hit, Service.rayHeight, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Service.MIN_H - 1, v.z), 0.2f, Vector3.up, out hit, Service.RAY_H, 1 << 9 | 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Service.current_heights[0] + v.y - pzero, v.z));
@@ -1063,8 +1055,8 @@ public class Build : MonoBehaviour
 		if (!Service.IsWithinMapBounds(x, z))
 			return;
 		int index = Service.PosToIndex(x, z);
-		Vector3 v = new Vector3(x, Service.minHeight - 1, z);
-		if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.rayHeight, 1 << 10))
+		Vector3 v = new Vector3(x, Service.MIN_H - 1, z);
+		if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Service.RAY_H, 1 << 10))
 		{
 			Service.current_heights[index] = hit.point.y;
 		}
@@ -1078,16 +1070,23 @@ public class Build : MonoBehaviour
 			return;
 		x += TLpos.x;
 		z = TLpos.z + z;
-		Vector3Int v = new Vector3Int(x, Service.maxHeight, z);
+		Vector3Int v = new Vector3Int(x, Service.MAX_H, z);
 		if (!Service.IsWithinMapBounds(x, z))
 			return;
 		int index = Service.PosToIndex(x, z);
 		if (index == -1)
 			return;
-		if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 10))
+		if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 10))
 		//&& Mathf.Abs(hit.point.y - Service.current_heights[index]) > 0.1)
 		{
+			Service.current_heights[index] = hit.point.y;
+		}
+		else
+		{ // For Quaternion rotation (90deg) numerical accuracy
+			if (Physics.SphereCast(v, 5e-6f, Vector3.down, out hit, Service.RAY_H + 1, 1 << 10))
+			{
 				Service.current_heights[index] = hit.point.y;
+			}
 		}
 		return;
 	}
@@ -1101,7 +1100,7 @@ public class Build : MonoBehaviour
 		for (int index = 0; index < verts.Length; index++)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(rmc.vertices[index]));
-			if (Physics.Raycast(new Vector3(v.x, Service.maxHeight, v.z), Vector3.down, out RaycastHit hit, Service.rayHeight, 1 << 9))
+			if (Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9))
 			{
 				verts[index].y = hit.point.y;
 				Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z] = hit.point.y;

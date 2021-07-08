@@ -108,8 +108,8 @@ public static class UndoBuffer
 				// Look for tiles lying here
 				{
 					RaycastHit tile;
-					pom.y = Service.maxHeight;
-					if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.maxHeight - Service.minHeight, 1 << 9) && !tiles_to_update.Contains(tile.transform.gameObject))
+					pom.y = Service.MAX_H;
+					if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.MAX_H - Service.MIN_H, 1 << 9) && !tiles_to_update.Contains(tile.transform.gameObject))
 						tiles_to_update.Add(tile.transform.gameObject);
 				}
 			}

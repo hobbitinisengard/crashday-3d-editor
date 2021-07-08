@@ -14,7 +14,7 @@ public class SliderWidth : MonoBehaviour
 
   public void updateWidth(float value)
   {
-    if (value * SliderHeight.val > Service.MaxElements)
+    if (value * SliderHeight.val > Service.MAX_ELEMENTS)
     {
       SliderHeight.trackHeight.color = Color.red;
       trackWidth.color = Color.red;

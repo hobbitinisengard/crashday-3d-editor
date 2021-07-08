@@ -90,7 +90,6 @@
     <Compile Include="Assets\Managers\ZipManager.cs" />
     <Compile Include="Assets\MouseInputUIBlocker.cs" />
     <Compile Include="Assets\ProfileCreator.cs" />
-    <Compile Include="Assets\SecretContainer.cs" />
     <Compile Include="Assets\Service.cs" />
     <Compile Include="Assets\ShapeMenu.cs" />
     <Compile Include="Assets\ShowTileName.cs" />
