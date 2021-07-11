@@ -9,6 +9,7 @@ public enum Border { V1U, V2U, H1R, H2R, V2B, V1B, H2L, H1L }
 
 public class Build : MonoBehaviour
 {
+	private static readonly float spherecast_radius = 5e-6f;
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
@@ -70,7 +71,7 @@ public class Build : MonoBehaviour
 			if (enableMixing && !IsEnteringKeypadValue && Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(1))
 			{// Pick up mixing height with RMB + ctrl
 				PickUpTileHeightUnderCursor();
-				StartCoroutine(DisplayMixingMessageText(MixingHeight.ToString(), 2));
+				StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 				return;
 			}
 			else if (enableMixing)
@@ -170,7 +171,7 @@ public class Build : MonoBehaviour
 			}
 		}
 	}
-	IEnumerator DisplayMixingMessageText(string message, float delay)
+	IEnumerator DisplayMessageFor(string message, float delay)
 	{
 		MixingInfoText.text = message;
 		MixingInfoText.gameObject.SetActive(true);
@@ -202,7 +203,7 @@ public class Build : MonoBehaviour
 	/// <summary>Displays transparent cuboid for 2 secs.</summary>
 	public void MixingHeightPreview()
 	{
-		StartCoroutine(DisplayMixingMessageText(MixingHeight.ToString(), 2));
+		StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
 		Destroy(preview.GetComponent<BoxCollider>());
 		preview.GetComponent<MeshRenderer>().material = partiallytransparent;
@@ -251,8 +252,10 @@ public class Build : MonoBehaviour
 	{
 		if (current_rmc != null)
 		{
-			Unhide_trawkas(current_rmc);
 			Vector3Int pos = Vpos2tpos(current_rmc);
+			if (Service.TilePlacementArray[pos.z, pos.x].Name != null)
+				return;
+			Unhide_trawkas(current_rmc);
 			List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
 			DestroyImmediate(current_rmc);
 			int[] t_verts = Service.TilePlacementArray[pos.z, pos.x].t_verts;
@@ -381,7 +384,9 @@ public class Build : MonoBehaviour
 		List<GameObject> to_return = new List<GameObject>();
 		Vector3 extents = rmc_o.GetComponent<MeshFilter>().mesh.bounds.extents;
 		extents.y = 1; // bounding box for boxcast must have non-zero height
-		RaycastHit[] hits = Physics.BoxCastAll(rmc_o.transform.position, extents, Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
+		Vector3 v = rmc_o.transform.position;
+		v.y = Service.MAX_H;
+		RaycastHit[] hits = Physics.BoxCastAll(v, extents, Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
 		foreach (RaycastHit hit in hits)
 			to_return.Add(hit.transform.gameObject);
 		rmc_o.layer = 9;
@@ -740,28 +745,19 @@ public class Build : MonoBehaviour
 		foreach (GameObject rmc_o in rmcs)
 		{
 			rmc_o.layer = 9;
-			Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
-			Mesh rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
 			//Update RMC
-			Vector3[] verts = rmc.vertices;
-			for (int index = 0; index < rmc.vertices.Length; index++)
+			Vector3[] verts = GetMeshVerts(rmc_o);
+			for (int i = 0; i < verts.Length; i++)
 			{
-				Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(rmc.vertices[index]));
-				verts[index].y = Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z];
+				Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
+				verts[i].y = Service.current_heights[Service.PosToIndex(v)];
 			}
-			rmc.vertices = verts;
-			rmc.RecalculateBounds();
-			rmc.RecalculateNormals();
-			rmc_mc = null;
-			rmc_mc = rmc;
+			UpdateMeshes(rmc_o, verts);
 		}
 		//2. Matching edge of every rmc up if under or above given vertex already is another vertex (of another tile)
 		foreach (GameObject rmc_o in rmcs)
 		{
 			rmc_o.layer = 10;
-			Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
-			Mesh rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
-
 			// Match RMC up and take care of current_heights table
 			Match_rmc2rmc(rmc_o);
 			Vector3Int pos = Vpos2tpos(rmc_o);
@@ -869,7 +865,7 @@ public class Build : MonoBehaviour
 			return null;
 		}
 
-		
+
 		AllowLMB = true;
 
 		// Instantiate RMC
@@ -927,13 +923,10 @@ public class Build : MonoBehaviour
 			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
 			GetPrefabMesh(mirrored, Prefab);
 
-			
-			current_rmc.layer = 9;
+
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
-			current_rmc.layer = 10;
 			Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
 			Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
-			current_rmc.layer = 9;
 			return null;
 		}
 		else
@@ -965,7 +958,7 @@ public class Build : MonoBehaviour
 	public static void Del_underlying_element()
 	{
 		bool traf = Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
-		if (traf && hit.transform.gameObject != current_rmc)
+		if (traf)
 		{
 			Vector3Int pos = Vpos2tpos(hit.transform.gameObject);
 			if (IsCheckpoint(Service.TilePlacementArray[pos.z, pos.x].Name))
@@ -1009,13 +1002,17 @@ public class Build : MonoBehaviour
 		for (int i = 0; i < mesh.vertices.Length; i++)
 		{
 			Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
-			if (Physics.SphereCast(new Vector3(v.x, Service.MAX_H, v.z), 0.005f, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 10))
+			if (Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 10))
+			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
+			}
+			else if (Physics.SphereCast(new Vector3(v.x, Service.MAX_H, v.z), spherecast_radius, Vector3.down, out hit, Service.RAY_H, 1 << 10))
 			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else
 			{ // when tile vertex is out of its dimensions (eg crane), cast on foreign rmc or map
-				if (Physics.SphereCast(new Vector3(v.x, Service.MIN_H - 1, v.z), 0.2f, Vector3.up, out hit, Service.RAY_H, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Service.MIN_H - 1, v.z), spherecast_radius, Vector3.up, out hit, Service.RAY_H, 1 << 9 | 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Service.current_heights[0] + v.y - pzero, v.z));
@@ -1083,7 +1080,7 @@ public class Build : MonoBehaviour
 		}
 		else
 		{ // For Quaternion rotation (90deg) numerical accuracy
-			if (Physics.SphereCast(v, 5e-6f, Vector3.down, out hit, Service.RAY_H + 1, 1 << 10))
+			if (Physics.SphereCast(v, spherecast_radius, Vector3.down, out hit, Service.RAY_H + 1, 1 << 10))
 			{
 				Service.current_heights[index] = hit.point.y;
 			}
@@ -1095,23 +1092,33 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void Match_rmc2rmc(GameObject rmc_o)
 	{
-		Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
-		Vector3[] verts = rmc.vertices;
-		for (int index = 0; index < verts.Length; index++)
+		Vector3[] verts = GetMeshVerts(rmc_o);
+		for (int i = 0; i < verts.Length; i++)
 		{
-			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(rmc.vertices[index]));
-			if (Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9))
+			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
+			v.y = Service.MAX_H;
+			if (Physics.SphereCast(v, spherecast_radius, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9))
 			{
-				verts[index].y = hit.point.y;
-				Service.current_heights[v.x + 4 * v.z * Service.TRACK.Width + v.z] = hit.point.y;
+				verts[i].y = hit.point.y;
+				Service.current_heights[Service.PosToIndex(v)] = hit.point.y;
 			}
 		}
-		rmc.vertices = verts;
+		UpdateMeshes(rmc_o, verts);
+	}
+	static Vector3[] GetMeshVerts(GameObject rmc_o)
+	{
+		return rmc_o.GetComponent<MeshFilter>().mesh.vertices;
+	}
+	static void UpdateMeshes(GameObject rmc_o, Vector3[] newverts)
+	{
+		Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
+		Mesh rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
+		rmc.vertices = newverts;
 		rmc.RecalculateBounds();
 		rmc.RecalculateNormals();
+		rmc_mc = null;
+		rmc_mc = rmc;
 		rmc_o.SetActive(false);
 		rmc_o.SetActive(true);
 	}
 }
-
-

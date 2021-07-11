@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public enum CopyState { empty, copying, non_empty }
@@ -12,7 +13,6 @@ public class CopyPaste : MonoBehaviour
 	public GameObject FormMenu;
 	public Button CopyButton;
 	public Button EnterCopyPasteMenu;
-
 	public Button PastingModeSwitch;
 	public Material seethrough;
 	/// <summary>
@@ -21,35 +21,44 @@ public class CopyPaste : MonoBehaviour
 	private static List<Vector3> CopyClipboard = new List<Vector3>();
 	private static List<GameObject> Markings = new List<GameObject>();
 	private int SelectionRotationVal;
-	private static CopyState State = CopyState.empty;
+
+	private static CopyState copystate = CopyState.empty;
 	private PastingMode pastingMode = PastingMode.fixed_height;
 	private static float fixed_height;
 	private Vector3 lastpos;
 
-	public static bool isEnabled()
+	public static bool IsEnabled()
 	{
-		return State == CopyState.copying ? true : false;
+		return copystate == CopyState.copying;
 	}
 	private void OnDisable()
 	{
 		SwitchState(CopyState.non_empty);
+	}
+	private void OnEnable()
+	{
+		
 	}
 	private void Start()
 	{
 		CopyButton.onClick.AddListener(() => { ShapeMenu.LastSelected = FormButton.copy; });
 		EnterCopyPasteMenu.onClick.AddListener(() => { SwitchState(CopyState.copying); });
 		PastingModeSwitch.onClick.AddListener(SwitchPastingMode);
+
+		FormPanel.GetComponent<Form>().HeightSlider.onValueChanged.AddListener((val) => { MousewheelWorks(val); });
 	}
 	void SwitchPastingMode()
 	{
 		if (pastingMode == PastingMode.fixed_height)
 		{
+			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
 			pastingMode = PastingMode.addition;
 			PastingModeSwitch.transform.GetChild(0).gameObject.GetComponent<Text>().text = "Addition";
 			UpdatePreview();
 		}
 		else if (pastingMode == PastingMode.addition)
 		{
+			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
 			pastingMode = PastingMode.fixed_height;
 			PastingModeSwitch.transform.GetChild(0).gameObject.GetComponent<Text>().text = "Fixed height";
 			UpdatePreview();
@@ -57,22 +66,24 @@ public class CopyPaste : MonoBehaviour
 	}
 	void Update()
 	{
-		FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
-
+		
+		
 		if (MouseInputUIBlocker.BlockedByUI)
 			return;
 		// ShapeMenu triggers CopySelectionToClipboard()
 		if (Input.GetKeyDown(KeyCode.C))
 			ShapeMenu.LastSelected = FormButton.copy;
-		if (Input.GetKeyDown(KeyCode.V) && State == CopyState.non_empty)
+		if (Input.GetKeyDown(KeyCode.V) && copystate == CopyState.non_empty)
 			SwitchState(CopyState.copying);
 
-		if (State == CopyState.copying)
+		if (copystate == CopyState.copying)
 		{
-			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
-
 			if (pastingMode == PastingMode.fixed_height)
-				Mousewheelcheck();
+			{
+				FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+			}
+			else if (pastingMode == PastingMode.addition)
+				FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
 
 			if (Input.GetKeyDown(KeyCode.Tab))
 				SwitchPastingMode();
@@ -88,9 +99,9 @@ public class CopyPaste : MonoBehaviour
 				SwitchState(CopyState.empty);
 			if (Input.GetKeyDown(KeyCode.Escape))
 				SwitchState(CopyState.non_empty);
-			if (lastpos != Highlight.pos && State == CopyState.copying)
+			if (lastpos != Highlight.pos && copystate == CopyState.copying)
 				UpdatePreview();
-			if (State == CopyState.copying && FormMenu.activeSelf)
+			if (copystate == CopyState.copying && FormMenu.activeSelf)
 			{
 				SwitchState(CopyState.non_empty);
 			}
@@ -150,7 +161,7 @@ public class CopyPaste : MonoBehaviour
 	}
 	private void SwitchState(CopyState cs)
 	{
-		State = cs;
+		copystate = cs;
 		if (cs == CopyState.copying)
 		{
 			GetComponent<ShapeMenu>().StateSwitch(SelectionState.NOSELECTION);
@@ -161,6 +172,7 @@ public class CopyPaste : MonoBehaviour
 		}
 		else
 		{
+			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
 			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Shape forming");
 			if (cs == CopyState.empty)
 			{
@@ -256,39 +268,12 @@ public class CopyPaste : MonoBehaviour
 		UndoBuffer.ApplyOperation();
 		Build.UpdateTiles(Build.Get_surrounding_tiles(Markings, true));
 	}
-	void Mousewheelcheck()
+	void MousewheelWorks(float sliderval)
 	{
-		if (Input.GetKey(KeyCode.LeftShift))
+		if(copystate == CopyState.copying)
 		{
-			if (Input.GetAxis("Mouse ScrollWheel") > 0)
-			{
-				fixed_height += Service.SliderValue2RealHeight(10);
-			}
-			else if (Input.GetAxis("Mouse ScrollWheel") < 0)
-			{
-				fixed_height -= Service.SliderValue2RealHeight(10);
-			}
-		}
-		else if (Input.GetKey(KeyCode.LeftAlt))
-		{
-			if (Input.GetAxis("Mouse ScrollWheel") > 0)
-			{
-				fixed_height += Service.SliderValue2RealHeight(1);
-			}
-			else if (Input.GetAxis("Mouse ScrollWheel") < 0)
-			{
-				fixed_height -= Service.SliderValue2RealHeight(1);
-			}
-		}
-		else if (Input.GetAxis("Mouse ScrollWheel") > 0)
-		{
-			fixed_height += Service.SliderValue2RealHeight(5);
-		}
-		else if (Input.GetAxis("Mouse ScrollWheel") < 0)
-		{
-			fixed_height -= Service.SliderValue2RealHeight(5);
-		}
-		if (Input.GetAxis("Mouse ScrollWheel") != 0)
+			fixed_height = Service.SliderValue2RealHeight(sliderval);
 			UpdatePreview();
+		}
 	}
 }

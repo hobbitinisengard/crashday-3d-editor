@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-	public readonly static string VERSION = "build 6";
+	public readonly static string VERSION = "build 7";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
@@ -20,7 +20,7 @@ public static class Service
 	public static TrackSavable TRACK { get; set; }
 	///<summary> Is editor loading map? </summary>
 	public static bool Isloading { get; set; } = false;
-	///<summary> array representing placed elements during mapping </summary>
+	///<summary> requires BL pos</summary>
 	public static TilePlacement[,] TilePlacementArray { get; set; }
 	///<summary> String showed on the top bar of the editor during mapping </summary>
 	public static string Trackname { get; set; } = "Untitled";
@@ -264,7 +264,7 @@ public static class Service
 			mc.enabled = true;
 		}
 	}
-	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool przywrocenie_terenu = false)
+	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool recover_terrain = false)
 	{
 		rmc_pos.y = Service.MAX_H;
 		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f),
@@ -274,7 +274,7 @@ public static class Service
 		{
 			mcs.Add(hit.transform.gameObject);
 		}
-		UpdateMapColliders(mcs, przywrocenie_terenu);
+		UpdateMapColliders(mcs, recover_terrain);
 	}
 	public static float Smoothstep(float edge0, float edge1, float x)
 	{

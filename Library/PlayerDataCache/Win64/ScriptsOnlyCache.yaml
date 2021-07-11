@@ -124,33 +124,33 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9690}
     - Class: 114
-      Script: {instanceID: 9776}
+      Script: {instanceID: 9774}
     - Class: 114
-      Script: {instanceID: 9806}
+      Script: {instanceID: 9804}
     - Class: 114
-      Script: {instanceID: 9846}
+      Script: {instanceID: 9844}
     - Class: 114
-      Script: {instanceID: 9956}
+      Script: {instanceID: 9954}
     - Class: 114
-      Script: {instanceID: 10018}
+      Script: {instanceID: 10016}
     - Class: 114
-      Script: {instanceID: 10052}
+      Script: {instanceID: 10050}
     - Class: 114
-      Script: {instanceID: 10286}
+      Script: {instanceID: 10284}
     - Class: 114
-      Script: {instanceID: 10360}
+      Script: {instanceID: 10358}
     - Class: 114
-      Script: {instanceID: 10364}
+      Script: {instanceID: 10362}
     - Class: 114
-      Script: {instanceID: 10426}
+      Script: {instanceID: 10424}
     - Class: 114
-      Script: {instanceID: 10516}
+      Script: {instanceID: 10514}
     - Class: 114
-      Script: {instanceID: 10626}
+      Script: {instanceID: 10624}
     - Class: 114
-      Script: {instanceID: 10718}
+      Script: {instanceID: 10716}
     - Class: 114
-      Script: {instanceID: 10930}
+      Script: {instanceID: 10928}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -257,17 +257,17 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9654}
     - Class: 114
-      Script: {instanceID: 9740}
+      Script: {instanceID: 9738}
     - Class: 114
-      Script: {instanceID: 9766}
+      Script: {instanceID: 9764}
     - Class: 114
-      Script: {instanceID: 10176}
+      Script: {instanceID: 10174}
     - Class: 114
-      Script: {instanceID: 10438}
+      Script: {instanceID: 10436}
     - Class: 114
-      Script: {instanceID: 10496}
+      Script: {instanceID: 10494}
     - Class: 114
-      Script: {instanceID: 10814}
+      Script: {instanceID: 10812}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 124
@@ -889,7 +889,7 @@ ScriptsOnlyBuild:
     className: NetworkTransformVisualizer
   - hash:
       serializedVersion: 2
-      Hash: 1069c808b8e73a34dc9059e0c4095729
+      Hash: c72bae2a4c09565e409040832cf937dc
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: ProfileCreator
@@ -1057,7 +1057,7 @@ ScriptsOnlyBuild:
     className: SimpleSlider
   - hash:
       serializedVersion: 2
-      Hash: 5455126194c7fb60e2136719105446c8
+      Hash: f4c140af37b9ad54aa4b6bc3d22d75c9
     assemblyName: PathCreator.dll
     namespaceName: PathCreation
     className: PathCreator
@@ -1197,4 +1197,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Kuba/Desktop/build6/3D Editor.exe
+  playerPath: C:/Users/Kuba/Desktop/build7/3D Editor.exe

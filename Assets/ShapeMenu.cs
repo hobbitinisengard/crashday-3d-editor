@@ -90,7 +90,7 @@ public class ShapeMenu : MonoBehaviour
 	private void Update()
 	{
 		EnsureModifiersNAND();
-		if (!CopyPaste.isEnabled())
+		if (!CopyPaste.IsEnabled())
 		{
 			CheckNumericShortuts();
 			if (!MouseInputUIBlocker.BlockedByUI)
@@ -132,7 +132,6 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
 				Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9)
-				&& hit.transform.gameObject.layer == 9
 				&& !selected_tiles.Contains(hit.transform.gameObject))
 			{
 				selected_tiles.Add(hit.transform.gameObject);
@@ -712,22 +711,17 @@ public class ShapeMenu : MonoBehaviour
 				var Last = selected_tiles[selected_tiles.Count - 1];
 				Vector3 v = Last.transform.position;
 				v.y = Service.MAX_H;
-				var hits = Physics.RaycastAll(v, Vector3.down, Service.RAY_H, 1 << 8);
-				foreach (var hit in hits)
+				var corresponding_grasses = Physics.RaycastAll(v, Vector3.down, Service.RAY_H, 1 << 8);
+				foreach (var grass in corresponding_grasses)
 				{
-					GameObject map = hit.transform.gameObject;
-					Mesh rmc = map.GetComponent<MeshFilter>().mesh;
-					// if last sensitive vertex point isn't the same as last marking -> add new points
-					Vector3 SomePoint = map.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
+					GameObject grass_tile = grass.transform.gameObject;
+					Mesh rmc = grass_tile.GetComponent<MeshFilter>().mesh;
 
-					if (markings.Count == 0 || SomePoint != markings[markings.Count - 1].transform.position)
+					for (int i = 0; i < rmc.vertexCount; i++)
 					{
-						for (int i = 0; i < rmc.vertexCount; i++)
-						{
-							SomePoint = map.transform.TransformPoint(rmc.vertices[i]);
-							if (!Physics.Raycast(new Vector3(SomePoint.x, Service.MAX_H, SomePoint.z), Vector3.down, Service.RAY_H, 1 << 11))
-								markings.Add(Service.CreateMarking(white, map.transform.TransformPoint(rmc.vertices[i])));
-						}
+						v = grass_tile.transform.TransformPoint(rmc.vertices[i]);
+						if (!Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, Service.RAY_H, 1 << 11))
+							markings.Add(Service.CreateMarking(white, grass_tile.transform.TransformPoint(rmc.vertices[i])));
 					}
 				}
 			}
@@ -735,18 +729,14 @@ public class ShapeMenu : MonoBehaviour
 			{ // normal tile selection
 				var Last = selected_tiles[selected_tiles.Count - 1];
 				Mesh rmc = Last.GetComponent<MeshFilter>().mesh;
-				// if last sensitive vertex point isn't the same as last marking -> add new points
-				Vector3 SomePoint = Last.transform.TransformPoint(rmc.vertices[rmc.vertices.Length - 1]);
-
-				if (markings.Count == 0 || SomePoint != markings[markings.Count - 1].transform.position)
+				// add new points
+				for (int i = 0; i < rmc.vertexCount; i++)
 				{
-					for (int i = 0; i < rmc.vertexCount; i++)
-					{
-						SomePoint = Last.transform.TransformPoint(rmc.vertices[i]);
-						if (!Physics.Raycast(new Vector3(SomePoint.x, Service.MAX_H, SomePoint.z), Vector3.down, Service.RAY_H, 1 << 11))
-							markings.Add(Service.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
-					}
+					Vector3 v = Last.transform.TransformPoint(rmc.vertices[i]);
+					if (!Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, Service.RAY_H, 1 << 11))
+						markings.Add(Service.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
 				}
+				
 			}
 			StateSwitch(SelectionState.VERTICES_EMERGED);
 		}
