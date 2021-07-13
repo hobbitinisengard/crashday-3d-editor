@@ -871,14 +871,12 @@ public class Build : MonoBehaviour
 		// Instantiate RMC
 		current_rmc = Instantiate(GetRMC(name), rmcPlacement, rotate_q);
 		current_rmc.name = name;
-		Mesh rmc = current_rmc.GetComponent<MeshFilter>().mesh;
-		rmc.MarkDynamic();
 		current_rmc.GetComponent<MeshRenderer>().enabled = false;
 		//Update RMC
-		Vector3[] verts = rmc.vertices;
-		for (int index = 0; index < rmc.vertices.Length; index++)
+		Vector3[] verts = GetMeshVerts(current_rmc);
+		for (int index = 0; index < verts.Length; index++)
 		{
-			Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(rmc.vertices[index]));
+			Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(verts[index]));
 			try
 			{
 				verts[index].y = Service.current_heights[Service.PosToIndex(v)];
@@ -894,9 +892,7 @@ public class Build : MonoBehaviour
 			current_rmc = null;
 			return null;
 		}
-		rmc.vertices = verts;
-		rmc.RecalculateBounds();
-		rmc.RecalculateNormals();
+		UpdateMeshes(current_rmc, verts);
 
 		MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
 
@@ -922,7 +918,6 @@ public class Build : MonoBehaviour
 		{
 			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform);
 			GetPrefabMesh(mirrored, Prefab);
-
 
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
 			Service.UpdateMapColliders(current_rmc.transform.position, tileDims);
@@ -1003,7 +998,7 @@ public class Build : MonoBehaviour
 		{
 			Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
 			if (Physics.Raycast(new Vector3(v.x, Service.MAX_H, v.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 10))
-			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
+			{  
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else if (Physics.SphereCast(new Vector3(v.x, Service.MAX_H, v.z), spherecast_radius, Vector3.down, out hit, Service.RAY_H, 1 << 10))
@@ -1112,7 +1107,11 @@ public class Build : MonoBehaviour
 	static void UpdateMeshes(GameObject rmc_o, Vector3[] newverts)
 	{
 		Mesh rmc = rmc_o.GetComponent<MeshFilter>().mesh;
-		Mesh rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
+		Mesh rmc_mc;
+		if (rmc_o.GetComponent<MeshCollider>() != null)
+			rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
+		else
+			rmc_mc = rmc_o.AddComponent<MeshCollider>().sharedMesh;
 		rmc.vertices = newverts;
 		rmc.RecalculateBounds();
 		rmc.RecalculateNormals();

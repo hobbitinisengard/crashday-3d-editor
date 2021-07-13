@@ -116,7 +116,6 @@
     <None Include="Assets\Resources\RTSCircle.shader" />
     <None Include="Assets\Resources\AlwaysVisible.shader" />
     <None Include="Assets\Resources\AdditiveTint.shader" />
-    <None Include="Assets\Resources\flatters — kopia.txt" />
     <None Include="Assets\Resources\Normal-Bumped.shader" />
     <None Include="Assets\StreamingAssets\path.txt" />
     <None Include="Assets\StreamingAssets\tilesets.txt" />

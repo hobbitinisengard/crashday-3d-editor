@@ -89,22 +89,21 @@ public static class UndoBuffer
 		List<int> indexes = new List<int>();
 		// List of tiles lying onto vertices that are now being pasted
 		List<GameObject> tiles_to_update = new List<GameObject>();
-		foreach (var mrk in UndoZnaczniki)
+		foreach (var mrk_pos in UndoZnaczniki)
 		{
-			if (Service.IsWithinMapBounds(mrk))
+			if (Service.IsWithinMapBounds(mrk_pos))
 			{
 				// Update arrays of vertex heights
-				indexes.Add(Service.PosToIndex(mrk));
-				Service.current_heights[indexes[indexes.Count - 1]] = mrk.y;
-				Service.former_heights[indexes[indexes.Count - 1]] = mrk.y;
+				indexes.Add(Service.PosToIndex(mrk_pos));
+				Service.current_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
+				Service.former_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
 
-				Vector3 pom = mrk;
+				Vector3 pom = mrk_pos;
 
 				// Mark pasted vertices
-				GameObject zn = Service.MarkAndReturnZnacznik(pom);
-				if (zn != null)
-					zn.transform.position = new Vector3(zn.transform.position.x, mrk.y, zn.transform.position.z);
-
+				GameObject mrk = Service.MarkAndReturnZnacznik(pom);
+				if (mrk != null)
+					mrk.transform.position = new Vector3(mrk.transform.position.x, mrk_pos.y, mrk.transform.position.z);
 				// Look for tiles lying here
 				{
 					RaycastHit tile;

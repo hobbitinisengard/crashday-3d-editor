@@ -811,7 +811,7 @@ ScriptsOnlyBuild:
     className: TransitionArmModel
   - hash:
       serializedVersion: 2
-      Hash: 430dcfa3b3194743292a4745db0529c4
+      Hash: 0ec4b3b06ea34aac2ef5938a04cdb8c4
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: EditorMenu
@@ -1197,4 +1197,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/scenes/mainMenu.unity
   - Assets/scenes/mainEditor.unity
-  playerPath: C:/Users/Kuba/Desktop/build7/3D Editor.exe
+  playerPath: C:/Users/Kuba/Desktop/build8/3D Editor.exe

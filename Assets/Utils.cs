@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 // Not mine code. Handles vertices marking in form mode.
 public class Utils : MonoBehaviour
 {
@@ -49,4 +50,6 @@ public class Utils : MonoBehaviour
     bounds.SetMinMax(min, max);
     return bounds;
   }
+
+
 }

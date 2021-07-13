@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, BL_SELECTED }
 public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,
-	amplify
+	amplify,
+	Razor_jumper
 }
 /// <summary>
 /// Hooked to ShapeMenu
@@ -77,6 +78,8 @@ public class ShapeMenu : MonoBehaviour
 			LastSelected = FormButton.flatter;
 		else if (Input.GetKeyDown(KeyCode.K))
 			LastSelected = FormButton.amplify;
+		else if (Input.GetKeyDown(KeyCode.R))
+			LastSelected = FormButton.Razor_jumper;
 		else if (Input.GetKeyDown(KeyCode.F1))
 			KeepShape.isOn = !KeepShape.isOn;
 		else if (Input.GetKeyDown(KeyCode.F2))
@@ -486,23 +489,24 @@ public class ShapeMenu : MonoBehaviour
 							}
 							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
 							index = Service.PosToIndex(x, z);
-							UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+							
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
+								UndoBuffer.AddZnacznik(Service.IndexToPos(index));
 								float old_Y = vertpos.y; // tylko do keepshape
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
 									vertpos.y = BL.y + Service.Smoothstep(BL.y, slider_realheight, BL.y + step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jump)
-									vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1)); //vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
-									vertpos.y += FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
+									vertpos.y = BL.y + FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
@@ -539,10 +543,11 @@ public class ShapeMenu : MonoBehaviour
 							//Debug.DrawLine(new Vector3(x, Terenowanie.Service.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
 							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
 							index = Service.PosToIndex(x, z);
-							UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+							
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
+								UndoBuffer.AddZnacznik(Service.IndexToPos(index));
 								//Debug.DrawRay(new Vector3(x, Terenowanie.Service.maxHeight+1, z), Vector3.down, Color.blue, 40);
 
 								float old_Y = vertpos.y; // tylko do keepshape
@@ -551,13 +556,13 @@ public class ShapeMenu : MonoBehaviour
 								else if (LastSelected == FormButton.integral)
 									vertpos.y = BL.y + Service.Smoothstep(BL.y, slider_realheight, BL.y + step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jump)
-									vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
-									vertpos.y += FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
+									vertpos.y = BL.y + FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
 								if (KeepShape.isOn && LastSelected != FormButton.amplify)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))

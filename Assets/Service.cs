@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-	public readonly static string VERSION = "build 7";
+	public readonly static string VERSION = "build 8";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";

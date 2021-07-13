@@ -29,6 +29,7 @@ public class EditorMenu : MonoBehaviour
 	public GameObject MissingTilesPanel_content;
 	public GameObject editorPANEL;
 	public GameObject formPANEL;
+	public Toggle plusOn;
 	public Dropdown GravityEffectDropdown;
 	public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
 	public Text upperPanel_t_version;
@@ -144,15 +145,19 @@ public class EditorMenu : MonoBehaviour
 		Service.Trackname = NameOfTrack.text;
 		GetComponent<Loader>().nazwa_toru.text = Service.Trackname;
 		// save currently set gravity value to static variable to remember last dropdown selection
-		Service.GravityValue = GravityEffectDropdown.value * 1000;
+		Service.GravityValue = GravityEffectDropdown.value * 1000 * ((plusOn.isOn == true) ? 1 : -1);
 
 		// Save terrain
-		for (int y = 0; y < 4 * Service.TRACK.Height + 1; y++)
+		for (int y = 0; y <= 4 * Service.TRACK.Height; y++)
 		{
-			for (int x = 0; x < 4 * Service.TRACK.Width + 1; x++)
+			for (int x = 0; x <= 4 * Service.TRACK.Width; x++)
 			{
 				int i = x + 4 * y * Service.TRACK.Width + y;
 				Service.TRACK.Heightmap[4 * Service.TRACK.Height - y][x] = Service.current_heights[i] * 5 + Service.GravityValue / 5f;
+				if(Service.TRACK.Heightmap[4 * Service.TRACK.Height - y][x] == 0)
+				{
+
+				}
 			}
 		}
 

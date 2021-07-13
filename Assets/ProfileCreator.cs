@@ -171,32 +171,15 @@ public class ProfileCreator : MonoBehaviour
 	{
 		if (RoadMesh == null)
 			return;
-
-		// find bounding box
-		int xmin = int.MaxValue;
-		int xmax = int.MinValue;
-		int zmin = int.MaxValue;
-		int zmax = int.MinValue;
-		foreach (var ProfileList in Profiles)
-		{
-			foreach (var go in ProfileList)
-			{
-				var p = go.transform.position;
-				if (p.x < xmin)
-					xmin = (int)p.x;
-				if (p.x > xmax)
-					xmax = (int)p.x;
-				if (p.z < zmin)
-					zmin = (int)p.z;
-				if (p.z > zmax)
-					zmax = (int)p.z;
-			}
-		}
+		Vector3Int minV = Vector3Int.RoundToInt(RoadMesh.GetComponent<MeshFilter>().mesh.bounds.min);
+		Vector3Int maxV = Vector3Int.RoundToInt(RoadMesh.GetComponent<MeshFilter>().mesh.bounds.max);
 		List<int> indexes = new List<int>();
-		for (int x = xmin; x <= xmax; x++)
+		for (int x = minV.x; x <= maxV.x; x++)
 		{
-			for (int z = zmin; z <= zmax; z++)
+			for (int z = minV.z; z <= maxV.z; z++)
 			{
+				if (!Service.IsWithinMapBounds(x, z))
+					continue;
 				if (Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 14))
 				{
 					int idx = Service.PosToIndex(x, z);

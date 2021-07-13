@@ -147,9 +147,9 @@ public class Loader : MonoBehaviour
 	{
 		Service.GravityValue = (int)(Service.TRACK.Heightmap[0][0] * 5f);
 
-		for (int z = 0; z < 4 * Service.TRACK.Height + 1; z++)
+		for (int z = 0; z <= 4 * Service.TRACK.Height; z++)
 		{
-			for (int x = 0; x < 4 * Service.TRACK.Width + 1; x++)
+			for (int x = 0; x <= 4 * Service.TRACK.Width; x++)
 			{
 				int i;
 				if (LoadMirrored)
