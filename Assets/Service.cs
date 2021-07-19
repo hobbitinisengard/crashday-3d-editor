@@ -27,7 +27,7 @@ public static class Service
 	public static string DefaultTilesetName { get; set; } = "Hidden";
 	public static float[] former_heights;
 	public static float[] current_heights;
-	/// <summary>
+	public static readonly string[] RMC_NAMES = { "1x1", "1x1H1", "1x1H1V1", "1x1V1", "1x1V1H1", "1x2", "1x2H1H2", "1x2H1V1", "1x2H1V1H2", "1x2V1", "1x2H1", "1x2V1H1", "1x2V1H1H2", "2x1", "2x1H1", "2x1H1V1", "2x1H1V1V2", "2x1V1", "2x1V1H1", "2x1V1H1V2", "2x1V1V2", "2x2", "2x2H1V1", "2x2H1V1H2", "2x2H1V1H2V2", "2x2H2V2", "2x2V1", "2x2V1H1", "2x2V1H1H2", "2x2V1H1V2", "2x2V1H1V2H2", "2x2V1V2", "2x2V1V2H1H2", "2x2V1V2H2", "2x2V1V2H2H2", "2x2V2H2"};
 	/// Load track by inversing elements
 	/// </summary>
 	public static bool LoadMirrored = false;
@@ -71,6 +71,10 @@ public static class Service
 	public static int PosToIndex(Vector3 v)
 	{
 		return Mathf.RoundToInt(v.x + 4 * v.z * Service.TRACK.Width + v.z);
+	}
+	public static Vector3 V(Vector3 v)
+	{
+		return new Vector3(v.x, Service.MAX_H, v.z);
 	}
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
 	{
@@ -283,6 +287,16 @@ public static class Service
 		// Scale to 0 - 1
 		x = (x - edge0) / (edge1 - edge0);
 		return x * x * (3 - 2 * x);
+	}
+	public static IEnumerable<string> SplitBy(this string str, int chunkLength)
+	{
+		for (int i = 0; i < str.Length; i += chunkLength)
+		{
+			if (chunkLength + i > str.Length)
+				chunkLength = str.Length - i;
+
+			yield return str.Substring(i, chunkLength);
+		}
 	}
 }
 

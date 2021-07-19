@@ -31,21 +31,23 @@ public class FlyCamera : MonoBehaviour
 				Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
 				if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Mathf.Infinity, 1 << 8))
 				{ // if casting elevated element from underground, raise camera up to it
-					this.transform.position = new Vector3(hit.transform.position.x,
-							posY > hit.transform.position.y ? posY : hit.transform.position.y + 10, hit.transform.position.z);
+
+					Vector3 hPos = hit.transform.position;
+					hPos.y = Service.current_heights[Service.PosToIndex(hPos)] + 10;
+					this.transform.position = hPos;
 				}
 			}
 			over_UI = (Input.mousePosition.x < 0.232 * Screen.width) ? true : false;
-			if (Input.GetKeyDown(KeyCode.PageUp))
+			if (Input.GetKey(KeyCode.PageUp))
 			{
 				Vector3 pos = transform.position;
-				pos.y += 80f;
+				pos.y += 30f;
 				transform.position = pos;
 			}
-			if (Input.GetKeyDown(KeyCode.PageDown))
+			if (Input.GetKey(KeyCode.PageDown))
 			{
 				Vector3 pos = transform.position;
-				pos.y -= 80f;
+				pos.y -= 30f;
 				transform.position = pos;
 			}
 			if (Input.GetKeyDown(KeyCode.Home))

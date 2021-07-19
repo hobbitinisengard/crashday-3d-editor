@@ -2,14 +2,15 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+public enum ManualSubMode { Set, Avg, Amp }
 /// <summary>
 /// First submode of manual mode: Areal mode. Second one is Single mode
 /// You switch between them with [Tab]
 /// </summary>
+
 public class ArealMode : MonoBehaviour
 {
-	private enum ArealModes { Immediate, Incremental, Amplify }
-	private ArealModes CurrentMode;
+	private ManualSubMode CurrentMode;
 	Color32 Color_selected = new Color32(219, 203, 178, 255);
 	public Slider HeightSlider;
 	public Slider IntensitySlider;
@@ -47,11 +48,11 @@ public class ArealMode : MonoBehaviour
 
 		if (!Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
 		{
-			if (CurrentMode == ArealModes.Immediate)
+			if (CurrentMode == ManualSubMode.Set)
 			{
-				DistortionSlider.enabled = false;
+				DistortionSlider.transform.parent.gameObject.SetActive(false);
 
-				if (Input.GetMouseButtonUp(0) && !Input.GetKey(KeyCode.LeftAlt))
+				if (Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
@@ -68,9 +69,9 @@ public class ArealMode : MonoBehaviour
 						Make_areal_elevation();
 				}
 			}
-			else if (CurrentMode == ArealModes.Incremental)
+			else if (CurrentMode == ManualSubMode.Avg)
 			{
-				DistortionSlider.enabled = true;
+				DistortionSlider.transform.parent.gameObject.SetActive(true);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
@@ -89,9 +90,9 @@ public class ArealMode : MonoBehaviour
 					}
 				}
 			}
-			else if (CurrentMode == ArealModes.Amplify)
+			else if (CurrentMode == ManualSubMode.Amp)
 			{
-				DistortionSlider.enabled = false;
+				DistortionSlider.transform.parent.gameObject.SetActive(false);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
@@ -115,7 +116,7 @@ public class ArealMode : MonoBehaviour
 	// buttons use this function
 	public void SwitchMode(float mode)
 	{
-		CurrentMode = (ArealModes)mode;
+		CurrentMode = (ManualSubMode)mode;
 		SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 		SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 		AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -159,7 +160,7 @@ public class ArealMode : MonoBehaviour
 							TargetDistValue = UnityEngine.Random.Range(h_val - dist_val, h_val + dist_val);
 							TargetDistValues.Add(idx, TargetDistValue);
 						}
-						UndoBuffer.AddZnacznik((int)x, (int)z);
+						UndoBuffer.Add((int)x, (int)z);
 						Service.current_heights[idx] += (TargetDistValue - Service.current_heights[idx]) * IntensitySlider.value / 100f;
 						Service.former_heights[idx] = Service.current_heights[idx];
 						Service.UpdateMapColliders(new List<int> { idx });
@@ -201,7 +202,7 @@ public class ArealMode : MonoBehaviour
 						float dist = Service.Distance(currentpos, Highlight.pos);
 						if (dist > RadiusSlider.value)
 							continue;
-						UndoBuffer.AddZnacznik(currentpos);
+						UndoBuffer.Add(currentpos);
 						Vector3 pos = Highlight.pos;
 						pos.y = Service.MAX_H;
 						float avg;
@@ -225,7 +226,7 @@ public class ArealMode : MonoBehaviour
 							avg = height_sum / 8f;
 							TargetSmoothValues.Add(idx, avg);
 						}
-						UndoBuffer.AddZnacznik((int)x, (int)z);
+						UndoBuffer.Add((int)x, (int)z);
 						Service.current_heights[idx] += (avg - Service.current_heights[idx]) * (IntensitySlider.value / 100f);
 						Service.former_heights[idx] = Service.current_heights[idx];
 						indexes.Add(idx);
@@ -255,7 +256,7 @@ public class ArealMode : MonoBehaviour
 					{
 						int idx = Service.PosToIndex((int)x, (int)z);
 						Vector3 currentpos = Service.IndexToPos(idx);
-						UndoBuffer.AddZnacznik(currentpos);
+						UndoBuffer.Add(currentpos);
 						Service.current_heights[idx] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
 						Service.former_heights[idx] = Service.current_heights[idx];
 						indexes.Add(idx);
@@ -290,7 +291,7 @@ public class ArealMode : MonoBehaviour
 						float dist = Service.Distance(currentpos, Highlight.pos);
 						if (dist > MaxRadius)
 							continue;
-						UndoBuffer.AddZnacznik(currentpos);
+						UndoBuffer.Add(currentpos);
 						float Hdiff = Service.SliderValue2RealHeight(HeightSlider.value) - Service.current_heights[idx];
 
 						float fullpossibleheight = Hdiff * IntensitySlider.value / 100f;
@@ -358,7 +359,7 @@ public class ArealMode : MonoBehaviour
 									float Hdiff = Service.SliderValue2RealHeight(HeightSlider.value) - Service.current_heights[idx];
 									Service.former_heights[idx] += Hdiff * Service.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
 								}
-								UndoBuffer.AddZnacznik(currentpos);
+								UndoBuffer.Add(currentpos);
 								Service.current_heights[idx] = Service.former_heights[idx];
 								indexes.Add(idx);
 							}

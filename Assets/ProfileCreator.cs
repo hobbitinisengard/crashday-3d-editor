@@ -183,7 +183,7 @@ public class ProfileCreator : MonoBehaviour
 				if (Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 14))
 				{
 					int idx = Service.PosToIndex(x, z);
-					UndoBuffer.AddZnacznik(x, z);
+					UndoBuffer.Add(x, z);
 					Service.former_heights[idx] = hit.point.y;
 					Service.current_heights[idx] = Service.former_heights[idx];
 					indexes.Add(idx);
@@ -192,7 +192,8 @@ public class ProfileCreator : MonoBehaviour
 		}
 		Service.UpdateMapColliders(indexes);
 		//Search for any tiles
-		Build.UpdateTiles(Build.Get_surrounding_tiles(indexes));
+		var surr = Build.Get_surrounding_tiles(indexes);
+		Build.UpdateTiles(surr);
 		UndoBuffer.ApplyOperation();
 		RemovePreview(false);
 	}
@@ -200,7 +201,10 @@ public class ProfileCreator : MonoBehaviour
 	public void RemovePreview(bool ClearPts = true)
 	{
 		if (RoadMesh)
+		{
 			Destroy(RoadMesh);
+			RoadMesh = null;
+		}
 		if (ClearPts)
 			ClearPtsLists();
 		SwitchTextStatus(ProfileState.idle);

@@ -241,7 +241,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
 				int index = Service.PosToIndex(v);
-				UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+				UndoBuffer.Add(Service.IndexToPos(index));
 				indexes.Add(index);
 
 				if (KeepShape.isOn)
@@ -283,7 +283,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
 				int index = Service.PosToIndex(v);
-				UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+				UndoBuffer.Add(Service.IndexToPos(index));
 				indexes.Add(index);
 				Service.current_heights[index] = float.NaN;
 				Service.former_heights[index] = Service.current_heights[index];
@@ -493,16 +493,16 @@ public class ShapeMenu : MonoBehaviour
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
-								UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+								UndoBuffer.Add(Service.IndexToPos(index));
 								float old_Y = vertpos.y; // tylko do keepshape
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
 									vertpos.y = BL.y + Service.Smoothstep(BL.y, slider_realheight, BL.y + step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jump)
-									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1)); //vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
-									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
+									vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)
@@ -547,10 +547,12 @@ public class ShapeMenu : MonoBehaviour
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
-								UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+								UndoBuffer.Add(Service.IndexToPos(index));
 								//Debug.DrawRay(new Vector3(x, Terenowanie.Service.maxHeight+1, z), Vector3.down, Color.blue, 40);
 
 								float old_Y = vertpos.y; // tylko do keepshape
+								if (LastSelected == FormButton.linear)
+									vertpos.y = BL.y + step / steps * heightdiff;
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
@@ -558,7 +560,7 @@ public class ShapeMenu : MonoBehaviour
 								else if (LastSelected == FormButton.jump)
 									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
-									vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
+									vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
 								else if (LastSelected == FormButton.amplify)

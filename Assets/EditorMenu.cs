@@ -54,6 +54,8 @@ public class EditorMenu : MonoBehaviour
 	}
 	void Update()
 	{
+		if (Input.GetKeyDown(KeyCode.B))
+			UpdateTileSelectedWithCursor();
 		if (Input.GetKeyDown(KeyCode.F5))
 		{
 			ToggleSaveMenu();
@@ -154,10 +156,7 @@ public class EditorMenu : MonoBehaviour
 			{
 				int i = x + 4 * y * Service.TRACK.Width + y;
 				Service.TRACK.Heightmap[4 * Service.TRACK.Height - y][x] = Service.current_heights[i] * 5 + Service.GravityValue / 5f;
-				if(Service.TRACK.Heightmap[4 * Service.TRACK.Height - y][x] == 0)
-				{
-
-				}
+				
 			}
 		}
 
@@ -178,26 +177,26 @@ public class EditorMenu : MonoBehaviour
 				if (Service.TilePlacementArray[z, x].Name != null)
 				{
 					ushort fieldId = SetAndGetFieldId(Service.TilePlacementArray[z, x].Name);
-					byte inwersja = (byte)(Service.TilePlacementArray[z, x].Inversion ? 1 : 0);
-					byte rotacja = (byte)(Service.TilePlacementArray[z, x].Rotation / 90);
-					if (inwersja == 1 && rotacja != 0)
-						rotacja = (byte)(4 - rotacja);
+					byte mirror = (byte)(Service.TilePlacementArray[z, x].Inversion ? 1 : 0);
+					byte rotation = (byte)(Service.TilePlacementArray[z, x].Rotation / 90);
+					if (mirror == 1 && rotation != 0)
+						rotation = (byte)(4 - rotation);
 					byte height = Service.TilePlacementArray[z, x].Height;
-					Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotacja == 1 || rotacja == 3) ? true : false);
+					Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotation == 1 || rotation == 3) ? true : false);
 					//Base part - Left Top
-					Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(fieldId, rotacja, inwersja, height);
+					Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(fieldId, rotation, mirror, height);
 					//Left Bottom
 					if (dim.y == 2)
 						//Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x, 1, rotacja, inwersja, height));
+						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x, 1, rotation, mirror, height));
 					////Right top
 					if (dim.x == 2)
 						//  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 2, rotacja, inwersja, height));
+						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 2, rotation, mirror, height));
 					////Right bottom
 					if (dim.x == 2 && dim.y == 2)
 						//  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x + 1, 0, rotacja, inwersja, height));
+						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x + 1, 0, rotation, mirror, height));
 				}
 			}
 		}
@@ -245,6 +244,17 @@ public class EditorMenu : MonoBehaviour
 			this.rotation = rotation;
 			this.mirror = mirror;
 			this.height = height;
+		}
+	}
+	private void UpdateTileSelectedWithCursor()
+	{
+		bool cast = Physics.Raycast(Service.V(Highlight.pos), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
+		if (cast)
+		{
+			var tile = hit.transform.gameObject;
+			var tiles = Build.Get_surrounding_tiles(tile);
+			tiles.Add(tile);
+			Build.UpdateTiles(tiles);
 		}
 	}
 }

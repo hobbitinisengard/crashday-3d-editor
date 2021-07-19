@@ -4,8 +4,7 @@ using UnityEngine.UI;
 
 public class SingleMode : MonoBehaviour
 {
-	private enum SingleModes { Immediate, Incremental, Amplify }
-	private SingleModes CurrentMode;
+	private ManualSubMode CurrentMode;
 	Color32 Color_selected = new Color32(219, 203, 178, 255);
 	public GameObject ArealMenu;
 	public Slider HeightSlider;
@@ -29,7 +28,7 @@ public class SingleMode : MonoBehaviour
 	// buttons use this function
 	public void SwitchMode(float mode)
 	{
-		CurrentMode = (SingleModes)mode;
+		CurrentMode = (ManualSubMode)mode;
 		SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 		SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 		AmpModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -49,13 +48,13 @@ public class SingleMode : MonoBehaviour
 			SwitchMode(1);
 		else if (Input.GetKeyDown(KeyCode.Alpha3))
 			SwitchMode(2);
-		if (CurrentMode == SingleModes.Immediate)
+		if (CurrentMode == ManualSubMode.Set)
 		{
-			IntensitySlider.enabled = false;
-			DistortionSlider.enabled = false;
+			IntensitySlider.transform.parent.gameObject.SetActive(false);
+			DistortionSlider.transform.parent.gameObject.SetActive(false);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
-				if (Input.GetMouseButtonUp(0) && !Input.GetKey(KeyCode.LeftAlt))
+				if (Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
@@ -75,11 +74,11 @@ public class SingleMode : MonoBehaviour
 				}
 			}
 		}
-		else if (CurrentMode == SingleModes.Incremental)
+		else if (CurrentMode == ManualSubMode.Avg)
 		{
 
-			IntensitySlider.enabled = true;
-			DistortionSlider.enabled = true;
+			IntensitySlider.transform.parent.gameObject.SetActive(true);
+			DistortionSlider.transform.parent.gameObject.SetActive(true);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
@@ -98,11 +97,11 @@ public class SingleMode : MonoBehaviour
 				}
 			}
 		}
-		else if (CurrentMode == SingleModes.Amplify)
+		else if (CurrentMode == ManualSubMode.Amp)
 		{
 
-			IntensitySlider.enabled = true;
-			DistortionSlider.enabled = true;
+			IntensitySlider.transform.parent.gameObject.SetActive(true);
+			DistortionSlider.transform.parent.gameObject.SetActive(true);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
@@ -128,7 +127,7 @@ public class SingleMode : MonoBehaviour
 		{
 			Vector3 v = Highlight.pos;
 			int index = Service.PosToIndex(v);
-			UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+			UndoBuffer.Add(Service.IndexToPos(index));
 			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
@@ -166,7 +165,7 @@ public class SingleMode : MonoBehaviour
 				TargetDistValue = Random.Range(h_val - dist_val, h_val + dist_val);
 			}
 			int idx = Service.PosToIndex(Highlight.pos);
-			UndoBuffer.AddZnacznik(Highlight.pos);
+			UndoBuffer.Add(Highlight.pos);
 			Service.current_heights[idx] += (TargetDistValue - Service.current_heights[idx]) * IntensitySlider.value / 100f;
 			Service.former_heights[idx] = Service.current_heights[idx];
 			Service.UpdateMapColliders(new List<int> { idx });
@@ -196,7 +195,7 @@ public class SingleMode : MonoBehaviour
 			}
 			float avg = height_sum / 8f;
 			int idx = Service.PosToIndex(Highlight.pos);
-			UndoBuffer.AddZnacznik(Highlight.pos);
+			UndoBuffer.Add(Highlight.pos);
 			Service.former_heights[idx] += (avg - Service.former_heights[idx]) * IntensitySlider.value / 100f;
 			Service.current_heights[idx] = Service.former_heights[idx];
 			Service.UpdateMapColliders(new List<int> { idx });
@@ -237,7 +236,7 @@ public class SingleMode : MonoBehaviour
 						for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
 						{
 							int idx = x + 4 * z * Service.TRACK.Width + z;
-							UndoBuffer.AddZnacznik(Service.IndexToPos(idx));
+							UndoBuffer.Add(Service.IndexToPos(idx));
 							Service.former_heights[idx] = Service.SliderValue2RealHeight(HeightSlider.value);
 							Service.current_heights[idx] = Service.former_heights[idx];
 							indexes.Add(idx);
@@ -266,7 +265,7 @@ public class SingleMode : MonoBehaviour
 		{
 			Vector3 v = Highlight.pos;
 			int index = Service.PosToIndex(v);
-			UndoBuffer.AddZnacznik(Service.IndexToPos(index));
+			UndoBuffer.Add(Service.IndexToPos(index));
 			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)

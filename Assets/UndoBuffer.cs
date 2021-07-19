@@ -35,17 +35,17 @@ public static class UndoBuffer
 		UndoCreated.Clear();
 	}
 
-	public static void AddZnacznik(int x, int z, bool EnableOverwriting = false)
+	public static void Add(int x, int z, bool EnableOverwriting = false)
 	{
 		Vector3 mrk = new Vector3(x, Service.current_heights[Service.PosToIndex(x, z)], z);
-		AddZnacznik(mrk, EnableOverwriting);
+		Add(mrk, EnableOverwriting);
 	}
 
 	/// <summary>
 	/// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
 	/// </summary>
 	/// <param name="mrk"></param>
-	public static void AddZnacznik(Vector3 mrk, bool EnableOverwriting = false)
+	public static void Add(Vector3 mrk, bool EnableOverwriting = false)
 	{
 		if (Clear_buffer_before_next_add)
 		{
@@ -68,7 +68,7 @@ public static class UndoBuffer
 	/// Saves list of znaczniki to buffer as one operation to possible undo
 	/// </summary>
 	/// <param name="Mrks"></param>
-	public static void AddZnaczniki(List<Vector3> Mrks)
+	public static void Add(List<Vector3> Mrks)
 	{
 		UndoZnaczniki = Mrks.ToList();
 	}
@@ -83,7 +83,7 @@ public static class UndoBuffer
 	/// <summary>
 	/// When Ctrl + Z is clicked
 	/// </summary>
-	public static void PasteUndoZnaczniki()
+	public static void Paste()
 	{
 		//Indexes of vertices for UpdateMapColliders()
 		List<int> indexes = new List<int>();
@@ -105,12 +105,11 @@ public static class UndoBuffer
 				if (mrk != null)
 					mrk.transform.position = new Vector3(mrk.transform.position.x, mrk_pos.y, mrk.transform.position.z);
 				// Look for tiles lying here
-				{
-					RaycastHit tile;
-					pom.y = Service.MAX_H;
-					if (Physics.SphereCast(pom, 0.1f, Vector3.down, out tile, Service.MAX_H - Service.MIN_H, 1 << 9) && !tiles_to_update.Contains(tile.transform.gameObject))
-						tiles_to_update.Add(tile.transform.gameObject);
-				}
+				pom.y = Service.MAX_H;
+				var hits = Physics.SphereCastAll(pom, .1f, Vector3.down, Service.MAX_H - Service.MIN_H, 1 << 9);
+				foreach(var hit in hits)
+					if (!tiles_to_update.Contains(hit.transform.gameObject))
+						tiles_to_update.Add(hit.transform.gameObject);
 			}
 		}
 		Service.UpdateMapColliders(indexes);

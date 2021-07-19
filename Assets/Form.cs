@@ -47,7 +47,7 @@ public class Form : MonoBehaviour
     if (Input.GetKeyDown(KeyCode.Tab))
       ToggleManipMode();
     if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
-      UndoBuffer.PasteUndoZnaczniki();
+      UndoBuffer.Paste();
   }
   
   /// <summary>

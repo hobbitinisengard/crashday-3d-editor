@@ -237,7 +237,7 @@ public class CopyPaste : MonoBehaviour
 		if (CopyClipboard.Count == 0)
 			return;
 
-		UndoBuffer.AddZnaczniki(CopyClipboard);
+		UndoBuffer.Add(CopyClipboard);
 		//Indexes of vertices for UpdateMapColliders()
 		List<int> indexes = new List<int>();
 
@@ -251,7 +251,7 @@ public class CopyPaste : MonoBehaviour
 				Vector3 pom = Highlight.pos + mrk;
 				// Update arrays of vertex heights
 				indexes.Add(Service.PosToIndex(pom));
-				UndoBuffer.AddZnacznik((int)pom.x, (int)pom.z);
+				UndoBuffer.Add((int)pom.x, (int)pom.z);
 				if (pastingMode == PastingMode.fixed_height)
 				{
 					Service.current_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;

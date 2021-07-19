@@ -47,6 +47,11 @@ public class MainMenu : MonoBehaviour
 		ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 		ManageTilesets_button.interactable = true;
 	}
+	private void Disable_manage_tiles_button()
+	{
+		ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
+		ManageTilesets_button.interactable = false;
+	}
 	private void Populate_Manage_Tilesets_Menu()
 	{
 		// if there is any custom tileset (with workshopId)
@@ -88,9 +93,7 @@ public class MainMenu : MonoBehaviour
 
 		if (ManageTilesets_ScrollView.content.childCount == 1) // if we only have empty invisible manage_entry_template remaining
 		{
-			// disable menu
-			ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
-			ManageTilesets_button.interactable = false;
+			Disable_manage_tiles_button();
 		}
 
 	}
