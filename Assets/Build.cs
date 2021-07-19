@@ -496,8 +496,6 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
-		// 0. Rmc can change dynamically if less restrictive rmc lies next to more restrictive rmc
-		//ApplyIllogicalBendingRuleForRmcs(rmcs);
 		//1. Updating only vertices of every RMC in list.
 		foreach (GameObject rmc_o in rmcs)
 		{
@@ -742,12 +740,13 @@ public class Build : MonoBehaviour
 		{ 
 			if (is_mirrored)
 			{
+				rotate_q = Quaternion.Euler(new Vector3(0, -rotation, 0));
 				if (rotation == 90 || rotation == 270)
 				{
-					// V1 = H1
-					if (RMCname.Contains("H1") && !RMCname.Contains("V1"))
+					// V1 = H2
+					if (RMCname.Contains("H2") && !RMCname.Contains("V1"))
 						RMCname += "V1";
-					else if (!RMCname.Contains("H1") && RMCname.Contains("V1"))
+					else if (!RMCname.Contains("H2") && RMCname.Contains("V1"))
 						RMCname = RMCname.Replace("V1", "");
 				}
 			}
@@ -756,6 +755,7 @@ public class Build : MonoBehaviour
 		{
 			if (is_mirrored)
 			{
+				rotate_q = Quaternion.Euler(new Vector3(0, -rotation, 0));
 				if (rotation == 0 || rotation == 180)
 				{
 					// H1 = H2
@@ -965,6 +965,7 @@ public class Build : MonoBehaviour
 			rmc_mc = rmc_o.GetComponent<MeshCollider>().sharedMesh;
 		else
 			rmc_mc = rmc_o.AddComponent<MeshCollider>().sharedMesh;
+
 		rmc.vertices = newverts;
 		rmc.RecalculateBounds();
 		rmc.RecalculateNormals();

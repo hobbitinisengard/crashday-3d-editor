@@ -129,18 +129,22 @@ public class ShapeMenu : MonoBehaviour
 			KeepShape.isOn = false;
 		}
 	}
+	public static Vector3 V(Vector3 v)
+	{
+		return new Vector3(v.x, Service.MAX_H, v.z);
+	}
 	void UpdateCurrent()
 	{
 		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.VERTICES_EMERGED)
 		{
-			if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
-				Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9)
-				&& !selected_tiles.Contains(hit.transform.gameObject))
+			RaycastHit hit;
+			if (Physics.Raycast(V(Highlight.pos), Vector3.down, out hit, Service.RAY_H, 1 << 9)
+				|| Physics.Raycast(V(Highlight.pos), Vector3.down, out hit, Service.RAY_H, 1 << 8))
 			{
-				selected_tiles.Add(hit.transform.gameObject);
+					if (!selected_tiles.Contains(hit.transform.gameObject))
+						selected_tiles.Add(hit.transform.gameObject);
 			}
 		}
-
 	}
 	public bool IsAnyZnacznikMarked()
 	{
@@ -498,7 +502,18 @@ public class ShapeMenu : MonoBehaviour
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
-									vertpos.y = BL.y + Service.Smoothstep(BL.y, slider_realheight, BL.y + step / steps * heightdiff) * heightdiff;
+								{
+									if (2 * step <= steps)
+									{
+										vertpos.y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+									}
+									else
+									{
+										vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+									}
+								}
 								else if (LastSelected == FormButton.jump)
 									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
@@ -556,7 +571,18 @@ public class ShapeMenu : MonoBehaviour
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
-									vertpos.y = BL.y + Service.Smoothstep(BL.y, slider_realheight, BL.y + step / steps * heightdiff) * heightdiff;
+								{
+									if (2 * step <= steps)
+									{
+										vertpos.y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+									}
+									else
+									{
+										vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+									}
+								}
 								else if (LastSelected == FormButton.jump)
 									vertpos.y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Service.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
