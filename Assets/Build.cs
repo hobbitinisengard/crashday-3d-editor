@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 //Handles BUILD mode.
-public enum Border { V1U, V2U, H1R, H2R, V2B, V1B, H2L, H1L }
 
 public class Build : MonoBehaviour
 {
@@ -14,6 +12,8 @@ public class Build : MonoBehaviour
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
 	public Text CURRENTELEMENT; //name of currently selected element on top of the building menu
+	public Text CURRENTROTATION;
+	public Text CURRENTMIRROR;
 	public Text BuildButtonText; // text 'build' in build button
 	public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
 	public GameObject savePanel; // "save track scheme" menu
@@ -53,6 +53,8 @@ public class Build : MonoBehaviour
 				cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
 
 			CURRENTELEMENT.text = EditorMenu.tile_name;
+			CURRENTROTATION.text = cum_rotation.ToString();
+			CURRENTMIRROR.text = inversion.ToString();
 			if (Input.GetKeyUp(KeyCode.M))
 				SwitchMixingMode();
 			if (enableMixing)
@@ -649,7 +651,7 @@ public class Build : MonoBehaviour
 		}
 		UpdateMeshes(current_rmc, verts);
 
-		MeshCollider rmc_mc = current_rmc.AddComponent<MeshCollider>();
+		MeshCollider rmc_mc = current_rmc.GetComponent<MeshCollider>();
 
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Service.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
@@ -728,40 +730,30 @@ public class Build : MonoBehaviour
 	private GameObject GetRMC(string tilename, int rotation, bool is_mirrored, Vector3 rmcPlacement)
 	{// ((unity loads models with -x axis))
 		string RMCname = TileManager.TileListInfo[tilename].RMCname;
+		Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
 		char x = RMCname[0];
 		char z = RMCname[2];
 
 		if (x == '1' && z == '1')
 		{
-			Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
-			return Instantiate(Resources.Load<GameObject>("rmcs/" + TileManager.TileListInfo[tilename].RMCname), rmcPlacement, rotate_q);
+			//nothing
 		}
-
-		if (x == '1' && z == '2')
-		{
-			Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
+		else if (x == '1' && z == '2')
+		{ 
 			if (is_mirrored)
 			{
 				if (rotation == 90 || rotation == 270)
 				{
-					// V1 = H2
-					if (RMCname.Contains("H2") && !RMCname.Contains("V1"))
+					// V1 = H1
+					if (RMCname.Contains("H1") && !RMCname.Contains("V1"))
 						RMCname += "V1";
-					else if (!RMCname.Contains("H2") && RMCname.Contains("V1"))
+					else if (!RMCname.Contains("H1") && RMCname.Contains("V1"))
 						RMCname = RMCname.Replace("V1", "");
-					Debug.Log(RMCname + " " + rotation + " " + inversion);
 				}
-				return Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
-			}
-			else
-			{
-				return Instantiate(Resources.Load<GameObject>("rmcs/" + TileManager.TileListInfo[tilename].RMCname), rmcPlacement, rotate_q);
 			}
 		}
-
-		if (x == '2' && z == '1')
+		else if (x == '2' && z == '1')
 		{
-			Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
 			if (is_mirrored)
 			{
 				if (rotation == 0 || rotation == 180)
@@ -771,36 +763,30 @@ public class Build : MonoBehaviour
 						RMCname += "H1";
 					else if (!RMCname.Contains("H2") && RMCname.Contains("H1"))
 						RMCname = RMCname.Replace("H1", "");
-					Debug.Log(RMCname + " " + rotation + " " + inversion);
 				}
-				return Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
-			}
-			else
-			{
-				return Instantiate(Resources.Load<GameObject>("rmcs/" + TileManager.TileListInfo[tilename].RMCname), rmcPlacement, rotate_q);
 			}
 		}
 		else // 2x2
 		{
-			Debug.Log("in:" + tilename + " " + RMCname);
 			if (is_mirrored)
 			{
-				// flip 180 degs along X axis to invert H1 with H2
-				Quaternion rotate_q = Quaternion.Euler(new Vector3(180, rotation, 0));
+				// mirrored 2x2 tiles somehow invert restrictions H1 with H2
+				// switch H1 with H2
+				if (RMCname.Contains("H1"))
+					RMCname = RMCname.Replace("H2", "Hx").Replace("H1", "H2").Replace("Hx", "H1");
+				else if(RMCname.Contains("H2"))
+					RMCname = RMCname.Replace("H2", "H1");
 				if (rotation == 90)
 				{
-					// H2 = V2, but H2 is inverted, so H1 = V2
+					// ("switched" H2) = V2 -> H1 = V2
 					if (RMCname.Contains("V2") && !RMCname.Contains("H1"))
 						RMCname += "H1";
 					else if (!RMCname.Contains("V2") && RMCname.Contains("H1"))
 						RMCname = RMCname.Replace("H1", "");
-					Debug.Log(RMCname + " " + rotation + " " + inversion);
 				}
-				return Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
 			}
 			else
 			{
-				Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
 				if (rotation == 270)
 				{
 					// H2 = V2
@@ -809,12 +795,25 @@ public class Build : MonoBehaviour
 					else if (!RMCname.Contains("V2") && RMCname.Contains("H2"))
 						RMCname = RMCname.Replace("H2", "");
 				}
-				return Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
 			}
 		}
+		//Debug.Log(RMCname + " " + rotation + " " + is_mirrored);
+		return Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
+	}
+	string NormalizeRMCname(string RMCname)
+	{ //RMCname position: 
+		char x = RMCname[0];
+		char z = RMCname[2];
+		while (x == '1' && RMCname.Contains("V2"))
+			RMCname = RMCname.Replace("V2", "");
+		while (z == '1' && RMCname.Contains("H2"))
+			RMCname = RMCname.Replace("H2", "");
+
+		return RMCname;
 	}
 	GameObject Get_RMC_Containing(string RMCname)
 	{
+		RMCname = NormalizeRMCname(RMCname);
 		// V1H1H2 => string(V1) string(H1) string(H2)
 		string[] restr = RMCname.Substring(3).SplitBy(2).ToArray();
 		string outname;
@@ -974,254 +973,4 @@ public class Build : MonoBehaviour
 		rmc_o.SetActive(false);
 		rmc_o.SetActive(true);
 	}
-	///// <summary>
-	///// For example returns Border.H1L and Border.H2R for 1x1V1. 
-	///// </summary>
-	///// <param name="RMCname"></param>
-	///// <returns></returns>
-	//static List<Border> GetNonRestrictedBorders(string RMCname)
-	//{
-	//	List<Border> toreturn = new List<Border>();
-	//	if (!RMCname.Contains("V1"))
-	//	{
-	//		toreturn.Add(Border.V1U);
-	//		toreturn.Add(Border.V1B);
-	//		Debug.Log("V1U, V1B");
-	//	}
-	//	if (!RMCname.Contains("H1"))
-	//	{
-	//		toreturn.Add(Border.H1L);
-	//		toreturn.Add(Border.H1R);
-	//		Debug.Log("H1L, H1R");
-	//	}
-	//	if (RMCname[0] == 2 && !RMCname.Contains("V2"))
-	//	{
-	//		toreturn.Add(Border.V2U);
-	//		toreturn.Add(Border.V2B);
-	//		Debug.Log("V2U, V2B");
-	//	}
-	//	if (RMCname[2] == 2 && !RMCname.Contains("H2"))
-	//	{
-	//		toreturn.Add(Border.H2L);
-	//		toreturn.Add(Border.H2R);
-	//		Debug.Log("H2L, H2R");
-	//	}
-	//	return toreturn;
-	//}
-	///// <summary>
-	///// Returns vector mov (rmc.transform.position + mov) for raycast of given border depending on rmc dims
-	///// </summary>
-	//static Vector3 GetMovVectorForBorder(Border b, Vector2Int dims, GameObject rmc)
-	//{
-	//	Vector3 v = new Vector3();
-	//	if (b == Border.H1L)
-	//	{
-	//		v.Set(-dims.x * 2, 0, dims.y == 1 ? 0 : 2);
-	//	}
-	//	else if (b == Border.H1R)
-	//	{
-	//		v.Set(dims.x * 2, 0, dims.y == 1 ? 0 : 2);
-	//	}
-	//	else if (b == Border.V1U)
-	//	{
-	//		v.Set(dims.x == 1 ? 0 : -2, 0, dims.y * 2);
-	//	}
-	//	else if (b == Border.V1B)
-	//	{
-	//		v.Set(dims.x == 1 ? 0 : -2, 0, -dims.y * 2);
-	//	}
-	//	else if (b == Border.H2L)
-	//	{
-	//		v.Set(-4, 0, -2);
-	//	}
-	//	else if (b == Border.H2R)
-	//	{
-	//		v.Set(4, 0, 2);
-	//	}
-	//	else if (b == Border.V2U)
-	//	{
-	//		v.Set(2, 0, 4);
-	//	}
-	//	else //if(b == Border.V2B)
-	//	{
-	//		v.Set(2, 0, -4);
-	//	}
-	//	Vector3 angles = rmc.transform.rotation.eulerAngles;
-	//	v = Quaternion.Euler(angles) * v; // rotate vector
-	//	return v;
-	//}
-	///// <summary>
-	///// Translates vector pointing to border to that border
-	///// </summary>
-	///// <param name="v">Vector pointing from center of given tile to border</param>
-	///// <param name="dims">Default dims of tile</param>
-	///// <returns></returns>
-	//static Border Vector2Border(Vector3 v, Vector2Int dims)
-	//{
-	//	if (dims.y == 1)
-	//	{
-	//		if (v.x == dims.x * 2 && v.z == 0)
-	//			return Border.H1R;
-	//		if (v.x == -dims.x * 2 && v.z == 0)
-	//			return Border.H1L;
-	//	}
-	//	if (dims.y == 2)
-	//	{
-	//		if (v.x == dims.x * 2 && v.z == 2)
-	//			return Border.H1R;
-	//		if (v.x == -dims.x * 2 && v.z == 2)
-	//			return Border.H1L;
-	//	}
-	//	if (v.x == 2 && v.z == -4)
-	//		return Border.V2B;
-	//	if (v.x == 2 && v.z == 4)
-	//		return Border.V2U;
-	//	if (v.x == 4 && v.z == 2)
-	//		return Border.H2R;
-	//	if (v.x == -4 && v.z == -2)
-	//		return Border.H2L;
-	//	if (dims.x == 1)
-	//	{
-	//		if (v.x == 0 && v.z == -dims.y * 2)
-	//			return Border.V1B;
-	//		else if (v.x == 0 && v.z == dims.y * 2)
-	//			return Border.V1U;
-	//	}
-	//	if (dims.x == 2)
-	//	{
-	//		if (v.x == -2 && v.z == -dims.y * 2)
-	//			return Border.V1B;
-	//		else if (v.x == 0 && v.z == -dims.y * 2)
-	//			return Border.V1B;
-	//	}
-	//	Debug.LogError("Wrong vector input");
-	//	return Border.H1L;
-	//}
-	///// <summary>
-	///// Update rmcs depending on their neighbourhood
-	///// </summary>
-	///// <param name="rmcs"></param>
-	//static void ApplyIllogicalBendingRuleForRmcs(List<GameObject> rmcs)
-	//{
-	//	// List of List of Borders of rmcs which need to be bent despite possible perpendicular restrictions
-	//	List<List<Border>> BordersOfRmcs = new List<List<Border>>();
-	//	// If element has non-restricted border, check if its neighbour restricts it
-	//	foreach (GameObject rmc in rmcs)
-	//	{
-	//		rmc.layer = 10;
-	//		string RMCname = TileManager.TileListInfo[rmc.name].RMCname;
-	//		// List of borders to check directly from rmc name
-	//		List<Border> Borders_to_check = GetNonRestrictedBorders(RMCname);
-	//		Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
-
-	//		List<Border> BordersToUpdate = new List<Border>();
-	//		foreach (Border b in Borders_to_check)
-	//		{
-	//			// Mov vector has to take into consideration rotation of an object
-	//			Vector3 mov = GetMovVectorForBorder(b, dims, rmc);
-	//			mov += rmc.transform.position;
-	//			mov.y = Service.RAY_H;
-	//			if (Physics.SphereCast(mov, 0.005f, Vector3.down, out RaycastHit hit, Service.RAY_H + 1, 1 << 9))
-	//			{
-	//				if (Does_this_tile_restrict_given_border(hit.transform.gameObject, mov))
-	//				{
-	//					BordersToUpdate.Add(b);
-	//					//Service.PosToIndex()
-	//				}
-	//			}
-	//		}
-	//		BordersOfRmcs.Add(BordersToUpdate);
-	//		rmc.layer = 9;
-	//	}
-	//	if (BordersOfRmcs.Count == 0)
-	//		return;
-	//	// Time to update rmcs with new vertices
-	//	for (int i = 0; i < rmcs.Count; i++)
-	//	{
-	//		Vector3[] verts = rmcs[i].GetComponent<MeshFilter>().mesh.vertices;
-	//		List<Vector2> vertices2D = new List<Vector2>(verts.Length);
-	//		// map vertices to 2d space
-	//		for (int j = 0; j < verts.Length; j++)
-	//			vertices2D.Add(new Vector2(verts[j].x, verts[j].z));
-
-	//		// add new vertices. Iterate over border list that is assigned for every rmc
-	//		foreach (Border b in BordersOfRmcs[i])
-	//		{
-	//			Vector2[] newpoints = GenerateIllogicalBendVerts(b, rmcs[i]);
-	//			vertices2D.AddRange(newpoints);
-	//		}
-	//		Triangulator tr = new Triangulator(vertices2D.ToArray());
-	//		int[] indices = tr.Triangulate();
-
-	//		// Create the Vector3 vertices
-	//		Vector3[] Vertices3D = new Vector3[vertices2D.Count];
-	//		for (int j = 0; j < Vertices3D.Length; j++)
-	//		{
-	//			Vertices3D[j].Set(vertices2D[j].x, 0, vertices2D[j].y);
-	//			// Debug.Log(Vertices3D[j]);
-	//		}
-
-	//		// Create the mesh
-	//		Mesh mesh = new Mesh();
-	//		mesh.vertices = Vertices3D;
-	//		mesh.triangles = indices;
-	//		mesh.RecalculateNormals();
-	//		mesh.RecalculateBounds();
-
-	//		rmcs[i].GetComponent<MeshFilter>().mesh = mesh;
-	//		rmcs[i].GetComponent<MeshCollider>().sharedMesh = null;
-	//		rmcs[i].GetComponent<MeshCollider>().sharedMesh = mesh;
-	//	}
-	//}
-	//static Vector2[] GenerateIllogicalBendVerts(Border b, GameObject rmc)
-	//{
-	//	Vector2[] to_return = new Vector2[3];
-	//	string RMCname = TileManager.TileListInfo[rmc.name].RMCname;
-	//	Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
-	//	Vector3 mov = GetMovVectorForBorder(b, dims, rmc);
-	//	Vector2 newpoint = new Vector2(mov.x, mov.z);
-	//	string BorderName = Enum.GetName(typeof(Border), b);
-	//	if (BorderName.Contains("L"))
-	//	{// move right
-	//		to_return[0] = newpoint + Vector2.right;
-	//		to_return[1] = to_return[0] + Vector2.up;
-	//		to_return[2] = to_return[0] + Vector2.down;
-	//	}
-	//	else if (BorderName.Contains("R"))
-	//	{// move left
-	//		to_return[0] = newpoint + Vector2.left;
-	//		to_return[1] = to_return[0] + Vector2.up;
-	//		to_return[2] = to_return[0] + Vector2.down;
-	//	}
-	//	else if (BorderName.Contains("U"))
-	//	{// move down
-	//		to_return[0] = newpoint + Vector2.down;
-	//		to_return[1] = to_return[0] + Vector2.left;
-	//		to_return[2] = to_return[0] + Vector2.right;
-	//	}
-	//	else if (BorderName.Contains("D"))
-	//	{// move up
-	//		to_return[0] = newpoint + Vector2.up;
-	//		to_return[1] = to_return[0] + Vector2.left;
-	//		to_return[2] = to_return[0] + Vector2.right;
-	//	}
-
-	//	return to_return;
-	//}
-	//static bool Does_this_tile_restrict_given_border(GameObject restricting_tile, Vector3 borderPos)
-	//{
-	//	string RMCname = TileManager.TileListInfo[restricting_tile.name].RMCname;
-	//	Vector2Int dims = new Vector2Int(int.Parse(RMCname.Substring(0, 1)), int.Parse(RMCname.Substring(2, 1)));
-	//	Vector3 angles = restricting_tile.transform.rotation.eulerAngles;
-	//	Vector3 exam = borderPos - restricting_tile.transform.position;
-	//	// exam vector points to border 
-	//	exam = Quaternion.Euler(angles) * exam;
-	//	Border border = Vector2Border(exam, dims);
-	//	string BorderName = Enum.GetName(typeof(Border), border); // e.g H1L
-	//	BorderName = BorderName.Substring(0, 2); // e.g H1
-	//	if (RMCname.Contains(BorderName))
-	//		return true;
-	//	else
-	//		return false;
-	//}
 }

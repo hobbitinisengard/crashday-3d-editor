@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Service
 {
-	public readonly static string VERSION = "build 8";
+	public readonly static string VERSION = "build 9";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
@@ -27,7 +27,7 @@ public static class Service
 	public static string DefaultTilesetName { get; set; } = "Hidden";
 	public static float[] former_heights;
 	public static float[] current_heights;
-	public static readonly string[] RMC_NAMES = { "1x1", "1x1H1", "1x1H1V1", "1x1V1", "1x1V1H1", "1x2", "1x2H1H2", "1x2H1V1", "1x2H1V1H2", "1x2V1", "1x2H1", "1x2V1H1", "1x2V1H1H2", "2x1", "2x1H1", "2x1H1V1", "2x1H1V1V2", "2x1V1", "2x1V1H1", "2x1V1H1V2", "2x1V1V2", "2x2", "2x2H1V1", "2x2H1V1H2", "2x2H1V1H2V2", "2x2H2V2", "2x2V1", "2x2V1H1", "2x2V1H1H2", "2x2V1H1V2", "2x2V1H1V2H2", "2x2V1V2", "2x2V1V2H1H2", "2x2V1V2H2", "2x2V1V2H2H2", "2x2V2H2"};
+	public static readonly string[] RMC_NAMES = { "1x1", "1x1H1", "1x1H1V1", "1x1V1", "1x1V1H1", "1x2", "1x2H1H2", "1x2H1V1", "1x2H1V1H2", "1x2V1", "1x2H1", "1x2V1H1", "1x2V1H1H2", "2x1", "2x1H1", "2x1H1V1", "2x1H1V1V2", "2x1V1", "2x1V1H1", "2x1V1H1V2", "2x1V1V2", "2x2", "2x2H1V1", "2x2H1V1H2", "2x2H1V1H2V2", "2x2H2V2", "2x2V1", "2x2V1H1", "2x2V1H1H2", "2x2V1H1V2", "2x2V1H1V2H2", "2x2V1V2", "2x2V1V2H1H2", "2x2V1V2H2", "2x2V1V2H2H2", "2x2V2H2", "2x2V2H2H1", "2x2V2H1", "2x2V1H2"};
 	/// Load track by inversing elements
 	/// </summary>
 	public static bool LoadMirrored = false;
@@ -297,6 +297,15 @@ public static class Service
 
 			yield return str.Substring(i, chunkLength);
 		}
+	}
+	public static string ReplaceFirst(this string text, string search, string replace)
+	{
+		int pos = text.IndexOf(search);
+		if (pos < 0)
+		{
+			return text;
+		}
+		return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
 	}
 }
 
