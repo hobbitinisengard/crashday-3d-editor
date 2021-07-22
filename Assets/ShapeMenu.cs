@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, BL_SELECTED }
+public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, WAITING4TR, BL_SELECTED }
 public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,
 	amplify,
 	Razor_jumper
@@ -34,6 +34,7 @@ public class ShapeMenu : MonoBehaviour
 	// modifiers
 	public Toggle KeepShape;
 	public Toggle Connect;
+	public Toggle SelectTR;
 	/// <summary>
 	/// Indicates type of selected shape in FormMenu 
 	/// </summary>
@@ -84,6 +85,8 @@ public class ShapeMenu : MonoBehaviour
 			KeepShape.isOn = !KeepShape.isOn;
 		else if (Input.GetKeyDown(KeyCode.F2))
 			Connect.isOn = !Connect.isOn;
+		else if (Input.GetKeyDown(KeyCode.F3))
+			SelectTR.isOn = !SelectTR.isOn;
 		
 	}
 	public void OnDisable()
@@ -106,6 +109,7 @@ public class ShapeMenu : MonoBehaviour
 				VerticesVisibleState(); // wait for left ctrl release
 				VertexSelectionState(); //selecting vertices state
 				Waiting4_Bottom_Left_state(); //  waiting for bottom left vertex state
+				Waiting4_Top_Right_state()+
 				SelectShape(); // apply selected shape
 			}
 		}
@@ -128,6 +132,12 @@ public class ShapeMenu : MonoBehaviour
 			Connect.isOn = false;
 			KeepShape.isOn = false;
 		}
+		if (Connect.isOn && SelectTR.isOn == Connect.isOn)
+		{
+			Connect.isOn = false;
+			Select.isOn = false;
+		}
+		
 	}
 	public static Vector3 V(Vector3 v)
 	{
@@ -218,6 +228,41 @@ public class ShapeMenu : MonoBehaviour
 				{
 					BL = Vector3Int.RoundToInt(hit.point);
 					BL.y = hit.transform.gameObject.transform.position.y;
+					if (SelectTR.isOn)
+						StateSwitch(SelectionState.WAITING4TR);
+					else
+						StateSwitch(SelectionState.BL_SELECTED);
+				}
+			}
+			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
+			{
+				StateSwitch(SelectionState.SELECTING_VERTICES);
+				LastSelected = FormButton.none;
+			}
+
+		}
+	}
+	
+	private void Waiting4_Top_Right_state()
+	{
+		if (selectionState == SelectionState.WAITING4TR)
+		{
+			if (LastSelected == FormButton.amplify || LastSelected == FormButton.flatten || LastSelected == FormButton.copy)
+				StateSwitch(SelectionState.BL_SELECTED);
+				
+			// Don't know how all that Unity stuff works, so you'll correct it.
+			foreach (GameObject mrk in markings)
+			{
+				mrk.GetComponent<BoxCollider>().enabled = true;
+				mrk.layer = 11;
+			}
+
+			if (Input.GetMouseButtonUp(0))
+			{
+				if (Physics.Raycast(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 11))
+				{
+					PG = Vector3Int.RoundToInt(hit.point);
+					PG.y = hit.transform.gameObject.transform.position.y;
 					StateSwitch(SelectionState.BL_SELECTED);
 				}
 			}
@@ -254,6 +299,36 @@ public class ShapeMenu : MonoBehaviour
 				}
 				else
 					Service.current_heights[index] = slider_value;
+
+				znacznik.transform.position = new Vector3(znacznik.transform.position.x, Service.current_heights[index], znacznik.transform.position.z);
+				Service.former_heights[index] = Service.current_heights[index];
+			}
+		}
+		UndoBuffer.ApplyOperation();
+		Service.UpdateMapColliders(indexes);
+
+		Build.UpdateTiles(surroundings);
+		surroundings.Clear();
+
+	}
+	
+	void Amplify()
+	{
+		surroundings = Build.Get_surrounding_tiles(markings);
+		
+		float slider_value = Service.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		//Update terrain
+		List<int> indexes = new List<int>();
+		foreach (GameObject znacznik in markings)
+		{
+			if (znacznik.name == "on")
+			{
+				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
+				int index = Service.PosToIndex(v);
+				UndoBuffer.Add(Service.IndexToPos(index));
+				indexes.Add(index);
+
+				Service.current_heights[index] = BL.y + slider_value * (Service.current_heights[index] - BL.y);
 
 				znacznik.transform.position = new Vector3(znacznik.transform.position.x, Service.current_heights[index], znacznik.transform.position.z);
 				Service.former_heights[index] = Service.current_heights[index];
@@ -375,6 +450,11 @@ public class ShapeMenu : MonoBehaviour
 			FormMenu_toSlider();
 			return;
 		}
+		if (LastSelected == FormButton.amplify)
+		{
+			Amplify();
+			return;
+		}
 		if (LastSelected == FormButton.infinity)
 		{
 			SetToInfinity();
@@ -390,80 +470,83 @@ public class ShapeMenu : MonoBehaviour
 
 		if (selectionState == SelectionState.BL_SELECTED)
 		{
-			//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
-			Vector3Int PG = new Vector3Int();
-			int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
-			foreach (GameObject znacznik in markings)
+			if (!SelectTR.isOn)
 			{
-				if (znacznik.name == "on")
+				//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
+				Vector3Int PG = new Vector3Int();
+				int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
+				foreach (GameObject znacznik in markings)
 				{
-					if (lowX > znacznik.transform.position.x)
-						lowX = Mathf.RoundToInt(znacznik.transform.position.x);
-					if (hiX < znacznik.transform.position.x)
-						hiX = Mathf.RoundToInt(znacznik.transform.position.x);
+					if (znacznik.name == "on")
+					{
+						if (lowX > znacznik.transform.position.x)
+							lowX = Mathf.RoundToInt(znacznik.transform.position.x);
+						if (hiX < znacznik.transform.position.x)
+							hiX = Mathf.RoundToInt(znacznik.transform.position.x);
 
-					if (lowZ > znacznik.transform.position.z)
-						lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
-					if (hiZ < znacznik.transform.position.z)
-						hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
-				}
-			}
-			// for vertices on tiles
-			if (selected_tiles.Count > 0)
-			{
-				if (BL.x < hiX)
-				{
-					if (BL.z < hiZ)
-					{
-						PG.Set(hiX, 0, hiZ);
+						if (lowZ > znacznik.transform.position.z)
+							lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
+						if (hiZ < znacznik.transform.position.z)
+							hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
 					}
-					else
-						PG.Set(hiX, 0, lowZ);
 				}
-				else
+				// for vertices on tiles
+				if (selected_tiles.Count > 0)
 				{
-					if (BL.z < hiZ)
+					if (BL.x < hiX)
 					{
-						PG.Set(lowX, 0, hiZ);
-					}
-					else
-						PG.Set(lowX, 0, lowZ);
-				}
-			}
-			else
-			{
-				// for vertices of grass
-				Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-				bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-				bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
-				if (D && Dhit.transform.name != "on")
-					D = false;
-				if (L && Lhit.transform.name != "on")
-					L = false;
-				if (D)
-				{
-					if (L)
-					{
-						BL.Set(hiX, BL.y, hiZ);
-						PG.Set(lowX, 0, lowZ);
+						if (BL.z < hiZ)
+						{
+							PG.Set(hiX, 0, hiZ);
+						}
+						else
+							PG.Set(hiX, 0, lowZ);
 					}
 					else
 					{
-						BL.Set(lowX, BL.y, hiZ);
-						PG.Set(hiX, 0, lowZ);
+						if (BL.z < hiZ)
+						{
+							PG.Set(lowX, 0, hiZ);
+						}
+						else
+							PG.Set(lowX, 0, lowZ);
 					}
 				}
 				else
 				{
-					if (L)
+					// for vertices of grass
+					Vector3 center = new Vector3(BL.x, BL.y, BL.z);
+					bool D = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
+					bool L = Physics.BoxCast(center, new Vector3(1e-3f, Service.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
+					if (D && Dhit.transform.name != "on")
+						D = false;
+					if (L && Lhit.transform.name != "on")
+						L = false;
+					if (D)
 					{
-						PG.Set(lowX, 0, hiZ);
-						BL.Set(hiX, BL.y, lowZ);
+						if (L)
+						{
+							BL.Set(hiX, BL.y, hiZ);
+							PG.Set(lowX, 0, lowZ);
+						}
+						else
+						{
+							BL.Set(lowX, BL.y, hiZ);
+							PG.Set(hiX, 0, lowZ);
+						}
 					}
 					else
 					{
-						PG.Set(hiX, 0, hiZ);
-						BL.Set(lowX, BL.y, lowZ);
+						if (L)
+						{
+							PG.Set(lowX, 0, hiZ);
+							BL.Set(hiX, BL.y, lowZ);
+						}
+						else
+						{
+							PG.Set(hiX, 0, hiZ);
+							BL.Set(lowX, BL.y, lowZ);
+						}
 					}
 				}
 			}
@@ -523,9 +606,7 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
-								else if (LastSelected == FormButton.amplify)
-									vertpos.y = BL.y + FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
-								if (KeepShape.isOn && LastSelected != FormButton.amplify)
+								if (KeepShape.isOn)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
 									return;
@@ -569,8 +650,6 @@ public class ShapeMenu : MonoBehaviour
 								float old_Y = vertpos.y; // tylko do keepshape
 								if (LastSelected == FormButton.linear)
 									vertpos.y = BL.y + step / steps * heightdiff;
-								if (LastSelected == FormButton.linear)
-									vertpos.y = BL.y + step / steps * heightdiff;
 								else if (LastSelected == FormButton.integral)
 								{
 									if (2 * step <= steps)
@@ -590,9 +669,7 @@ public class ShapeMenu : MonoBehaviour
 									vertpos.y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Service.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
 									vertpos.y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
-								else if (LastSelected == FormButton.amplify)
-									vertpos.y = BL.y + FormPanel.GetComponent<Form>().HeightSlider.value * (vertpos.y - BL.y);
-								if (KeepShape.isOn && LastSelected != FormButton.amplify)
+								if (KeepShape.isOn)
 									vertpos.y += old_Y - BL.y;
 								if (float.IsNaN(vertpos.y))
 									return;
@@ -814,6 +891,10 @@ public class ShapeMenu : MonoBehaviour
 				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Select h0 vertex ..");
 			else
 				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for bottom-left vertex..");
+		}
+		else if (newstate == SelectionState.WAITING4TR)
+		{
+			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for top-right vertex..");
 		}
 		else if (newstate == SelectionState.BL_SELECTED)
 		{
