@@ -248,7 +248,7 @@ public class EditorMenu : MonoBehaviour
 	}
 	private void UpdateTileSelectedWithCursor()
 	{
-		bool cast = Physics.Raycast(Service.V(Highlight.pos), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
+		bool cast = Physics.Raycast(ShapeMenu.V(Highlight.pos), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
 		if (cast)
 		{
 			var tile = hit.transform.gameObject;

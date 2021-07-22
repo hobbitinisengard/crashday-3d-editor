@@ -72,10 +72,7 @@ public static class Service
 	{
 		return Mathf.RoundToInt(v.x + 4 * v.z * Service.TRACK.Width + v.z);
 	}
-	public static Vector3 V(Vector3 v)
-	{
-		return new Vector3(v.x, Service.MAX_H, v.z);
-	}
+
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
 	{
 		GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);

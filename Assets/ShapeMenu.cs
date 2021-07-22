@@ -482,21 +482,24 @@ public class ShapeMenu : MonoBehaviour
 					{
 						for (int z = (int)BL.z; BL_aims4_TR(BL.z, PG.z, z); Go2High(BL.z, PG.z, ref z))
 						{
-							// check for elements 
-							if (Connect.isOn)
-							{
-								int ext_index = (int)Mathf.Abs(z - BL.z);
-								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-								steps = Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-								slider_realheight = extremes[ext_index].P2.y;
-								BL.y = extremes[ext_index].P1.y;
-							}
+							
 							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
-							index = Service.PosToIndex(x, z);
+							
 							
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
+								index = Service.PosToIndex(x, z);
+								// check for elements 
+								if (Connect.isOn)
+								{
+									int ext_index = (int)Mathf.Abs(z - BL.z);
+									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+									steps = Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
+									slider_realheight = extremes[ext_index].P2.y;
+									BL.y = extremes[ext_index].P1.y;
+								}
+
 								UndoBuffer.Add(Service.IndexToPos(index));
 								float old_Y = vertpos.y; // tylko do keepshape
 								if (LastSelected == FormButton.linear)
@@ -547,21 +550,19 @@ public class ShapeMenu : MonoBehaviour
 					{
 						for (int x = (int)BL.x; BL_aims4_TR(BL.x, PG.x, x); Go2High(BL.x, PG.x, ref x))
 						{
-							if (Connect.isOn)
-							{
-								int ext_index = (int)Mathf.Abs(x - BL.x);
-								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-								steps = Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
-								slider_realheight = extremes[ext_index].P2.y;
-								BL.y = extremes[ext_index].P1.y;
-							}
-							//Debug.DrawLine(new Vector3(x, Terenowanie.Service.maxHeight+1, z), new Vector3(x, -5, z), Color.green, 60);
 							bool traf = Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out hit, Service.RAY_H, 1 << 11);
-							index = Service.PosToIndex(x, z);
-							
 							Vector3 vertpos = Service.IndexToPos(index);
 							if (traf && hit.transform.gameObject.name == "on" && Service.IsWithinMapBounds(vertpos))
 							{
+								if (Connect.isOn)
+								{
+									int ext_index = (int)Mathf.Abs(x - BL.x);
+									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+									steps = Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
+									slider_realheight = extremes[ext_index].P2.y;
+									BL.y = extremes[ext_index].P1.y;
+								}
+								index = Service.PosToIndex(x, z);
 								UndoBuffer.Add(Service.IndexToPos(index));
 								//Debug.DrawRay(new Vector3(x, Terenowanie.Service.maxHeight+1, z), Vector3.down, Color.blue, 40);
 
