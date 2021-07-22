@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 /// <summary>
 /// Static class containing fields that need to survive during scene change
 /// </summary>
-public static class Service
+public static class Consts
 {
 	public readonly static string VERSION = "build 10";
 	/// <summary>Maximum tile limit</summary>
@@ -34,11 +35,34 @@ public static class Service
 	public static List<string> MissingTilesNames = new List<string>();
 	public static bool IsWithinMapBounds(Vector3 v)
 	{
-		return (v.x > 0 && v.x < 4 * Service.TRACK.Width && v.z > 0 && v.z < 4 * Service.TRACK.Height) ? true : false;
+		return (v.x > 0 && v.x < 4 * Consts.TRACK.Width && v.z > 0 && v.z < 4 * Consts.TRACK.Height) ? true : false;
 	}
 	public static bool IsWithinMapBounds(float x, float z)
 	{
-		return x > 0 && x < 4 * Service.TRACK.Width && z > 0 && z < 4 * Service.TRACK.Height;
+		return x > 0 && x < 4 * Consts.TRACK.Width && z > 0 && z < 4 * Consts.TRACK.Height;
+	}
+	/// <summary>
+	/// Loads latest path from StreamingAssets/Path.txt
+	/// </summary>
+	/// <returns></returns>
+	public static string LoadTrackPath()
+	{
+		StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");
+		string LastTrackPath = w.ReadLine();
+		w.Close();
+		if (LastTrackPath == "")
+			LastTrackPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+		return LastTrackPath;
+	}
+
+	/// <summary>
+	/// Saves latest path to StreamingAssets/Path.txt
+	/// </summary>
+	public static void SaveTrackPath(string path)
+	{
+		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
+		w.WriteLine(path);
+		w.Close();
 	}
 	/// <summary>
 	/// Distance on 2D map between 3D points
@@ -60,17 +84,17 @@ public static class Service
 	/// </summary>
 	public static Vector3 IndexToPos(int index)
 	{
-		int x = index % (4 * Service.TRACK.Width + 1);
-		Vector3 to_return = new Vector3(x, Service.current_heights[index], (index - x) / (4 * Service.TRACK.Width + 1));
+		int x = index % (4 * Consts.TRACK.Width + 1);
+		Vector3 to_return = new Vector3(x, Consts.current_heights[index], (index - x) / (4 * Consts.TRACK.Width + 1));
 		return to_return;
 	}
 	public static int PosToIndex(int x, int z)
 	{
-		return Mathf.RoundToInt(x + 4 * z * Service.TRACK.Width + z);
+		return Mathf.RoundToInt(x + 4 * z * Consts.TRACK.Width + z);
 	}
 	public static int PosToIndex(Vector3 v)
 	{
-		return Mathf.RoundToInt(v.x + 4 * v.z * Service.TRACK.Width + v.z);
+		return Mathf.RoundToInt(v.x + 4 * v.z * Consts.TRACK.Width + v.z);
 	}
 
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
@@ -101,8 +125,8 @@ public static class Service
 	/// </summary>
 	public static GameObject MarkAndReturnZnacznik(Vector3 z_pos)
 	{
-		z_pos.y = Service.MAX_H;
-		if (Physics.Raycast(z_pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 11))
+		z_pos.y = Consts.MAX_H;
+		if (Physics.Raycast(z_pos, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11))
 		{
 			if (hit.transform.name == "on")
 				return hit.transform.gameObject;
@@ -139,11 +163,11 @@ public static class Service
 					Vector3Int v = Vector3Int.RoundToInt(grass.transform.TransformPoint(verts[i]));
 					if (IsRecoveringTerrain)
 					{
-						verts[i].y = Service.former_heights[Service.PosToIndex(v)];
-						Service.current_heights[Service.PosToIndex(v)] = Service.former_heights[Service.PosToIndex(v)];
+						verts[i].y = Consts.former_heights[Consts.PosToIndex(v)];
+						Consts.current_heights[Consts.PosToIndex(v)] = Consts.former_heights[Consts.PosToIndex(v)];
 					}
 					else
-						verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+						verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
 					if (float.IsNaN(verts[i].y))
 						HasNaNs = true;
 				}
@@ -200,9 +224,9 @@ public static class Service
 		List<GameObject> mcs = new List<GameObject>();
 		foreach (int i in indexes)
 		{
-			Vector3Int v = Vector3Int.RoundToInt(Service.IndexToPos(i));
-			v.y = Service.MAX_H;
-			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Service.RAY_H, 1 << 8);
+			Vector3Int v = Vector3Int.RoundToInt(Consts.IndexToPos(i));
+			v.y = Consts.MAX_H;
+			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Consts.RAY_H, 1 << 8);
 			foreach (RaycastHit hit in hits)
 				if (!mcs.Contains(hit.transform.gameObject))
 				{
@@ -218,18 +242,18 @@ public static class Service
 				Vector3Int v = Vector3Int.RoundToInt(grass.transform.TransformPoint(verts[i]));
 				if (IsRecoveringTerrain)
 				{
-					if (indexes.Contains(Service.PosToIndex(v)))
+					if (indexes.Contains(Consts.PosToIndex(v)))
 					{ // Recover only listed indexes ...
-						verts[i].y = Service.former_heights[Service.PosToIndex(v)];
-						Service.current_heights[Service.PosToIndex(v)] = Service.former_heights[Service.PosToIndex(v)];
+						verts[i].y = Consts.former_heights[Consts.PosToIndex(v)];
+						Consts.current_heights[Consts.PosToIndex(v)] = Consts.former_heights[Consts.PosToIndex(v)];
 					}
 					else
 					{ // ... rest is assigned from current_heights
-						verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+						verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
 					}
 				}
 				else
-					verts[i].y = Service.current_heights[Service.PosToIndex(v)];
+					verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
 				if (float.IsNaN(verts[i].y))
 					HasNaNs = true;
 			}
@@ -267,9 +291,9 @@ public static class Service
 	}
 	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool recover_terrain = false)
 	{
-		rmc_pos.y = Service.MAX_H;
+		rmc_pos.y = Consts.MAX_H;
 		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f),
-				Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 8);
+				Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 8);
 		List<GameObject> mcs = new List<GameObject>();
 		foreach (RaycastHit hit in hits)
 		{

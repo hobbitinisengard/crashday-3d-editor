@@ -22,29 +22,29 @@ public class Loader : MonoBehaviour
 
 	void Awake()
 	{
-		Service.MissingTilesNames.Clear();
-		if (Service.Isloading)
+		Consts.MissingTilesNames.Clear();
+		if (Consts.Isloading)
 		{
-			InitializeTilePlacementArray(Service.TRACK.Height, Service.TRACK.Width);
+			InitializeTilePlacementArray(Consts.TRACK.Height, Consts.TRACK.Width);
 			// Load tiles layout from TRACK to TilePlacementArray
-			for (int z = 0; z < Service.TRACK.Height; z++)
+			for (int z = 0; z < Consts.TRACK.Height; z++)
 			{
-				for (int x = 0; x < Service.TRACK.Width; x++)
+				for (int x = 0; x < Consts.TRACK.Width; x++)
 				{
-					TrackTileSavable tile = Service.TRACK.TrackTiles[Service.TRACK.Height - z - 1][x];
+					TrackTileSavable tile = Consts.TRACK.TrackTiles[Consts.TRACK.Height - z - 1][x];
 					//  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as grass fields (FieldId = 0)  
-					if (tile.FieldId < Service.TRACK.FieldFiles.Count && tile.FieldId != 0)
+					if (tile.FieldId < Consts.TRACK.FieldFiles.Count && tile.FieldId != 0)
 					{
 						// without .cfl suffix
-						string TileName = Service.TRACK.FieldFiles[tile.FieldId].Substring(0, Service.TRACK.FieldFiles[tile.FieldId].Length - 4);
+						string TileName = Consts.TRACK.FieldFiles[tile.FieldId].Substring(0, Consts.TRACK.FieldFiles[tile.FieldId].Length - 4);
 						// ignore strange grass tiles
 						if (TileName == "border1" || TileName == "border2")
 							continue;
 						// Don't load tiles that aren't in tile database
 						if (!TileManager.TileListInfo.ContainsKey(TileName))
 						{
-							if (!Service.MissingTilesNames.Contains(TileName))
-								Service.MissingTilesNames.Add(TileName);
+							if (!Consts.MissingTilesNames.Contains(TileName))
+								Consts.MissingTilesNames.Add(TileName);
 							continue;
 						}
 						int Rotation = tile.Rotation * 90;
@@ -54,37 +54,37 @@ public class Loader : MonoBehaviour
 							Rotation = 360 - Rotation;
 						byte Height = tile.Height;
 						Vector2Int dim = TileManager.GetRealDims(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
-						if (!Service.LoadMirrored)
+						if (!Consts.LoadMirrored)
 						{
-							Service.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
+							Consts.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
 						}
 						else
-							Service.TilePlacementArray[z, Service.TRACK.Width - 1 - x - dim.x + 1].Set(
+							Consts.TilePlacementArray[z, Consts.TRACK.Width - 1 - x - dim.x + 1].Set(
 									TileName, 360 - Rotation, !Inversion, Height);
 					}
 				}
 			}
-			InitializeHeightArrays(Service.TRACK.Height, Service.TRACK.Width);
-			LoadTerrain(Service.LoadMirrored);
+			InitializeHeightArrays(Consts.TRACK.Height, Consts.TRACK.Width);
+			LoadTerrain(Consts.LoadMirrored);
 		}
 		else
 		{ // load new track
-			Service.TRACK = new TrackSavable((ushort)SliderWidth.val, (ushort)SliderHeight.val);
-			InitializeHeightArrays(Service.TRACK.Height, Service.TRACK.Width);
+			Consts.TRACK = new TrackSavable((ushort)SliderWidth.val, (ushort)SliderHeight.val);
+			InitializeHeightArrays(Consts.TRACK.Height, Consts.TRACK.Width);
 			InitializeTilePlacementArray(SliderHeight.val, SliderWidth.val);
-			Service.Trackname = "Untitled";
+			Consts.Trackname = "Untitled";
 		}
 
-		if (Service.LoadMirrored)
-			Service.Trackname += " (mirrored)";
+		if (Consts.LoadMirrored)
+			Consts.Trackname += " (mirrored)";
 
-		nazwa_toru.text = Service.Trackname;
+		nazwa_toru.text = Consts.Trackname;
 		CreateScatteredMeshColliders();
 
-		if (Service.Isloading)
+		if (Consts.Isloading)
 			PlaceLoadedTilesOnMap();
 		else
-			Service.Isloading = false;
+			Consts.Isloading = false;
 
 		// Fills sliderCase HeightSlider with tabs. This includes custom tilesets.
 		// -----------------------------------------------------------------
@@ -119,46 +119,46 @@ public class Loader : MonoBehaviour
 
 			}
 		}
-		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Service.CHKPOINTS_STR);
+		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Consts.CHKPOINTS_STR);
 	}
 	private void InitializeHeightArrays(int Height, int Width)
 	{
 		// initialize height arrays
-		Service.former_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
-		Service.current_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
+		Consts.former_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
+		Consts.current_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
 	}
 
 	private void InitializeTilePlacementArray(int height, int width)
 	{
-		Service.TilePlacementArray = new TilePlacement[height, width];
+		Consts.TilePlacementArray = new TilePlacement[height, width];
 		for (int z = 0; z < height; z++)
 		{
 			for (int x = 0; x < width; x++)
 			{
-				Service.TilePlacementArray[z, x] = new TilePlacement();
+				Consts.TilePlacementArray[z, x] = new TilePlacement();
 			}
 		}
 	}
 
 	/// <summary>
-	///Loads terrain from Service.TRACK to current_heights and former_heights
+	///Loads terrain from Consts.TRACK to current_heights and former_heights
 	/// </summary>
 	void LoadTerrain(bool LoadMirrored)
 	{
-		Service.GravityValue = (int)(Service.TRACK.Heightmap[0][0] * 5f);
+		Consts.GravityValue = (int)(Consts.TRACK.Heightmap[0][0] * 5f);
 
-		for (int z = 0; z <= 4 * Service.TRACK.Height; z++)
+		for (int z = 0; z <= 4 * Consts.TRACK.Height; z++)
 		{
-			for (int x = 0; x <= 4 * Service.TRACK.Width; x++)
+			for (int x = 0; x <= 4 * Consts.TRACK.Width; x++)
 			{
 				int i;
 				if (LoadMirrored)
-					i = 4 * Service.TRACK.Width - x + z * (4 * Service.TRACK.Width + 1);
+					i = 4 * Consts.TRACK.Width - x + z * (4 * Consts.TRACK.Width + 1);
 				else
-					i = x + z * (4 * Service.TRACK.Width + 1);
+					i = x + z * (4 * Consts.TRACK.Width + 1);
 
-				Service.current_heights[i] = Service.TRACK.Heightmap[4 * Service.TRACK.Height - z][x] / 5f - Service.TRACK.Heightmap[0][0] / 5f;
-				Service.former_heights[i] = Service.current_heights[i];
+				Consts.current_heights[i] = Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - z][x] / 5f - Consts.TRACK.Heightmap[0][0] / 5f;
+				Consts.former_heights[i] = Consts.current_heights[i];
 			}
 		}
 	}
@@ -168,9 +168,9 @@ public class Loader : MonoBehaviour
 	void CreateScatteredMeshColliders()
 	{
 		Mesh basic = Resources.Load<Mesh>("rmcs/basic");
-		for (int z = 0; z < Service.TRACK.Height; z++)
+		for (int z = 0; z < Consts.TRACK.Height; z++)
 		{
-			for (int x = 0; x < Service.TRACK.Width; x++)
+			for (int x = 0; x < Consts.TRACK.Width; x++)
 			{
 				GameObject element = new GameObject("Map " + x + " " + z);
 				element.transform.position = new Vector3Int(4 * x, 0, 4 * z);
@@ -180,7 +180,7 @@ public class Loader : MonoBehaviour
 				mr.material = thismaterial;
 				mf.mesh = Instantiate(basic);
 				mc.sharedMesh = Instantiate(basic);
-				Service.UpdateMapColliders(new List<GameObject> { element });
+				Consts.UpdateMapColliders(new List<GameObject> { element });
 				element.layer = 8;
 			}
 		}
@@ -191,24 +191,24 @@ public class Loader : MonoBehaviour
 		Stopwatch sw = Stopwatch.StartNew();
 		int elements = 0;
 		List<GameObject> to_update = new List<GameObject>();
-		for (int z = 0; z < Service.TRACK.Height; z++)
+		for (int z = 0; z < Consts.TRACK.Height; z++)
 		{
-			for (int x = 0; x < Service.TRACK.Width; x++)
+			for (int x = 0; x < Consts.TRACK.Width; x++)
 			{
-				if (Service.TilePlacementArray[z, x].Name == null)
+				if (Consts.TilePlacementArray[z, x].Name == null)
 					continue;
 				Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z + 1));
 				elements++;
 				to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos,
-						Service.TilePlacementArray[z, x].Name, Service.TilePlacementArray[z, x].Rotation,
-						Service.TilePlacementArray[z, x].Inversion, Service.TilePlacementArray[z, x].Height));
+						Consts.TilePlacementArray[z, x].Name, Consts.TilePlacementArray[z, x].Rotation,
+						Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
 			}
 		}
 		// when PlaceTile tries to place a tile sticking out of map bounds (because of resizing), it returns null. Nulls have to be removed from to_update
 		to_update.RemoveAll(go => go == null);
 		Build.UpdateTiles(to_update);
 		Build.current_rmc = null;
-		Service.Isloading = false;
+		Consts.Isloading = false;
 		sw.Stop();
 		if (sw.Elapsed.Seconds != 0)
 			UnityEngine.Debug.Log("Loading time [elements/s]" + elements / sw.Elapsed.Seconds);

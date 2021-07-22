@@ -21,12 +21,12 @@ public static class UndoBuffer
 	{
 		UndoZnaczniki.Add(point);
 		if (!ItIsAlreadyPresent)
-			UndoCreated.Add(Service.PosToIndex(point), true);
+			UndoCreated.Add(Consts.PosToIndex(point), true);
 	}
 
 	private static bool IsAlreadyPresent(Vector3 point)
 	{
-		return UndoCreated.ContainsKey(Service.PosToIndex(point));
+		return UndoCreated.ContainsKey(Consts.PosToIndex(point));
 	}
 
 	private static void ClearBuffer()
@@ -37,7 +37,7 @@ public static class UndoBuffer
 
 	public static void Add(int x, int z, bool EnableOverwriting = false)
 	{
-		Vector3 mrk = new Vector3(x, Service.current_heights[Service.PosToIndex(x, z)], z);
+		Vector3 mrk = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, z)], z);
 		Add(mrk, EnableOverwriting);
 	}
 
@@ -91,28 +91,28 @@ public static class UndoBuffer
 		List<GameObject> tiles_to_update = new List<GameObject>();
 		foreach (var mrk_pos in UndoZnaczniki)
 		{
-			if (Service.IsWithinMapBounds(mrk_pos))
+			if (Consts.IsWithinMapBounds(mrk_pos))
 			{
 				// Update arrays of vertex heights
-				indexes.Add(Service.PosToIndex(mrk_pos));
-				Service.current_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
-				Service.former_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
+				indexes.Add(Consts.PosToIndex(mrk_pos));
+				Consts.current_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
+				Consts.former_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
 
 				Vector3 pom = mrk_pos;
 
 				// Mark pasted vertices
-				GameObject mrk = Service.MarkAndReturnZnacznik(pom);
+				GameObject mrk = Consts.MarkAndReturnZnacznik(pom);
 				if (mrk != null)
 					mrk.transform.position = new Vector3(mrk.transform.position.x, mrk_pos.y, mrk.transform.position.z);
 				// Look for tiles lying here
-				pom.y = Service.MAX_H;
-				var hits = Physics.SphereCastAll(pom, .1f, Vector3.down, Service.MAX_H - Service.MIN_H, 1 << 9);
+				pom.y = Consts.MAX_H;
+				var hits = Physics.SphereCastAll(pom, .1f, Vector3.down, Consts.MAX_H - Consts.MIN_H, 1 << 9);
 				foreach(var hit in hits)
 					if (!tiles_to_update.Contains(hit.transform.gameObject))
 						tiles_to_update.Add(hit.transform.gameObject);
 			}
 		}
-		Service.UpdateMapColliders(indexes);
+		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(tiles_to_update);
 		ClearBuffer();
 	}

@@ -8,7 +8,7 @@ public class SliderCase : MonoBehaviour
 	public ScrollRect TabTemplate;
 	public GameObject TileTemplate;
 	public GameObject TilesetContainer;
-	private string Current_tileset = Service.CHKPOINTS_STR;
+	private string Current_tileset = Consts.CHKPOINTS_STR;
 	private string[] Tilesets;
 
 	public void InitializeSlider(string[] tilesets)

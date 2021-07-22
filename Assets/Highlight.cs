@@ -35,11 +35,11 @@ public class Highlight : MonoBehaviour
   //Returns position of map's vertex that is closest to pointer
   Vector3 Get_valid_init_vector(Ray r)
   {
-    bool traf = Physics.Raycast(r.origin, r.direction, out hit, Service.RAY_H, 1 << 8);
+    bool traf = Physics.Raycast(r.origin, r.direction, out hit, Consts.RAY_H, 1 << 8);
     if (traf && hit.transform.gameObject.layer != 5)
     { // Raycast nie przejdzie przez elementy UI
       Vector3 to_return = Vector3Int.RoundToInt(hit.point);
-      to_return.y = Service.current_heights[Service.PosToIndex((int)to_return.x, (int)to_return.z)];
+      to_return.y = Consts.current_heights[Consts.PosToIndex((int)to_return.x, (int)to_return.z)];
       return to_return;
     }
     else
@@ -52,7 +52,7 @@ public class Highlight : MonoBehaviour
   //{
   //  if (Input.GetKeyDown(KeyCode.Delete))
   //  {
-  //    if (Physics.Raycast(pos, Vector3.down, out hit, Service.rayHeight, 1 << 12))
+  //    if (Physics.Raycast(pos, Vector3.down, out hit, Consts.rayHeight, 1 << 12))
   //    {
   //      StreamWriter writer = new StreamWriter("Assets/Resources/flatters.txt", true);
   //      writer.Write(hit.transform.name.Substring(0, hit.transform.name.IndexOf('(')) + " ");
@@ -63,7 +63,7 @@ public class Highlight : MonoBehaviour
   //  if (Input.GetKeyDown(KeyCode.Insert))
   //  {
   //    RaycastHit hit1;
-  //    if (Physics.Raycast(r.origin, r.direction, out hit1, Service.rayHeight, 1 << 12) && Physics.Raycast(new Vector3(Mathf.Round(pos.x), hit1.point.y + 0.5f, Mathf.Round(pos.z)), Vector3.down, out hit, Service.rayHeight, 1 << 12) && Mathf.Round(hit.point.z) != Mathf.Round(last_z))
+  //    if (Physics.Raycast(r.origin, r.direction, out hit1, Consts.rayHeight, 1 << 12) && Physics.Raycast(new Vector3(Mathf.Round(pos.x), hit1.point.y + 0.5f, Mathf.Round(pos.z)), Vector3.down, out hit, Consts.rayHeight, 1 << 12) && Mathf.Round(hit.point.z) != Mathf.Round(last_z))
   //    {
   //      StreamWriter writer = new StreamWriter("Assets/Resources/flatters.txt", true);
   //      writer.Write(hit.point.y + " ");
@@ -76,7 +76,7 @@ public class Highlight : MonoBehaviour
   //  }
   //  if (Input.GetKeyDown(KeyCode.Return))
   //  {
-  //    if (Physics.Raycast(r.origin, r.direction, out hit, Service.rayHeight, 1 << 14))
+  //    if (Physics.Raycast(r.origin, r.direction, out hit, Consts.rayHeight, 1 << 14))
   //      Debug.Log("free Y=" + hit.point.y);
   //    else
   //      Debug.Log("-");

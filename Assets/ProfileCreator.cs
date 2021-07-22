@@ -85,7 +85,7 @@ public class ProfileCreator : MonoBehaviour
 		{
 			if (Input.GetMouseButtonDown(0))
 			{
-				if (!Service.IsWithinMapBounds(Highlight.pos))
+				if (!Consts.IsWithinMapBounds(Highlight.pos))
 					return;
 				if (Input.GetKey(KeyCode.LeftControl)) // add single vertex
 				{
@@ -93,12 +93,12 @@ public class ProfileCreator : MonoBehaviour
 					{ // first or middle marking
 						if (state == ProfileState.idle)
 						{
-							GameObject znacznik = Service.CreateMarking(red);
+							GameObject znacznik = Consts.CreateMarking(red);
 							Profiles.Add(new List<GameObject>() { znacznik }); //add first marking to list
 						}
 						else if (state == ProfileState.first_clicked)
 						{
-							GameObject znacznik = Service.CreateMarking(white);
+							GameObject znacznik = Consts.CreateMarking(white);
 							Profiles.Last().Add(znacznik); //add middle marking
 						}
 						SwitchTextStatus(ProfileState.first_clicked);
@@ -106,7 +106,7 @@ public class ProfileCreator : MonoBehaviour
 				}
 				else if (state == ProfileState.profileApplied) // standard multiple selection
 				{ // redo first marking
-					GameObject znacznik = Service.CreateMarking(white);
+					GameObject znacznik = Consts.CreateMarking(white);
 					for (int i = 0; i < Profiles.Last().Count; i++) // delete markings of current profile
 						Destroy(Profiles.Last()[i]);
 					Profiles.Last().Clear();
@@ -116,7 +116,7 @@ public class ProfileCreator : MonoBehaviour
 				}
 				else if (state == ProfileState.idle)
 				{ // first marking
-					GameObject znacznik = Service.CreateMarking(red);
+					GameObject znacznik = Consts.CreateMarking(red);
 					Profiles.Add(new List<GameObject>() { znacznik }); //add first marking to list
 					SwitchTextStatus(ProfileState.first_clicked);
 				}
@@ -124,7 +124,7 @@ public class ProfileCreator : MonoBehaviour
 				{ // second marking 
 					Vector3[] RemainingPos = GetRemainingPoints(Profiles.Last().Last().transform.position, Highlight.pos);
 					foreach (var pos in RemainingPos)
-						Profiles.Last().Add(Service.CreateMarking(white, pos));
+						Profiles.Last().Add(Consts.CreateMarking(white, pos));
 
 					SwitchTextStatus(ProfileState.profileApplied);
 				}
@@ -141,7 +141,7 @@ public class ProfileCreator : MonoBehaviour
 				begin.x += begin.x < end.x ? 1 : -1;
 			if (begin.z != end.z)
 				begin.z += begin.z < end.z ? 1 : -1;
-			to_return.Add(Service.IndexToPos(Service.PosToIndex((int)begin.x, (int)begin.z)));
+			to_return.Add(Consts.IndexToPos(Consts.PosToIndex((int)begin.x, (int)begin.z)));
 		}
 		return to_return.ToArray();
 	}
@@ -157,7 +157,7 @@ public class ProfileCreator : MonoBehaviour
 	//  lr.startWidth = 0.5f;
 	//  lr.endWidth = 0.5f;
 	//  lr.SetPosition(0, start);
-	//  lr.SetPosition(1, new Vector3(start.x, Service.maxHeight, start.z));
+	//  lr.SetPosition(1, new Vector3(start.x, Consts.maxHeight, start.z));
 	//  Destroy(myLine, duration);
 	//}
 	bool IsNewProfileValid()
@@ -178,19 +178,19 @@ public class ProfileCreator : MonoBehaviour
 		{
 			for (int z = minV.z; z <= maxV.z; z++)
 			{
-				if (!Service.IsWithinMapBounds(x, z))
+				if (!Consts.IsWithinMapBounds(x, z))
 					continue;
-				if (Physics.Raycast(new Vector3(x, Service.MAX_H, z), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 14))
+				if (Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 14))
 				{
-					int idx = Service.PosToIndex(x, z);
+					int idx = Consts.PosToIndex(x, z);
 					UndoBuffer.Add(x, z);
-					Service.former_heights[idx] = hit.point.y;
-					Service.current_heights[idx] = Service.former_heights[idx];
+					Consts.former_heights[idx] = hit.point.y;
+					Consts.current_heights[idx] = Consts.former_heights[idx];
 					indexes.Add(idx);
 				}
 			}
 		}
-		Service.UpdateMapColliders(indexes);
+		Consts.UpdateMapColliders(indexes);
 		//Search for any tiles
 		var surr = Build.Get_surrounding_tiles(indexes);
 		Build.UpdateTiles(surr);

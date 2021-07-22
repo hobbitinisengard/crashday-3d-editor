@@ -169,7 +169,7 @@ public static class TileManager
 					VegName = VegName.Substring(0, VegName.IndexOf('.'));
 					// don't load grass and small vegetation. We are interested only in big trees
 					// TODO
-					//if (!Service.AllowedBushes.Contains(VegName))
+					//if (!Consts.AllowedBushes.Contains(VegName))
 					//  continue;
 					//string[] xz = Regex.Split(cfl[21 + offset + 7 * j], " ");
 					//float x = float.Parse(xz[0], System.Globalization.CultureInfo.InvariantCulture);
@@ -231,12 +231,12 @@ public static class TileManager
 			if (!TileListInfo.ContainsKey(name))
 			{ // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
 				TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id));
-				TileListInfo[name].TilesetName = Service.DefaultTilesetName;
+				TileListInfo[name].TilesetName = Consts.DefaultTilesetName;
 			}
 			else
 				TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id);
 			if (IsCheckpoint)
-				TileListInfo[name].TilesetName = Service.CHKPOINTS_STR;
+				TileListInfo[name].TilesetName = Consts.CHKPOINTS_STR;
 		}
 
 	}
@@ -268,7 +268,7 @@ public static class TileManager
 		if (name == "$ID trkdata/editor/fields.cat CategorySet12")
 			return "Nature";
 		if (name == "$ID trkdata/editor/cps.cat CategorySet1")
-			return Service.CHKPOINTS_STR;
+			return Consts.CHKPOINTS_STR;
 		name = name.Replace('/', ' ').Replace("\\", "");
 		return name;
 	}

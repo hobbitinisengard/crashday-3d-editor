@@ -101,7 +101,7 @@ public class SingleMode : MonoBehaviour
 		{
 
 			IntensitySlider.transform.parent.gameObject.SetActive(true);
-			DistortionSlider.transform.parent.gameObject.SetActive(true);
+			DistortionSlider.transform.parent.gameObject.SetActive(false);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
@@ -123,12 +123,12 @@ public class SingleMode : MonoBehaviour
 	}
 	void Single_amp(int ext_multiplier = 1)
 	{
-		if (Highlight.over && Service.IsWithinMapBounds(Highlight.pos))
+		if (Highlight.over && Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			Vector3 v = Highlight.pos;
-			int index = Service.PosToIndex(v);
-			UndoBuffer.Add(Service.IndexToPos(index));
-			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
+			int index = Consts.PosToIndex(v);
+			UndoBuffer.Add(Consts.IndexToPos(index));
+			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Consts.MAX_H, v.z), 0.5f, Vector3.down, Consts.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
@@ -137,48 +137,48 @@ public class SingleMode : MonoBehaviour
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
-					Service.current_heights[index] *= 1 + ext_multiplier * IntensitySlider.value/100f;
+					Consts.current_heights[index] *= 1 + ext_multiplier * IntensitySlider.value/100f;
 					//Helper.current_heights[index] = Helper.former_heights[index];
-					Service.UpdateMapColliders(new List<int> { index });
+					Consts.UpdateMapColliders(new List<int> { index });
 					Build.UpdateTiles(to_update);
 				}
 			}
 			else
 			{
-				Service.former_heights[index] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
-				Service.current_heights[index] = Service.former_heights[index];
-				Service.UpdateMapColliders(new List<int> { index });
+				Consts.former_heights[index] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
+				Consts.current_heights[index] = Consts.former_heights[index];
+				Consts.UpdateMapColliders(new List<int> { index });
 			}
 		}
 	}
 	void Single_distortion()
 	{
 
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
-			float dist_val = Service.SliderValue2RealHeight(DistortionSlider.value);
-			float h_val = Highlight.pos.y;//Service.SliderValue2RealHeight(HeightSlider.value);
+			float dist_val = Consts.SliderValue2RealHeight(DistortionSlider.value);
+			float h_val = Highlight.pos.y;//Consts.SliderValue2RealHeight(HeightSlider.value);
 
 			if (Highlight.pos.x != InitialPos.x || Highlight.pos.z != InitialPos.z)
 			{ // vertex -> vertex
 				InitialPos = Highlight.pos;
 				TargetDistValue = Random.Range(h_val - dist_val, h_val + dist_val);
 			}
-			int idx = Service.PosToIndex(Highlight.pos);
+			int idx = Consts.PosToIndex(Highlight.pos);
 			UndoBuffer.Add(Highlight.pos);
-			Service.current_heights[idx] += (TargetDistValue - Service.current_heights[idx]) * IntensitySlider.value / 100f;
-			Service.former_heights[idx] = Service.current_heights[idx];
-			Service.UpdateMapColliders(new List<int> { idx });
+			Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
+			Consts.former_heights[idx] = Consts.current_heights[idx];
+			Consts.UpdateMapColliders(new List<int> { idx });
 			var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
 			Build.UpdateTiles(tiles);
 		}
 	}
 	void Single_smoothing()
 	{
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			Vector3 pos = Highlight.pos;
-			pos.y = Service.MAX_H;
+			pos.y = Consts.MAX_H;
 
 			float height_sum = 0;
 			for (int x = -1; x <= 1; x++)
@@ -189,16 +189,16 @@ public class SingleMode : MonoBehaviour
 						continue;
 					pos.x = Highlight.pos.x + x;
 					pos.z = Highlight.pos.z + z;
-					if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 8))
+					if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 8))
 						height_sum += hit.point.y;
 				}
 			}
 			float avg = height_sum / 8f;
-			int idx = Service.PosToIndex(Highlight.pos);
+			int idx = Consts.PosToIndex(Highlight.pos);
 			UndoBuffer.Add(Highlight.pos);
-			Service.former_heights[idx] += (avg - Service.former_heights[idx]) * IntensitySlider.value / 100f;
-			Service.current_heights[idx] = Service.former_heights[idx];
-			Service.UpdateMapColliders(new List<int> { idx });
+			Consts.former_heights[idx] += (avg - Consts.former_heights[idx]) * IntensitySlider.value / 100f;
+			Consts.current_heights[idx] = Consts.former_heights[idx];
+			Consts.UpdateMapColliders(new List<int> { idx });
 			var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
 			Build.UpdateTiles(tiles);
 		}
@@ -211,9 +211,9 @@ public class SingleMode : MonoBehaviour
 		if (index == 0)
 		{
 			// Get initial position and set znacznik there
-			if (Service.IsWithinMapBounds(Highlight.pos))
+			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				index = (int)(Highlight.pos.x + 4 * Service.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				index = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
 				//Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
 				indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
 				indicator.transform.localScale = new Vector3(.25f, 1, .25f);
@@ -223,30 +223,30 @@ public class SingleMode : MonoBehaviour
 		else
 		{
 			// Time to get second position
-			if (Service.IsWithinMapBounds(Highlight.pos))
+			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				int index2 = (int)(Highlight.pos.x + 4 * Service.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				int index2 = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
 				//Debug.Log("I2="+index2+" "+m.vertices[index]+" pos="+highlight.pos);
-				Vector3Int a = Vector3Int.RoundToInt(Service.IndexToPos(index));
-				Vector3Int b = Vector3Int.RoundToInt(Service.IndexToPos(index2));
+				Vector3Int a = Vector3Int.RoundToInt(Consts.IndexToPos(index));
+				Vector3Int b = Vector3Int.RoundToInt(Consts.IndexToPos(index2));
 				{
 					List<int> indexes = new List<int>();
 					for (int z = Mathf.Min(a.z, b.z); z <= Mathf.Max(a.z, b.z); z++)
 					{
 						for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
 						{
-							int idx = x + 4 * z * Service.TRACK.Width + z;
-							UndoBuffer.Add(Service.IndexToPos(idx));
-							Service.former_heights[idx] = Service.SliderValue2RealHeight(HeightSlider.value);
-							Service.current_heights[idx] = Service.former_heights[idx];
+							int idx = x + 4 * z * Consts.TRACK.Width + z;
+							UndoBuffer.Add(Consts.IndexToPos(idx));
+							Consts.former_heights[idx] = Consts.SliderValue2RealHeight(HeightSlider.value);
+							Consts.current_heights[idx] = Consts.former_heights[idx];
 							indexes.Add(idx);
 						}
 					}
-					Service.UpdateMapColliders(indexes);
+					Consts.UpdateMapColliders(indexes);
 				}
 				Destroy(indicator);
 				index = 0;
-				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.MAX_H, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
+				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Consts.MAX_H, 0.5f * (a.z + b.z)), new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))), Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9); //Szukaj jakiegokolwiek tilesa w zaznaczeniu
 				List<GameObject> to_update = new List<GameObject>();
 				foreach (RaycastHit hit in hits)
 					to_update.Add(hit.transform.gameObject);
@@ -261,12 +261,12 @@ public class SingleMode : MonoBehaviour
 	/// </summary>
 	void Single_vertex_manipulation()
 	{
-		if (Highlight.over && Service.IsWithinMapBounds(Highlight.pos))
+		if (Highlight.over && Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			Vector3 v = Highlight.pos;
-			int index = Service.PosToIndex(v);
-			UndoBuffer.Add(Service.IndexToPos(index));
-			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Service.MAX_H, v.z), 0.5f, Vector3.down, Service.RAY_H, 1 << 9);
+			int index = Consts.PosToIndex(v);
+			UndoBuffer.Add(Consts.IndexToPos(index));
+			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Consts.MAX_H, v.z), 0.5f, Vector3.down, Consts.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
@@ -275,17 +275,17 @@ public class SingleMode : MonoBehaviour
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
-					Service.current_heights[index] = Service.SliderValue2RealHeight(HeightSlider.value);
-					Service.former_heights[index] = Service.current_heights[index];
-					Service.UpdateMapColliders(new List<int> { index });
+					Consts.current_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
+					Consts.former_heights[index] = Consts.current_heights[index];
+					Consts.UpdateMapColliders(new List<int> { index });
 					Build.UpdateTiles(to_update);
 				}
 			}
 			else
 			{
-				Service.former_heights[index] = Service.SliderValue2RealHeight(HeightSlider.value);
-				Service.current_heights[index] = Service.former_heights[index];
-				Service.UpdateMapColliders(new List<int> { index });
+				Consts.former_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
+				Consts.current_heights[index] = Consts.former_heights[index];
+				Consts.UpdateMapColliders(new List<int> { index });
 			}
 		}
 	}
@@ -297,7 +297,7 @@ public class SingleMode : MonoBehaviour
 			foreach (Vector3 v in rmc.GetComponent<MeshCollider>().sharedMesh.vertices)
 			{
 				Vector3Int V = Vector3Int.RoundToInt(rmc.transform.TransformPoint(v));
-				if (Service.PosToIndex(V) == index)
+				if (Consts.PosToIndex(V) == index)
 				{
 					found_matching = true;
 					break;

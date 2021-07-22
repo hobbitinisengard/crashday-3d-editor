@@ -33,8 +33,8 @@ public class MainMenu : MonoBehaviour
 		ResizeMenu_Left.text = "0";
 		ResizeMenu_Up.text = "0";
 		ResizeMenu_Down.text = "0";
-		Service.LoadMirrored = false;
-		Service.Isloading = false;
+		Consts.LoadMirrored = false;
+		Consts.Isloading = false;
 		// if we running this for the first time
 		if (TileManager.TileListInfo.Count == 0)
 		{
@@ -132,7 +132,7 @@ public class MainMenu : MonoBehaviour
 	}
 	public void ToggleMirrored()
 	{
-		Service.LoadMirrored = MirroredToggle.isOn;
+		Consts.LoadMirrored = MirroredToggle.isOn;
 	}
 	public void RemoveEntryAndContentFolder()
 	{
@@ -175,7 +175,7 @@ public class MainMenu : MonoBehaviour
 	}
 	public void LoadTrackToVariablesAndRunEditor()
 	{
-		string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", LoadTrackPath(), "trk", false);
+		string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", Consts.LoadTrackPath(), "trk", false);
 		if (sourcepath.Length == 0)
 			return;
 		else// player hasnt clicked 'cancel' button
@@ -183,9 +183,9 @@ public class MainMenu : MonoBehaviour
 			string path = sourcepath[0];
 			//Path can't have .trk suffix
 			path = path.Substring(0, path.Length - 4);
-			Service.Trackname = path.Substring(path.LastIndexOf('\\') + 1);
-			SaveTrackPath(path);
-			Service.TRACK = MapParser.ReadMap(path + ".trk");
+			Consts.Trackname = path.Substring(path.LastIndexOf('\\') + 1);
+			Consts.SaveTrackPath(path);
+			Consts.TRACK = MapParser.ReadMap(path + ".trk");
 
 			if (ResizeToggle.isOn)
 			{
@@ -195,7 +195,7 @@ public class MainMenu : MonoBehaviour
 			}
 			else
 			{
-				Service.Isloading = true;
+				Consts.Isloading = true;
 				StartCoroutine("EnableLoadingScreen");
 				ChangeSceneToEditor();
 			}
@@ -207,56 +207,35 @@ public class MainMenu : MonoBehaviour
 		ResizeMenu_Left.text = ResizeMenu_Left.text == "" ? "0" : ResizeMenu_Left.text;
 		ResizeMenu_Up.text = ResizeMenu_Up.text == "" ? "0" : ResizeMenu_Up.text;
 		ResizeMenu_Down.text = ResizeMenu_Down.text == "" ? "0" : ResizeMenu_Down.text;
-		Resizemenu_Trackname.text = Service.Trackname;
+		Resizemenu_Trackname.text = Consts.Trackname;
 		int newwidth = int.Parse(ResizeMenu_Right.text) + int.Parse(ResizeMenu_Left.text);
 		int newheight = int.Parse(ResizeMenu_Up.text) + int.Parse(ResizeMenu_Down.text);
-		Resizemenu_Size_str.text = "Size: " + (Service.TRACK.Width + newwidth) + " x " + (Service.TRACK.Height + newheight);
-		Resizemenu_Elements_str.text = "Elements: " + (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) + " / " + Service.MAX_ELEMENTS;
+		Resizemenu_Size_str.text = "Size: " + (Consts.TRACK.Width + newwidth) + " x " + (Consts.TRACK.Height + newheight);
+		Resizemenu_Elements_str.text = "Elements: " + (Consts.TRACK.Width + newwidth) * (Consts.TRACK.Height + newheight) + " / " + Consts.MAX_ELEMENTS;
 	}
 	public void Resize_n_Load()
 	{
 		int newwidth = int.Parse(ResizeMenu_Right.text) + int.Parse(ResizeMenu_Left.text);
 		int newheight = int.Parse(ResizeMenu_Up.text) + int.Parse(ResizeMenu_Down.text);
-		if (Service.TRACK.Width + newwidth < 3 || Service.TRACK.Height + newheight < 3 || 
-		 (Service.TRACK.Width + newwidth) * (Service.TRACK.Height + newheight) > Service.MAX_ELEMENTS)
+		if (Consts.TRACK.Width + newwidth < 3 || Consts.TRACK.Height + newheight < 3 || 
+		 (Consts.TRACK.Width + newwidth) * (Consts.TRACK.Height + newheight) > Consts.MAX_ELEMENTS)
 			return;
-		TrackSavable ResizedMap = new TrackSavable(Service.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
+		TrackSavable ResizedMap = new TrackSavable(Consts.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
 			int.Parse(ResizeMenu_Up.text), int.Parse(ResizeMenu_Down.text));
 		
-		Service.TRACK = ResizedMap;
-		Service.Isloading = true;
+		Consts.TRACK = ResizedMap;
+		Consts.Isloading = true;
 		StartCoroutine("EnableLoadingScreen");
 		ChangeSceneToEditor();
 	}
 	IEnumerator EnableLoadingScreen()
 	{
-		LoadingScreen_text_logo.text = "3D Editor " + Service.VERSION;
+		LoadingScreen_text_logo.text = "3D Editor " + Consts.VERSION;
 		string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
 		loadScreen.SetActive(true);
 		loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
 		yield return null;
 	}
 
-	/// <summary>
-	/// Saves latest path to StreamingAssets/Path.txt
-	/// </summary>
-	public static void SaveTrackPath(string path)
-	{
-		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
-		w.WriteLine(path);
-		w.Close();
-	}
-	/// <summary>
-	/// Loads latest path from StreamingAssets/Path.txt
-	/// </summary>
-	/// <returns></returns>
-	public static string LoadTrackPath()
-	{
-		StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");
-		string LastTrackPath = w.ReadLine();
-		w.Close();
-		if (LastTrackPath == "")
-			LastTrackPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-		return LastTrackPath;
-	}
+	
 }

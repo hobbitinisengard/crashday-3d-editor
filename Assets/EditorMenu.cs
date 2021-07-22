@@ -1,4 +1,5 @@
 ﻿using SFB;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -33,6 +34,7 @@ public class EditorMenu : MonoBehaviour
 	public Dropdown GravityEffectDropdown;
 	public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
 	public Text upperPanel_t_version;
+	public Text SAVED_TEXT; //for feedback when quick-saved
 	/// <summary>
 	/// tile name we are currently placing in building mode
 	/// </summary>
@@ -40,22 +42,26 @@ public class EditorMenu : MonoBehaviour
 	public static string tile_name = "NULL";
 	private void Start()
 	{
-		upperPanel_t_version.text = Service.VERSION;
+		upperPanel_t_version.text = Consts.VERSION;
 		floor1 = Resources.Load<Material>("floor1");
-		if (Service.MissingTilesNames.Count > 0)
+		if (Consts.MissingTilesNames.Count > 0)
 		{
 			MissingTilesPanel.SetActive(true);
-			MissingTilesPanel_content.GetComponent<Text>().text = string.Join("\n", Service.MissingTilesNames);
+			MissingTilesPanel_content.GetComponent<Text>().text = string.Join("\n", Consts.MissingTilesNames);
 		}
 	}
 	private void OnEnable()
 	{
-		GravityEffectDropdown.value = Service.GravityValue / 1000;
+		GravityEffectDropdown.value = Consts.GravityValue / 1000;
 	}
 	void Update()
 	{
 		if (Input.GetKeyDown(KeyCode.B))
 			UpdateTileSelectedWithCursor();
+		if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
+		{
+			QuickSave();
+		}
 		if (Input.GetKeyDown(KeyCode.F5))
 		{
 			ToggleSaveMenu();
@@ -75,6 +81,27 @@ public class EditorMenu : MonoBehaviour
 				SwitchPanels();
 			}
 		}
+	}
+	void QuickSave()
+	{ // track cannot be named 'untitled'
+		if (Consts.Trackname == "Untitled")
+			ToggleSaveMenu();
+		else
+		{
+			string path = Consts.LoadTrackPath();
+			if (path == System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments))
+				ToggleSaveMenu();
+			else
+			{
+				SaveMenu_works(path);
+			}
+		}
+	}
+	IEnumerator DisplayMessage()
+	{
+		SAVED_TEXT.gameObject.SetActive(true);
+		yield return new WaitForSeconds(2);
+		SAVED_TEXT.gameObject.SetActive(false);
 	}
 	void SwitchPanels()
 	{
@@ -113,7 +140,7 @@ public class EditorMenu : MonoBehaviour
 	{
 		try
 		{
-			Service.MarkerBounds.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
+			Consts.MarkerBounds.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
 		}
 		catch
 		{
@@ -124,7 +151,7 @@ public class EditorMenu : MonoBehaviour
 	{
 		try
 		{
-			Service.MarkerBounds.y = int.Parse(val) > 5 ? int.Parse(val) : 5;
+			Consts.MarkerBounds.y = int.Parse(val) > 5 ? int.Parse(val) : 5;
 		}
 		catch
 		{
@@ -137,66 +164,69 @@ public class EditorMenu : MonoBehaviour
 		help.SetActive(!help.activeSelf);
 	}
 
-	public void SaveMenu_works()
+	public void SaveMenu_works(string path = null)
 	{
-		string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", MainMenu.LoadTrackPath(), false);
-		string path = originalpath[0];
+		if(path == "" || path == null)
+		{
+			string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", Consts.LoadTrackPath(), false);
+			path = originalpath[0];
+		}
 		if (path == "")
 			return;
-		MainMenu.SaveTrackPath(path);
-		Service.Trackname = NameOfTrack.text;
-		GetComponent<Loader>().nazwa_toru.text = Service.Trackname;
+		Consts.SaveTrackPath(path);
+		Consts.Trackname = NameOfTrack.text;
+		GetComponent<Loader>().nazwa_toru.text = Consts.Trackname;
 		// save currently set gravity value to static variable to remember last dropdown selection
-		Service.GravityValue = GravityEffectDropdown.value * 1000 * ((plusOn.isOn == true) ? 1 : -1);
+		Consts.GravityValue = GravityEffectDropdown.value * 1000 * ((plusOn.isOn == true) ? 1 : -1);
 
 		// Save terrain
-		for (int y = 0; y <= 4 * Service.TRACK.Height; y++)
+		for (int y = 0; y <= 4 * Consts.TRACK.Height; y++)
 		{
-			for (int x = 0; x <= 4 * Service.TRACK.Width; x++)
+			for (int x = 0; x <= 4 * Consts.TRACK.Width; x++)
 			{
-				int i = x + 4 * y * Service.TRACK.Width + y;
-				Service.TRACK.Heightmap[4 * Service.TRACK.Height - y][x] = Service.current_heights[i] * 5 + Service.GravityValue / 5f;
+				int i = x + 4 * y * Consts.TRACK.Width + y;
+				Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - y][x] = Consts.current_heights[i] * 5 + Consts.GravityValue / 5f;
 				
 			}
 		}
 
 		// Prepare track tiles arrays
-		for (int z = 0; z < Service.TRACK.Height; z++)
-			for (int x = 0; x < Service.TRACK.Width; x++)
-				Service.TRACK.TrackTiles[z][x].Set(0, 0, 0, 0);
+		for (int z = 0; z < Consts.TRACK.Height; z++)
+			for (int x = 0; x < Consts.TRACK.Width; x++)
+				Consts.TRACK.TrackTiles[z][x].Set(0, 0, 0, 0);
 
-		Service.TRACK.FieldFiles.Clear();
-		Service.TRACK.FieldFiles.Add("field.cfl");
-		Service.TRACK.FieldFilesNumber = 1;
+		Consts.TRACK.FieldFiles.Clear();
+		Consts.TRACK.FieldFiles.Add("field.cfl");
+		Consts.TRACK.FieldFilesNumber = 1;
 		List<QuarterData> QuartersToSave = new List<QuarterData>();
 		// Save tiles
-		for (int z = 0; z < Service.TRACK.Height; z++)
+		for (int z = 0; z < Consts.TRACK.Height; z++)
 		{
-			for (int x = 0; x < Service.TRACK.Width; x++)
+			for (int x = 0; x < Consts.TRACK.Width; x++)
 			{
-				if (Service.TilePlacementArray[z, x].Name != null)
+				if (Consts.TilePlacementArray[z, x].Name != null)
 				{
-					ushort fieldId = SetAndGetFieldId(Service.TilePlacementArray[z, x].Name);
-					byte mirror = (byte)(Service.TilePlacementArray[z, x].Inversion ? 1 : 0);
-					byte rotation = (byte)(Service.TilePlacementArray[z, x].Rotation / 90);
+					ushort fieldId = SetAndGetFieldId(Consts.TilePlacementArray[z, x].Name);
+					byte mirror = (byte)(Consts.TilePlacementArray[z, x].Inversion ? 1 : 0);
+					byte rotation = (byte)(Consts.TilePlacementArray[z, x].Rotation / 90);
 					if (mirror == 1 && rotation != 0)
 						rotation = (byte)(4 - rotation);
-					byte height = Service.TilePlacementArray[z, x].Height;
-					Vector2Int dim = TileManager.GetRealDims(Service.TilePlacementArray[z, x].Name, (rotation == 1 || rotation == 3) ? true : false);
+					byte height = Consts.TilePlacementArray[z, x].Height;
+					Vector2Int dim = TileManager.GetRealDims(Consts.TilePlacementArray[z, x].Name, (rotation == 1 || rotation == 3) ? true : false);
 					//Base part - Left Top
-					Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(fieldId, rotation, mirror, height);
+					Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z][x].Set(fieldId, rotation, mirror, height);
 					//Left Bottom
 					if (dim.y == 2)
-						//Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x, 1, rotation, mirror, height));
+						//Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
+						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - z, x, 1, rotation, mirror, height));
 					////Right top
 					if (dim.x == 2)
-						//  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - 1 - z, x + 1, 2, rotation, mirror, height));
+						//  Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
+						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - 1 - z, x + 1, 2, rotation, mirror, height));
 					////Right bottom
 					if (dim.x == 2 && dim.y == 2)
-						//  Service.TRACK.TrackTiles[Service.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
-						QuartersToSave.Add(new QuarterData(Service.TRACK.Height - z, x + 1, 0, rotation, mirror, height));
+						//  Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
+						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - z, x + 1, 0, rotation, mirror, height));
 				}
 			}
 		}
@@ -204,27 +234,29 @@ public class EditorMenu : MonoBehaviour
 		{
 			try
 			{
-				if (Service.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
-					Service.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1 ? (ushort)65471 : (ushort)65472, q.rotation, q.mirror, q.height);
+				if (Consts.TRACK.TrackTiles[q.Y][q.X].FieldId == 0)
+					Consts.TRACK.TrackTiles[q.Y][q.X].Set(q.ID == 0 ? (ushort)65470 : q.ID == 1 ? (ushort)65471 : (ushort)65472, q.rotation, q.mirror, q.height);
 			}
 			catch
 			{
 				Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
 			}
 		}
-		MapParser.SaveMap(Service.TRACK, path + "\\" + Service.Trackname + ".trk");
+		MapParser.SaveMap(Consts.TRACK, path + "\\" + Consts.Trackname + ".trk");
+		save.SetActive(false);
+		StartCoroutine(DisplayMessage());
 	}
 	ushort SetAndGetFieldId(string name)
 	{
 		name += ".cfl";
-		for (ushort i = 0; i < Service.TRACK.FieldFiles.Count; i++)
+		for (ushort i = 0; i < Consts.TRACK.FieldFiles.Count; i++)
 		{
-			if (name == Service.TRACK.FieldFiles[i])
+			if (name == Consts.TRACK.FieldFiles[i])
 				return i;
 		}
-		Service.TRACK.FieldFiles.Add(name);
-		Service.TRACK.FieldFilesNumber++;
-		return (ushort)(Service.TRACK.FieldFilesNumber - 1);
+		Consts.TRACK.FieldFiles.Add(name);
+		Consts.TRACK.FieldFilesNumber++;
+		return (ushort)(Consts.TRACK.FieldFilesNumber - 1);
 	}
 
 	private struct QuarterData
@@ -248,7 +280,7 @@ public class EditorMenu : MonoBehaviour
 	}
 	private void UpdateTileSelectedWithCursor()
 	{
-		bool cast = Physics.Raycast(ShapeMenu.V(Highlight.pos), Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 9);
+		bool cast = Physics.Raycast(ShapeMenu.V(Highlight.pos), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9);
 		if (cast)
 		{
 			var tile = hit.transform.gameObject;

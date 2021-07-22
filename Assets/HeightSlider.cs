@@ -12,8 +12,8 @@ public class HeightSlider : MonoBehaviour
   bool IsEnteringKeypadValue = false; // used in numericenter();
   private void Start()
   {
-    HSlider.minValue = Service.MIN_H;
-    HSlider.maxValue = Service.MAX_H;
+    HSlider.minValue = Consts.MIN_H;
+    HSlider.maxValue = Consts.MAX_H;
   }
   private void Update()
   {
@@ -29,8 +29,8 @@ public class HeightSlider : MonoBehaviour
         Hide_text_helper();
 
       Vector3 v = Highlight.pos;
-      int index = Service.PosToIndex(Highlight.pos);
-      HSlider.value = Service.RealHeight2SliderValue(Service.current_heights[index]);
+      int index = Consts.PosToIndex(Highlight.pos);
+      HSlider.value = Consts.RealHeight2SliderValue(Consts.current_heights[index]);
     }
   }
   /// <summary> shows current height value next to HeightSlider </summary>
@@ -42,7 +42,7 @@ public class HeightSlider : MonoBehaviour
   /// <summary>Displays transparent cuboid for 2 secs.</summary>
   public void SliderPreview(float v)
   {
-    float y = Service.SliderValue2RealHeight(v);
+    float y = Consts.SliderValue2RealHeight(v);
     GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
     Destroy(preview.GetComponent<BoxCollider>());
     preview.GetComponent<MeshRenderer>().material = partiallytransparent;
@@ -104,31 +104,31 @@ public class HeightSlider : MonoBehaviour
     }
     if (Input.GetKey(KeyCode.LeftShift))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Consts.MAX_H)
       {
         HSlider.value += 10;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Consts.MIN_H)
       {
         HSlider.value -= 10;
       }
     }
     else if (Input.GetKey(KeyCode.LeftAlt))
     {
-      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
+      if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Consts.MAX_H)
       {
         HSlider.value += 0.1f;
       }
-      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
+      else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Consts.MIN_H)
       {
         HSlider.value -= 0.1f;
       }
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Service.MAX_H)
+    else if (Input.GetAxis("Mouse ScrollWheel") > 0 && HSlider.value < Consts.MAX_H)
     {
       HSlider.value += 1;
     }
-    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Service.MIN_H)
+    else if (Input.GetAxis("Mouse ScrollWheel") < 0 && HSlider.value > Consts.MIN_H)
     {
       HSlider.value -= 1;
     }

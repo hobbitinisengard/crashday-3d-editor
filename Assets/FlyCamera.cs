@@ -33,7 +33,7 @@ public class FlyCamera : MonoBehaviour
 				{ // if casting elevated element from underground, raise camera up to it
 
 					Vector3 hPos = hit.transform.position;
-					hPos.y = Service.current_heights[Service.PosToIndex(hPos)] + 10;
+					hPos.y = Consts.current_heights[Consts.PosToIndex(hPos)] + 10;
 					this.transform.position = hPos;
 				}
 			}
@@ -80,7 +80,7 @@ public class FlyCamera : MonoBehaviour
 		{ // switch to birds eye
 			Ordinary_cam_last_height = transform.position.y;
 			//  
-			transform.position = new Vector3(transform.position.x, Service.MAX_H, transform.position.z);
+			transform.position = new Vector3(transform.position.x, Consts.MAX_H, transform.position.z);
 		}
 		else
 		{ //switch to ordinary

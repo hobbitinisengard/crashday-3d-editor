@@ -129,7 +129,7 @@ public class ArealMode : MonoBehaviour
 	}
 	private void Areal_distortion()
 	{
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			if (Highlight.pos.x != InitialPos.x || Highlight.pos.z != InitialPos.z)
 			{ // vertex -> vertex
@@ -142,16 +142,16 @@ public class ArealMode : MonoBehaviour
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
 				{
-					if (Service.IsWithinMapBounds(x, z))
+					if (Consts.IsWithinMapBounds(x, z))
 					{
-						int idx = Service.PosToIndex((int)x, (int)z);
-						Vector3 currentpos = Service.IndexToPos(idx);
-						float dist = Service.Distance(currentpos, Highlight.pos);
+						int idx = Consts.PosToIndex((int)x, (int)z);
+						Vector3 currentpos = Consts.IndexToPos(idx);
+						float dist = Consts.Distance(currentpos, Highlight.pos);
 						if (dist > RadiusSlider.value)
 							continue;
 						Vector3 pos = Highlight.pos;
-						float dist_val = Service.SliderValue2RealHeight(DistortionSlider.value);
-						float h_val = Highlight.pos.y;//Service.SliderValue2RealHeight(HeightSlider.value);
+						float dist_val = Consts.SliderValue2RealHeight(DistortionSlider.value);
+						float h_val = Highlight.pos.y;//Consts.SliderValue2RealHeight(HeightSlider.value);
 						float TargetDistValue;
 						if (TargetDistValues.ContainsKey(idx))
 							TargetDistValue = TargetDistValues[idx];
@@ -161,20 +161,20 @@ public class ArealMode : MonoBehaviour
 							TargetDistValues.Add(idx, TargetDistValue);
 						}
 						UndoBuffer.Add((int)x, (int)z);
-						Service.current_heights[idx] += (TargetDistValue - Service.current_heights[idx]) * IntensitySlider.value / 100f;
-						Service.former_heights[idx] = Service.current_heights[idx];
-						Service.UpdateMapColliders(new List<int> { idx });
+						Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
+						Consts.former_heights[idx] = Consts.current_heights[idx];
+						Consts.UpdateMapColliders(new List<int> { idx });
 						var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
 						Build.UpdateTiles(tiles);
 						indexes.Add(idx);
 					}
 				}
 			}
-			Service.UpdateMapColliders(indexes);
+			Consts.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -182,7 +182,7 @@ public class ArealMode : MonoBehaviour
 
 	private void Areal_smoothing()
 	{
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			// Highlight.pos is center vertex
 			if (Highlight.pos.x != InitialPos.x || Highlight.pos.z != InitialPos.z)
@@ -195,16 +195,16 @@ public class ArealMode : MonoBehaviour
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
 				{
-					if (Service.IsWithinMapBounds(x, z))
+					if (Consts.IsWithinMapBounds(x, z))
 					{
-						int idx = Service.PosToIndex((int)x, (int)z);
-						Vector3 currentpos = Service.IndexToPos(idx);
-						float dist = Service.Distance(currentpos, Highlight.pos);
+						int idx = Consts.PosToIndex((int)x, (int)z);
+						Vector3 currentpos = Consts.IndexToPos(idx);
+						float dist = Consts.Distance(currentpos, Highlight.pos);
 						if (dist > RadiusSlider.value)
 							continue;
 						UndoBuffer.Add(currentpos);
 						Vector3 pos = Highlight.pos;
-						pos.y = Service.MAX_H;
+						pos.y = Consts.MAX_H;
 						float avg;
 						if (TargetSmoothValues.ContainsKey(idx))
 							avg = TargetSmoothValues[idx];
@@ -219,7 +219,7 @@ public class ArealMode : MonoBehaviour
 										continue;
 									pos.x = Highlight.pos.x + xx;
 									pos.z = Highlight.pos.z + zz;
-									if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Service.RAY_H, 1 << 8))
+									if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 8))
 										height_sum += hit.point.y;
 								}
 							}
@@ -227,24 +227,24 @@ public class ArealMode : MonoBehaviour
 							TargetSmoothValues.Add(idx, avg);
 						}
 						UndoBuffer.Add((int)x, (int)z);
-						Service.current_heights[idx] += (avg - Service.current_heights[idx]) * (IntensitySlider.value / 100f);
-						Service.former_heights[idx] = Service.current_heights[idx];
+						Consts.current_heights[idx] += (avg - Consts.current_heights[idx]) * (IntensitySlider.value / 100f);
+						Consts.former_heights[idx] = Consts.current_heights[idx];
 						indexes.Add(idx);
 					}
 				}
 			}
-			Service.UpdateMapColliders(indexes);
+			Consts.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
 	}
 	void Areal_amp(int ext_multiplier = 1)
 	{
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			// Highlight.pos is center vertex
 			List<int> indexes = new List<int>();
@@ -252,29 +252,29 @@ public class ArealMode : MonoBehaviour
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
 				{
-					if (Service.IsWithinMapBounds(x, z))
+					if (Consts.IsWithinMapBounds(x, z))
 					{
-						int idx = Service.PosToIndex((int)x, (int)z);
-						Vector3 currentpos = Service.IndexToPos(idx);
+						int idx = Consts.PosToIndex((int)x, (int)z);
+						Vector3 currentpos = Consts.IndexToPos(idx);
 						UndoBuffer.Add(currentpos);
-						Service.current_heights[idx] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
-						Service.former_heights[idx] = Service.current_heights[idx];
+						Consts.current_heights[idx] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
+						Consts.former_heights[idx] = Consts.current_heights[idx];
 						indexes.Add(idx);
 					}
 				}
 			}
-			Service.UpdateMapColliders(indexes);
+			Consts.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
 	}
 	void Areal_vertex_manipulation()
 	{
-		if (Service.IsWithinMapBounds(Highlight.pos))
+		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			// Highlight.pos is center vertex
 
@@ -284,28 +284,28 @@ public class ArealMode : MonoBehaviour
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
 				{
-					if (Service.IsWithinMapBounds(x, z))
+					if (Consts.IsWithinMapBounds(x, z))
 					{
-						int idx = Service.PosToIndex((int)x, (int)z);
-						Vector3 currentpos = Service.IndexToPos(idx);
-						float dist = Service.Distance(currentpos, Highlight.pos);
+						int idx = Consts.PosToIndex((int)x, (int)z);
+						Vector3 currentpos = Consts.IndexToPos(idx);
+						float dist = Consts.Distance(currentpos, Highlight.pos);
 						if (dist > MaxRadius)
 							continue;
 						UndoBuffer.Add(currentpos);
-						float Hdiff = Service.SliderValue2RealHeight(HeightSlider.value) - Service.current_heights[idx];
+						float Hdiff = Consts.SliderValue2RealHeight(HeightSlider.value) - Consts.current_heights[idx];
 
 						float fullpossibleheight = Hdiff * IntensitySlider.value / 100f;
-						Service.former_heights[idx] += fullpossibleheight * Service.Smoothstep(0, 1, (MaxRadius - dist) / MaxRadius);
-						Service.current_heights[idx] = Service.former_heights[idx];
+						Consts.former_heights[idx] += fullpossibleheight * Consts.Smoothstep(0, 1, (MaxRadius - dist) / MaxRadius);
+						Consts.current_heights[idx] = Consts.former_heights[idx];
 						indexes.Add(idx);
 					}
 				}
 			}
-			Service.UpdateMapColliders(indexes);
+			Consts.UpdateMapColliders(indexes);
 			//Search for any tiles 
-			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Service.MAX_H, Highlight.pos.z),
+			RaycastHit[] hits = Physics.BoxCastAll(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z),
 																																										new Vector3(RadiusSlider.value + 1, 1, RadiusSlider.value),
-																																											Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9);
+																																											Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 			List<GameObject> hitsList = hits.Select(hit => hit.transform.gameObject).ToList();
 			Build.UpdateTiles(hitsList);
 		}
@@ -315,9 +315,9 @@ public class ArealMode : MonoBehaviour
 		if (index == 0)
 		{
 			// Get initial position and set znacznik there
-			if (Service.IsWithinMapBounds(Highlight.pos))
+			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				index = (int)(Highlight.pos.x + 4 * Service.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				index = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
 				//Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
 				indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
 				indicator.transform.localScale = new Vector3(.25f, 1, .25f);
@@ -327,11 +327,11 @@ public class ArealMode : MonoBehaviour
 		else
 		{
 			// Time to get second position
-			if (Service.IsWithinMapBounds(Highlight.pos))
+			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				int index2 = (int)(Highlight.pos.x + 4 * Service.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
-				Vector3Int a = Vector3Int.RoundToInt(Service.IndexToPos(index));
-				Vector3Int b = Vector3Int.RoundToInt(Service.IndexToPos(index2));
+				int index2 = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				Vector3Int a = Vector3Int.RoundToInt(Consts.IndexToPos(index));
+				Vector3Int b = Vector3Int.RoundToInt(Consts.IndexToPos(index2));
 				Vector3Int LD = new Vector3Int(Mathf.Min(a.x, b.x), 0, Mathf.Min(a.z, b.z));
 				Vector3Int PG = new Vector3Int(Mathf.Max(a.x, b.x), 0, Mathf.Max(a.z, b.z));
 				{
@@ -342,36 +342,36 @@ public class ArealMode : MonoBehaviour
 					{
 						for (int x = LD.x - (int)RadiusSlider.value; x <= PG.x + RadiusSlider.value; x++)
 						{
-							if (Service.IsWithinMapBounds(x, z))
+							if (Consts.IsWithinMapBounds(x, z))
 							{
-								int idx = Service.PosToIndex(x, z);
-								Vector3 currentpos = Service.IndexToPos(idx);
+								int idx = Consts.PosToIndex(x, z);
+								Vector3 currentpos = Consts.IndexToPos(idx);
 								if (x >= LD.x && x <= PG.x && z >= LD.z && z <= PG.z)
 								{
-									Service.former_heights[idx] = Service.SliderValue2RealHeight(HeightSlider.value);
+									Consts.former_heights[idx] = Consts.SliderValue2RealHeight(HeightSlider.value);
 								}
 								else
 								{
 									Vector3 Closest = GetClosestPointOfEdgeOfSelection(currentpos, LD, PG);
-									float dist = Service.Distance(currentpos, Closest);
+									float dist = Consts.Distance(currentpos, Closest);
 									if (dist > RadiusSlider.value)
 										continue;
-									float Hdiff = Service.SliderValue2RealHeight(HeightSlider.value) - Service.current_heights[idx];
-									Service.former_heights[idx] += Hdiff * Service.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
+									float Hdiff = Consts.SliderValue2RealHeight(HeightSlider.value) - Consts.current_heights[idx];
+									Consts.former_heights[idx] += Hdiff * Consts.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
 								}
 								UndoBuffer.Add(currentpos);
-								Service.current_heights[idx] = Service.former_heights[idx];
+								Consts.current_heights[idx] = Consts.former_heights[idx];
 								indexes.Add(idx);
 							}
 						}
 					}
-					Service.UpdateMapColliders(indexes);
+					Consts.UpdateMapColliders(indexes);
 				}
 				Destroy(indicator);
 				index = 0;
-				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Service.MAX_H, 0.5f * (a.z + b.z)),
+				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Consts.MAX_H, 0.5f * (a.z + b.z)),
 						new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
-						Vector3.down, Quaternion.identity, Service.RAY_H, 1 << 9); //Search for tiles
+						Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9); //Search for tiles
 				Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
 				UndoBuffer.ApplyOperation();
 			}

@@ -119,7 +119,7 @@ public class CopyPaste : MonoBehaviour
 		{
 			if (mrk.name == "on")
 			{
-				Vector3 pom = Service.Round_X_Z_InVector(mrk.transform.position - ShapeMenu.BL);
+				Vector3 pom = Consts.Round_X_Z_InVector(mrk.transform.position - ShapeMenu.BL);
 				if (pom.x == 0 && pom.z == 0)
 					continue;
 				else
@@ -141,14 +141,14 @@ public class CopyPaste : MonoBehaviour
 
 		foreach (var mrk in CopyClipboard)
 		{
-			if (Service.IsWithinMapBounds(Highlight.pos + mrk))
+			if (Consts.IsWithinMapBounds(Highlight.pos + mrk))
 			{
 				Vector3 pos = Highlight.pos + mrk;
 				// height of preview depends on pasting mode
 				if (pastingMode == PastingMode.fixed_height)
 					pos.Set(pos.x, fixed_height + mrk.y, pos.z);
 
-				GameObject znacznik = Service.CreateMarking(seethrough, pos, false);
+				GameObject znacznik = Consts.CreateMarking(seethrough, pos, false);
 				Markings.Add(znacznik);
 			}
 		}
@@ -246,25 +246,25 @@ public class CopyPaste : MonoBehaviour
 
 		foreach (var mrk in CopyClipboard)
 		{
-			if (Service.IsWithinMapBounds(Highlight.pos + mrk))
+			if (Consts.IsWithinMapBounds(Highlight.pos + mrk))
 			{
 				Vector3 pom = Highlight.pos + mrk;
 				// Update arrays of vertex heights
-				indexes.Add(Service.PosToIndex(pom));
+				indexes.Add(Consts.PosToIndex(pom));
 				UndoBuffer.Add((int)pom.x, (int)pom.z);
 				if (pastingMode == PastingMode.fixed_height)
 				{
-					Service.current_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
-					Service.former_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
+					Consts.current_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
+					Consts.former_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
 				}
 				else if (pastingMode == PastingMode.addition)
 				{
-					Service.current_heights[indexes[indexes.Count - 1]] = pom.y;
-					Service.former_heights[indexes[indexes.Count - 1]] = pom.y;
+					Consts.current_heights[indexes[indexes.Count - 1]] = pom.y;
+					Consts.former_heights[indexes[indexes.Count - 1]] = pom.y;
 				}
 			}
 		}
-		Service.UpdateMapColliders(indexes);
+		Consts.UpdateMapColliders(indexes);
 		UndoBuffer.ApplyOperation();
 		Build.UpdateTiles(Build.Get_surrounding_tiles(Markings, true));
 	}
@@ -272,7 +272,7 @@ public class CopyPaste : MonoBehaviour
 	{
 		if(copystate == CopyState.copying)
 		{
-			fixed_height = Service.SliderValue2RealHeight(sliderval);
+			fixed_height = Consts.SliderValue2RealHeight(sliderval);
 			UpdatePreview();
 		}
 	}
