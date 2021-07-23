@@ -64,6 +64,16 @@ public static class Consts
 		w.WriteLine(path);
 		w.Close();
 	}
+	public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles, bool precision = false)
+	{
+		Vector3 dir = point - pivot; // get point direction relative to pivot
+		dir = Quaternion.Euler(angles) * dir; // rotate it
+		point = dir + pivot; // calculate rotated point
+		if (precision)
+			return point;
+		else
+			return new Vector3(Mathf.RoundToInt(point.x), point.y, Mathf.RoundToInt(point.z)); // return it
+	}
 	/// <summary>
 	/// Distance on 2D map between 3D points
 	/// </summary>
@@ -292,7 +302,7 @@ public static class Consts
 	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool recover_terrain = false)
 	{
 		rmc_pos.y = Consts.MAX_H;
-		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x * 0.6f, 1, 4 * tileDims.z * 0.6f),
+		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x, 1, 4 * tileDims.z),
 				Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 8);
 		List<GameObject> mcs = new List<GameObject>();
 		foreach (RaycastHit hit in hits)

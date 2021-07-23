@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class Build : MonoBehaviour
 {
-	private static readonly float spherecast_radius = 5e-6f;
+	private static readonly float spherecast_radius = 5e-5f;
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
@@ -535,7 +535,7 @@ public class Build : MonoBehaviour
 				{
 					if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 					{
-						Match_boundaries(x, -z, TLpos);
+						Match_boundaries(x, -z, TLpos, rmc_o);
 					}
 					else
 					{
@@ -662,7 +662,7 @@ public class Build : MonoBehaviour
 			{
 				if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 				{
-					Match_boundaries(x, -z, TLpos); // borders
+					Match_boundaries(x, -z, TLpos, current_rmc); // borders
 				}
 				else
 				{
@@ -910,28 +910,32 @@ public class Build : MonoBehaviour
 	/// <summary>
 	/// Matches up height of terrain to height of vertex of current RMC (layer = 10)
 	/// </summary>
-	public static void Match_boundaries(int x, int z, Vector3Int TLpos)
+	public static void Match_boundaries(int x, int z, Vector3Int TLpos, GameObject current_rmc)
 	{
-		if (x % 4 == 0 && z % 4 == 0)
-			return;
 		x += TLpos.x;
 		z = TLpos.z + z;
-		Vector3Int v = new Vector3Int(x, Consts.MAX_H, z);
+		Vector3 v = new Vector3(x, Consts.MAX_H, z);
 		if (!Consts.IsWithinMapBounds(x, z))
 			return;
 		int index = Consts.PosToIndex(x, z);
 		if (index == -1)
 			return;
 		if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 10))
-		//&& Mathf.Abs(hit.point.y - Consts.current_heights[index]) > 0.1)
 		{
 			Consts.current_heights[index] = hit.point.y;
 		}
 		else
-		{ // For Quaternion rotation (90deg) numerical accuracy
-			if (Physics.SphereCast(v, spherecast_radius, Vector3.down, out hit, Consts.RAY_H + 1, 1 << 10))
+		{ // one dim casts sometimes won't hit rotated and event not rotated objects
+			Vector3 dir = current_rmc.transform.position - v;
+			v.x = dir.x > 0 ? v.x + spherecast_radius : v.x - spherecast_radius;
+			v.z = dir.z > 0 ? v.z + spherecast_radius : v.z - spherecast_radius;
+			if (Physics.Raycast(v, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
 			{
 				Consts.current_heights[index] = hit.point.y;
+			}
+			else
+			{
+
 			}
 		}
 		return;

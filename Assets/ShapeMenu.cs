@@ -139,8 +139,8 @@ public class ShapeMenu : MonoBehaviour
 		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.VERTICES_EMERGED)
 		{
 			RaycastHit hit;
-			if (Physics.Raycast(V(Highlight.pos), Vector3.down, out hit, Consts.RAY_H, 1 << 9)
-				|| Physics.Raycast(V(Highlight.pos), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+			if (Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 9)
+				|| Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
 			{
 					if (!selected_tiles.Contains(hit.transform.gameObject))
 						selected_tiles.Add(hit.transform.gameObject);

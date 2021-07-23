@@ -197,18 +197,12 @@ public class CopyPaste : MonoBehaviour
 		SelectionRotationVal = SelectionRotationVal == 270 ? 0 : SelectionRotationVal + 90;
 		for (int i = 1; i < CopyClipboard.Count; i++)
 		{
-			CopyClipboard[i] = RotatePointAroundPivot(CopyClipboard[i], CopyClipboard[0], new Vector3(0, 90, 0));
+			CopyClipboard[i] = Consts.RotatePointAroundPivot(CopyClipboard[i], CopyClipboard[0], new Vector3(0, 90, 0));
 		}
 		UpdatePreview();
 	}
 
-	public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
-	{
-		Vector3 dir = point - pivot; // get point direction relative to pivot
-		dir = Quaternion.Euler(angles) * dir; // rotate it
-		point = dir + pivot; // calculate rotated point
-		return new Vector3(Mathf.RoundToInt(point.x), point.y, Mathf.RoundToInt(point.z)); // return it
-	}
+	
 	public void InverseHeights()
 	{
 		for (int i = 0; i < CopyClipboard.Count; i++)

@@ -211,6 +211,6 @@ public class Loader : MonoBehaviour
 		Consts.Isloading = false;
 		sw.Stop();
 		if (sw.Elapsed.Seconds != 0)
-			UnityEngine.Debug.Log("Loading time [elements/s]" + elements / sw.Elapsed.Seconds);
+			UnityEngine.Debug.Log("Loading time [elements/s]" + elements / Mathf.Round(sw.Elapsed.Seconds));
 	}
 }
