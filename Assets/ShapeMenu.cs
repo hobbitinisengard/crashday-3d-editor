@@ -513,7 +513,7 @@ public class ShapeMenu : MonoBehaviour
 			{ // equal heights along Z axis ||||
 				float steps = Mathf.Abs(BL.x - TR.x);
 				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
 				{
 					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
 					{
@@ -527,12 +527,21 @@ public class ShapeMenu : MonoBehaviour
 								if (Connect.isOn)
 								{
 									int ext_index = (int)Mathf.Abs(z - BL.z);
-									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
 									steps = Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-									slider_realheight = extremes[ext_index].P2.y;
-									BL.y = extremes[ext_index].P1.y;
+									if (P1.x == BL.x)
+									{
+									
+										heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+										slider_realheight = extremes[ext_index].P2.y;
+										BL.y = extremes[ext_index].P1.y;
+									}
+									else
+									{
+										heightdiff = extremes[ext_index].P1.y - extremes[ext_index].P2.y;
+										slider_realheight = extremes[ext_index].P1.y;
+										BL.y = extremes[ext_index].P2.y;
+									}
 								}
-
 								UndoBuffer.Add(Consts.IndexToPos(index));
 								float old_Y = Consts.current_heights[index]; // tylko do keepshape
 								float Y = old_Y;
@@ -576,7 +585,7 @@ public class ShapeMenu : MonoBehaviour
 				float steps = Mathf.Abs(BL.z - TR.z);
 				//Debug.Log("steps = " + steps);
 				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
 				{
 					for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
 					{
@@ -588,10 +597,20 @@ public class ShapeMenu : MonoBehaviour
 								if (Connect.isOn)
 								{
 									int ext_index = (int)Mathf.Abs(x - BL.x);
-									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
 									steps = Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
-									slider_realheight = extremes[ext_index].P2.y;
-									BL.y = extremes[ext_index].P1.y;
+									if (P1.z == BL.z)
+									{
+									
+										heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+										slider_realheight = extremes[ext_index].P2.y;
+										BL.y = extremes[ext_index].P1.y;
+									}
+									else
+									{
+										heightdiff = extremes[ext_index].P1.y - extremes[ext_index].P2.y;
+										slider_realheight = extremes[ext_index].P1.y;
+										BL.y = extremes[ext_index].P2.y;
+									}
 								}
 								index = Consts.PosToIndex(x, z);
 								UndoBuffer.Add(Consts.IndexToPos(index));
