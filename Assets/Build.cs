@@ -539,7 +539,7 @@ public class Build : MonoBehaviour
 					}
 					else
 					{
-						Hide_Inside(x, -z, TLpos);
+						//Hide_Inside(x, -z, TLpos);
 					}
 				}
 			}
@@ -621,9 +621,7 @@ public class Build : MonoBehaviour
 			return null;
 		}
 
-
 		AllowLMB = true;
-
 		// Instantiate RMC
 		current_rmc = GetRMC(name, cum_rotation, mirrored, rmcPlacement);
 		current_rmc.name = name;
@@ -666,7 +664,7 @@ public class Build : MonoBehaviour
 				}
 				else
 				{
-					Hide_Inside(x, -z, TLpos);
+					//Hide_Inside(x, -z, TLpos);
 				}
 			}
 		}
@@ -925,7 +923,7 @@ public class Build : MonoBehaviour
 			Consts.current_heights[index] = hit.point.y;
 		}
 		else
-		{ // one dim casts sometimes won't hit rotated and event not rotated objects
+		{ // one dim casts sometimes won't hit rotated and even not rotated objects
 			Vector3 dir = current_rmc.transform.position - v;
 			v.x = dir.x > 0 ? v.x + spherecast_radius : v.x - spherecast_radius;
 			v.z = dir.z > 0 ? v.z + spherecast_radius : v.z - spherecast_radius;

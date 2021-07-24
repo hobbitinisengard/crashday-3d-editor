@@ -60,6 +60,7 @@ public static class Consts
 	/// </summary>
 	public static void SaveTrackPath(string path)
 	{
+		Debug.Log("SaveTrack:" + path);
 		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
 		w.WriteLine(path);
 		w.Close();

@@ -182,10 +182,10 @@ public class MainMenu : MonoBehaviour
 		{
 			string path = sourcepath[0];
 			//Path can't have .trk suffix
-			path = path.Substring(0, path.Length - 4);
-			Consts.Trackname = path.Substring(path.LastIndexOf('\\') + 1);
+			Consts.TRACK = MapParser.ReadMap(path);
+			Consts.Trackname = path.Substring(path.LastIndexOf('\\') + 1, path.Length - path.LastIndexOf('\\') - 5);
 			Consts.SaveTrackPath(path);
-			Consts.TRACK = MapParser.ReadMap(path + ".trk");
+			
 
 			if (ResizeToggle.isOn)
 			{
@@ -230,12 +230,10 @@ public class MainMenu : MonoBehaviour
 	}
 	IEnumerator EnableLoadingScreen()
 	{
-		LoadingScreen_text_logo.text = "3D Editor " + Consts.VERSION;
-		string nazwa = Mathf.CeilToInt(8 * UnityEngine.Random.value).ToString();
+		LoadingScreen_text_logo.text = "3D editor " + Consts.VERSION;
+		string nazwa = Mathf.RoundToInt(7 * UnityEngine.Random.value).ToString();
 		loadScreen.SetActive(true);
 		loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
 		yield return null;
 	}
-
-	
 }

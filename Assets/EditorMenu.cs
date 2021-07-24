@@ -58,7 +58,7 @@ public class EditorMenu : MonoBehaviour
 	{
 		if (Input.GetKeyDown(KeyCode.B))
 			UpdateTileSelectedWithCursor();
-		if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
+		if(Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.S))
 		{
 			QuickSave();
 		}
@@ -219,11 +219,11 @@ public class EditorMenu : MonoBehaviour
 					if (dim.y == 2)
 						//Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z][x].Set(65471, rotacja, inwersja, height);
 						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - z, x, 1, rotation, mirror, height));
-					////Right top
+					//Right top
 					if (dim.x == 2)
 						//  Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z + 1 - dim.y][x + 1].Set(65472, rotacja, inwersja, height);
 						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - 1 - z, x + 1, 2, rotation, mirror, height));
-					////Right bottom
+					//Right bottom
 					if (dim.x == 2 && dim.y == 2)
 						//  Consts.TRACK.TrackTiles[Consts.TRACK.Height - 1 - z][x + 1].Set(65470, rotacja, inwersja, height);
 						QuartersToSave.Add(new QuarterData(Consts.TRACK.Height - z, x + 1, 0, rotation, mirror, height));
@@ -242,7 +242,7 @@ public class EditorMenu : MonoBehaviour
 				Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
 			}
 		}
-		MapParser.SaveMap(Consts.TRACK, path + "\\" + Consts.Trackname + ".trk");
+		MapParser.SaveMap(Consts.TRACK, path);
 		save.SetActive(false);
 		StartCoroutine(DisplayMessage());
 	}
