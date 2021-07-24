@@ -527,21 +527,12 @@ public class ShapeMenu : MonoBehaviour
 								if (Connect.isOn)
 								{
 									int ext_index = (int)Mathf.Abs(z - BL.z);
+									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
 									steps = Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-									if (P1.x == BL.x)
-									{
-									
-										heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-										slider_realheight = extremes[ext_index].P2.y;
-										BL.y = extremes[ext_index].P1.y;
-									}
-									else
-									{
-										heightdiff = extremes[ext_index].P1.y - extremes[ext_index].P2.y;
-										slider_realheight = extremes[ext_index].P1.y;
-										BL.y = extremes[ext_index].P2.y;
-									}
+									slider_realheight = extremes[ext_index].P2.y;
+									BL.y = extremes[ext_index].P1.y;
 								}
+
 								UndoBuffer.Add(Consts.IndexToPos(index));
 								float old_Y = Consts.current_heights[index]; // tylko do keepshape
 								float Y = old_Y;
@@ -561,7 +552,7 @@ public class ShapeMenu : MonoBehaviour
 									}
 								}
 								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
@@ -597,20 +588,10 @@ public class ShapeMenu : MonoBehaviour
 								if (Connect.isOn)
 								{
 									int ext_index = (int)Mathf.Abs(x - BL.x);
+									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
 									steps = Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
-									if (P1.z == BL.z)
-									{
-									
-										heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-										slider_realheight = extremes[ext_index].P2.y;
-										BL.y = extremes[ext_index].P1.y;
-									}
-									else
-									{
-										heightdiff = extremes[ext_index].P1.y - extremes[ext_index].P2.y;
-										slider_realheight = extremes[ext_index].P1.y;
-										BL.y = extremes[ext_index].P2.y;
-									}
+									slider_realheight = extremes[ext_index].P2.y;
+									BL.y = extremes[ext_index].P1.y;
 								}
 								index = Consts.PosToIndex(x, z);
 								UndoBuffer.Add(Consts.IndexToPos(index));
@@ -634,7 +615,7 @@ public class ShapeMenu : MonoBehaviour
 									}
 								}
 								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
