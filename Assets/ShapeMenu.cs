@@ -552,7 +552,7 @@ public class ShapeMenu : MonoBehaviour
 									}
 								}
 								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
@@ -615,7 +615,7 @@ public class ShapeMenu : MonoBehaviour
 									}
 								}
 								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * slider_realheight / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
 								else if (LastSelected == FormButton.jumpend)
 									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
 								else if (LastSelected == FormButton.flatter)
