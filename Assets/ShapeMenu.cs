@@ -14,7 +14,6 @@ public class ShapeMenu : MonoBehaviour
 	/// child - formMenu with all the below listed buttons
 	/// </summary>
 	public GameObject FormMenu;
-
 	public Material transp;
 	public Material red;
 	public Material white;
@@ -47,6 +46,7 @@ public class ShapeMenu : MonoBehaviour
 	public static Vector3 BL;
 	private Vector3 mousePosition1;
 	private Vector3Int TR;
+	private Vector3Int TRcut;
 
 	void Start()
 	{
@@ -81,7 +81,6 @@ public class ShapeMenu : MonoBehaviour
 			Connect.isOn = !Connect.isOn;
 		else if (Input.GetKeyDown(KeyCode.F3))
 			SelectTR.isOn = !SelectTR.isOn;
-		
 	}
 	public void OnDisable()
 	{
@@ -222,7 +221,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11))
 				{
-					TR = Vector3Int.RoundToInt(Highlight.pos);
+					TRcut = Vector3Int.RoundToInt(Highlight.pos);
 					StateSwitch(SelectionState.POINT_SELECTED);
 				}
 			}
@@ -271,6 +270,164 @@ public class ShapeMenu : MonoBehaviour
 
 	}
 
+	/// <summary>
+	/// Handles placing more complicated shapes.
+	/// </summary>
+	void ApplyFormingFunction()
+	{
+		if (LastSelected == FormButton.amplify)
+		{
+			Amplify();
+			return;
+		}
+		if (LastSelected == FormButton.infinity)
+		{
+			SetToInfinity();
+			return;
+		}
+		//Flatter check
+		if (LastSelected == FormButton.flatter)
+		{
+			if (selected_tiles.Count != 1 || !IsFlatter(selected_tiles[0].name))
+				return;
+		}
+
+		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float heightdiff = slider_realheight - BL.y;
+
+		if (heightdiff == 0)
+			return;
+
+		if (LastSelected == FormButton.to_slider)
+		{
+			FormMenu_toSlider();
+			return;
+		}
+
+		var surroundings = Build.Get_surrounding_tiles(markings);
+
+		if (selectionState == SelectionState.POINT_SELECTED)
+		{
+			Set_rotated_BL_and_TR();
+			List<DuVec3> extremes = new List<DuVec3>();
+			if (Connect.isOn)
+				extremes = GetOpposingVerticesForConnect(BL, TR);
+			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
+			{ // equal heights along Z axis ||||
+				int steps = (int)Mathf.Abs(BL.x - TR.x);
+				int step = 0;
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
+				{
+					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
+					{
+						for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
+						{
+							SetMarkingPos(x, z, step, steps, ref extremes);
+							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
+								goto endloop;
+						}
+						step += 1;
+					}
+				}
+			}
+			else
+			{ // equal heights along X axis _-_-
+				int steps = (int)Mathf.Abs(BL.z - TR.z);
+				//Debug.Log("steps = " + steps);
+				int step = 0;
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
+				{
+					for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
+					{
+						for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
+						{
+							SetMarkingPos(x, z, step, steps, ref extremes);
+							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
+								goto endloop;
+						}
+						step += 1;
+					}
+				}
+			}
+
+			endloop:
+			Consts.UpdateMapColliders(markings);
+			//if (current != null)
+			//  Build.UpdateTiles(new List<GameObject> { current });
+			Build.UpdateTiles(surroundings);
+			surroundings.Clear();
+			UndoBuffer.ApplyOperation();
+		}
+
+		// LOCAL FUNCTIONS
+		void Go2High(float low, float high, ref int x)
+		{
+			x = (low < high) ? x + 1 : x - 1;
+		}
+		/// <summary>
+		/// helper function ensuring that:
+		/// x goes from bottom left pos (considering rotation of selection; see: bottom-left vertex) to (upper)-right pos
+		/// </summary>
+		bool BL_aims4_TR(float ld, float pg, int x)
+		{
+			return (ld < pg) ? x <= pg : x >= pg;
+		}
+		/// <summary>
+		/// Returns List of vertices contains their global position (x or z, depending on bottom-left vertex) and height  
+		/// </summary>
+		List<DuVec3> GetOpposingVerticesForConnect(Vector3 LD, Vector3Int PG)
+		{
+			List<DuVec3> Extremes = new List<DuVec3>();
+			if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
+			{ // equal heights along Z axis ||||
+				for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
+				{
+					Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
+					Vector3 P2 = new Vector3(float.MinValue, 0, 0);
+					foreach (var mrk in markings)
+					{
+						if (mrk.name == "on" && mrk.transform.position.z == z)
+						{
+							if (mrk.transform.position.x < P1.x)
+								P1 = mrk.transform.position;
+							if (mrk.transform.position.x > P2.x)
+								P2 = mrk.transform.position;
+						}
+					}
+					if (P1.x == LD.x)
+						Extremes.Add(new DuVec3(P1, P2));
+					else
+						Extremes.Add(new DuVec3(P2, P1));
+				}
+			}
+			else
+			{
+				//equal heights along X axis _---
+				//string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
+				for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
+				{
+					Vector3 P1 = new Vector3(0, 0, float.MaxValue);
+					Vector3 P2 = new Vector3(0, 0, float.MinValue);
+					foreach (var mrk in markings)
+					{
+						if (mrk.name == "on" && mrk.transform.position.x == x)
+						{
+							if (mrk.transform.position.z < P1.z)
+								P1 = mrk.transform.position;
+							if (mrk.transform.position.z > P2.z)
+								P2 = mrk.transform.position;
+						}
+					}
+					if (P1.z == LD.z)
+						Extremes.Add(new DuVec3(P1, P2));
+					else
+						Extremes.Add(new DuVec3(P2, P1));
+				}
+			}
+			return Extremes;
+		}
+		
+	}
 	void Amplify()
 	{
 		var surroundings = Build.Get_surrounding_tiles(markings);
@@ -326,329 +483,144 @@ public class ShapeMenu : MonoBehaviour
 		UndoBuffer.ApplyOperation();
 		Consts.UpdateMapColliders(indexes);
 	}
-
-	void Go2High(float low, float high, ref int x)
+	void Set_rotated_BL_and_TR()
 	{
-		x = (low < high) ? x + 1 : x - 1;
-	}
-	/// <summary>
-	/// helper function ensuring that:
-	/// x goes from bottom left pos (considering rotation of selection; see: bottom-left vertex) to (upper)-right pos
-	/// </summary>
-	bool BL_aims4_TR(float ld, float pg, int x)
-	{
-		return (ld < pg) ? x <= pg : x >= pg;
-	}
-
-	/// <summary>
-	/// Returns List of vertices contains their global position (x or z, depending on bottom-left vertex) and height  
-	/// </summary>
-	public List<DuVec3> GetOpposingVerticesForConnect(Vector3 LD, Vector3Int PG)
-	{
-		List<DuVec3> Extremes = new List<DuVec3>();
-		if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
-		{ // equal heights along Z axis ||||
-			for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
+		//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
+		int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
+		foreach (GameObject znacznik in markings)
+		{
+			if (znacznik.name == "on")
 			{
-				Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
-				Vector3 P2 = new Vector3(float.MinValue, 0, 0);
-				foreach (var mrk in markings)
+				if (lowX > znacznik.transform.position.x)
+					lowX = Mathf.RoundToInt(znacznik.transform.position.x);
+				if (hiX < znacznik.transform.position.x)
+					hiX = Mathf.RoundToInt(znacznik.transform.position.x);
+
+				if (lowZ > znacznik.transform.position.z)
+					lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
+				if (hiZ < znacznik.transform.position.z)
+					hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
+			}
+		}
+		// for vertices on tiles
+		if (selected_tiles.Count > 0)
+		{
+			if (BL.x < hiX)
+			{
+				if (BL.z < hiZ)
 				{
-					if (mrk.name == "on" && mrk.transform.position.z == z)
-					{
-						if (mrk.transform.position.x < P1.x)
-							P1 = mrk.transform.position;
-						if (mrk.transform.position.x > P2.x)
-							P2 = mrk.transform.position;
-					}
+					TR.Set(hiX, 0, hiZ);
 				}
-				if (P1.x == LD.x)
-					Extremes.Add(new DuVec3(P1, P2));
 				else
-					Extremes.Add(new DuVec3(P2, P1));
+					TR.Set(hiX, 0, lowZ);
+			}
+			else
+			{
+				if (BL.z < hiZ)
+				{
+					TR.Set(lowX, 0, hiZ);
+				}
+				else
+					TR.Set(lowX, 0, lowZ);
 			}
 		}
 		else
 		{
-			//equal heights along X axis _---
-			//string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
-			for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
+			// for vertices of grass
+			Vector3 center = new Vector3(BL.x, BL.y, BL.z);
+			bool D = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
+			bool L = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
+			if (D && Dhit.transform.name != "on")
+				D = false;
+			if (L && Lhit.transform.name != "on")
+				L = false;
+			if (D)
 			{
-				Vector3 P1 = new Vector3(0, 0, float.MaxValue);
-				Vector3 P2 = new Vector3(0, 0, float.MinValue);
-				foreach (var mrk in markings)
+				if (L)
 				{
-					if (mrk.name == "on" && mrk.transform.position.x == x)
-					{
-						if (mrk.transform.position.z < P1.z)
-							P1 = mrk.transform.position;
-						if (mrk.transform.position.z > P2.z)
-							P2 = mrk.transform.position;
-					}
-				}
-				if (P1.z == LD.z)
-					Extremes.Add(new DuVec3(P1, P2));
-				else
-					Extremes.Add(new DuVec3(P2, P1));
-			}
-		}
-		return Extremes;
-	}
-	/// <summary>
-	/// Handles placing more complicated shapes.
-	/// </summary>
-	void ApplyFormingFunction()
-	{
-		RaycastHit hit;
-		if (LastSelected == FormButton.to_slider)
-		{
-			FormMenu_toSlider();
-			return;
-		}
-		if (LastSelected == FormButton.amplify)
-		{
-			Amplify();
-			return;
-		}
-		if (LastSelected == FormButton.infinity)
-		{
-			SetToInfinity();
-			return;
-		}
-		//Flatter check
-		if (LastSelected == FormButton.flatter)
-		{
-			if (selected_tiles.Count != 1 || !IsFlatter(selected_tiles[0].name))
-				return;
-		}
-		var surroundings = Build.Get_surrounding_tiles(markings);
-
-		if (selectionState == SelectionState.POINT_SELECTED)
-		{
-			if (!SelectTR.isOn)
-			{
-				//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
-				int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
-				foreach (GameObject znacznik in markings)
-				{
-					if (znacznik.name == "on")
-					{
-						if (lowX > znacznik.transform.position.x)
-							lowX = Mathf.RoundToInt(znacznik.transform.position.x);
-						if (hiX < znacznik.transform.position.x)
-							hiX = Mathf.RoundToInt(znacznik.transform.position.x);
-
-						if (lowZ > znacznik.transform.position.z)
-							lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
-						if (hiZ < znacznik.transform.position.z)
-							hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
-					}
-				}
-				// for vertices on tiles
-				if (selected_tiles.Count > 0)
-				{
-					if (BL.x < hiX)
-					{
-						if (BL.z < hiZ)
-						{
-							TR.Set(hiX, 0, hiZ);
-						}
-						else
-							TR.Set(hiX, 0, lowZ);
-					}
-					else
-					{
-						if (BL.z < hiZ)
-						{
-							TR.Set(lowX, 0, hiZ);
-						}
-						else
-							TR.Set(lowX, 0, lowZ);
-					}
+					BL.Set(hiX, BL.y, hiZ);
+					TR.Set(lowX, 0, lowZ);
 				}
 				else
 				{
-					// for vertices of grass
-					Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-					bool D = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-					bool L = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
-					if (D && Dhit.transform.name != "on")
-						D = false;
-					if (L && Lhit.transform.name != "on")
-						L = false;
-					if (D)
-					{
-						if (L)
-						{
-							BL.Set(hiX, BL.y, hiZ);
-							TR.Set(lowX, 0, lowZ);
-						}
-						else
-						{
-							BL.Set(lowX, BL.y, hiZ);
-							TR.Set(hiX, 0, lowZ);
-						}
-					}
-					else
-					{
-						if (L)
-						{
-							TR.Set(lowX, 0, hiZ);
-							BL.Set(hiX, BL.y, lowZ);
-						}
-						else
-						{
-							TR.Set(hiX, 0, hiZ);
-							BL.Set(lowX, BL.y, lowZ);
-						}
-					}
-				}
-			}
-			List<DuVec3> extremes = new List<DuVec3>();
-			float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-			float heightdiff = slider_realheight - BL.y;
-			if (Connect.isOn)
-				extremes = GetOpposingVerticesForConnect(BL, TR);
-			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
-			{ // equal heights along Z axis ||||
-				float steps = Mathf.Abs(BL.x - TR.x);
-				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
-				{
-					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
-					{
-						for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
-						{
-							bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out hit, Consts.RAY_H, 1 << 11);
-							if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x,z))
-							{
-								index = Consts.PosToIndex(x, z);
-								// check for elements 
-								if (Connect.isOn)
-								{
-									int ext_index = (int)Mathf.Abs(z - BL.z);
-									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-									steps = Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-									slider_realheight = extremes[ext_index].P2.y;
-									BL.y = extremes[ext_index].P1.y;
-								}
-
-								UndoBuffer.Add(Consts.IndexToPos(index));
-								float old_Y = Consts.current_heights[index]; // tylko do keepshape
-								float Y = old_Y;
-								if (LastSelected == FormButton.linear)
-									Y = BL.y + step / steps * heightdiff;
-								else if (LastSelected == FormButton.integral)
-								{
-									if (2 * step <= steps)
-									{
-										Y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
-									}
-									else
-									{
-										Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
-									}
-								}
-								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
-								else if (LastSelected == FormButton.jumpend)
-									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
-								else if (LastSelected == FormButton.flatter)
-									Y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
-								if (KeepShape.isOn)
-									Y += old_Y - BL.y;
-								if (float.IsNaN(Y))
-									return;
-								Consts.former_heights[index] = Y;
-								Consts.current_heights[index] = Consts.former_heights[index];
-								GameObject znacznik = hit.transform.gameObject;
-								znacznik.transform.position = new Vector3(znacznik.transform.position.x, Y, znacznik.transform.position.z);
-							}
-						}
-						step += 1;
-					}
+					BL.Set(lowX, BL.y, hiZ);
+					TR.Set(hiX, 0, lowZ);
 				}
 			}
 			else
-			{ // equal heights along X axis _-_-
-				float steps = Mathf.Abs(BL.z - TR.z);
-				//Debug.Log("steps = " + steps);
-				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
+			{
+				if (L)
 				{
-					for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
-					{
-						for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
-						{
-							bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out hit, Consts.RAY_H, 1 << 11);
-							if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
-							{
-								if (Connect.isOn)
-								{
-									int ext_index = (int)Mathf.Abs(x - BL.x);
-									heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-									steps = Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
-									slider_realheight = extremes[ext_index].P2.y;
-									BL.y = extremes[ext_index].P1.y;
-								}
-								index = Consts.PosToIndex(x, z);
-								UndoBuffer.Add(Consts.IndexToPos(index));
-								//Debug.DrawRay(new Vector3(x, Terenowanie.Consts.maxHeight+1, z), Vector3.down, Color.blue, 40);
-
-								float old_Y = Consts.current_heights[index]; // tylko do keepshape
-								float Y = old_Y;
-								if (LastSelected == FormButton.linear)
-									Y = BL.y + step / steps * heightdiff;
-								else if (LastSelected == FormButton.integral)
-								{
-									if (2 * step <= steps)
-									{
-										Y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
-									}
-									else
-									{
-										Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-										+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
-									}
-								}
-								else if (LastSelected == FormButton.jump)
-									Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
-								else if (LastSelected == FormButton.jumpend)
-									Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//vertpos.y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
-								else if (LastSelected == FormButton.flatter)
-									Y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
-								if (KeepShape.isOn)
-									Y += old_Y - BL.y;
-								if (float.IsNaN(Y))
-									return;
-								Consts.former_heights[index] = Y;
-								Consts.current_heights[index] = Consts.former_heights[index];
-								GameObject znacznik = hit.transform.gameObject;
-								znacznik.transform.position = new Vector3(znacznik.transform.position.x, Y, znacznik.transform.position.z);
-							}
-						}
-						step += 1;
-					}
+					TR.Set(lowX, 0, hiZ);
+					BL.Set(hiX, BL.y, lowZ);
+				}
+				else
+				{
+					TR.Set(hiX, 0, hiZ);
+					BL.Set(lowX, BL.y, lowZ);
 				}
 			}
-			Consts.UpdateMapColliders(markings);
-			//if (current != null)
-			//  Build.UpdateTiles(new List<GameObject> { current });
-			Build.UpdateTiles(surroundings);
-			surroundings.Clear();
-			UndoBuffer.ApplyOperation();
 		}
 	}
 
+	void SetMarkingPos(int x, int z, int step, int steps, ref List<DuVec3> extremes)
+	{
+		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float heightdiff = slider_realheight - BL.y;
+
+		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
+		if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
+		{
+
+			index = Consts.PosToIndex(x, z);
+			// check for elements 
+			if (Connect.isOn)
+			{
+				int ext_index = (int)Mathf.Abs(z - BL.z);
+				heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+				steps = (int)Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
+				slider_realheight = extremes[ext_index].P2.y;
+				BL.y = extremes[ext_index].P1.y;
+			}
+
+			UndoBuffer.Add(Consts.IndexToPos(index));
+			float old_Y = Consts.current_heights[index]; // tylko do keepshape
+			float Y = old_Y;
+			if (LastSelected == FormButton.linear)
+				Y = BL.y + step / steps * heightdiff;
+			else if (LastSelected == FormButton.integral)
+			{
+				if (2 * step <= steps)
+				{
+					Y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+					+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+				}
+				else
+				{
+					Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
+					+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+				}
+			}
+			else if (LastSelected == FormButton.jump)
+				Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
+			else if (LastSelected == FormButton.jumpend)
+				Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
+			else if (LastSelected == FormButton.flatter)
+				Y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
+			if (KeepShape.isOn)
+				Y += old_Y - BL.y;
+			if (float.IsNaN(Y))
+				return;
+			Consts.former_heights[index] = Y;
+			Consts.current_heights[index] = Consts.former_heights[index];
+			GameObject znacznik = hit.transform.gameObject;
+			znacznik.transform.position = new Vector3(znacznik.transform.position.x, Y, znacznik.transform.position.z);
+		}
+	}
 	private bool IsFlatter(string Name)
 	{
-		return TileManager.TileListInfo[Name].FlatterPoints.Length != 0 ? true : false;
+		return TileManager.TileListInfo[Name].FlatterPoints.Length != 0;
 	}
-
-
 	public bool IsMarkingVisible(GameObject mrk)
 	{
 		Ray r = Camera.main.ScreenPointToRay(Camera.main.WorldToScreenPoint(mrk.transform.position));
@@ -714,8 +686,6 @@ public class ShapeMenu : MonoBehaviour
 			}
 		}
 	}
-
-	
 
 	void OnGUI()
 	{

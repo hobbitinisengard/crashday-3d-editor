@@ -189,7 +189,6 @@ public class Loader : MonoBehaviour
 	void PlaceLoadedTilesOnMap()
 	{
 		Stopwatch sw = Stopwatch.StartNew();
-		int elements = 0;
 		List<GameObject> to_update = new List<GameObject>();
 		for (int z = 0; z < Consts.TRACK.Height; z++)
 		{
@@ -198,7 +197,7 @@ public class Loader : MonoBehaviour
 				if (Consts.TilePlacementArray[z, x].Name == null)
 					continue;
 				Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z + 1));
-				elements++;
+
 				to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos,
 						Consts.TilePlacementArray[z, x].Name, Consts.TilePlacementArray[z, x].Rotation,
 						Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
@@ -211,6 +210,6 @@ public class Loader : MonoBehaviour
 		Consts.Isloading = false;
 		sw.Stop();
 		if (sw.Elapsed.Seconds != 0)
-			UnityEngine.Debug.Log("Loading time [elements/s]" + elements / Mathf.Round(sw.Elapsed.Seconds));
+			UnityEngine.Debug.Log("Loading time [elements/s]" + to_update.Count / Mathf.Round(sw.Elapsed.Seconds));
 	}
 }
