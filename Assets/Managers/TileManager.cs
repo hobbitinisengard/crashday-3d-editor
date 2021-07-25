@@ -47,6 +47,7 @@ public static class TileManager
 			return;
 
 		string CdWorkshopPath = NavigateDirUp(IO.GetCrashdayPath(), 2) + "\\workshop\\content\\508980\\";
+
 		//Unpack custom tilesets
 		foreach (string Id in WorkshopModIds)
 			PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + Id).First(), Id);
