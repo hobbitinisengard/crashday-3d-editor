@@ -513,7 +513,7 @@ public class ShapeMenu : MonoBehaviour
 			{ // equal heights along Z axis ||||
 				float steps = Mathf.Abs(BL.x - TR.x);
 				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
 				{
 					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
 					{
@@ -576,7 +576,7 @@ public class ShapeMenu : MonoBehaviour
 				float steps = Mathf.Abs(BL.z - TR.z);
 				//Debug.Log("steps = " + steps);
 				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
+				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter))
 				{
 					for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
 					{
