@@ -104,10 +104,6 @@ public class ArealMode : MonoBehaviour
 							Areal_amp(); // single-action
 						else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
 							Areal_amp(); //auto-fire
-						else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
-							Areal_amp(-1); // single-action
-						else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
-							Areal_amp(-1); //auto-fire
 					}
 				}
 			}
@@ -242,7 +238,7 @@ public class ArealMode : MonoBehaviour
 			Build.UpdateTiles(hitsList);
 		}
 	}
-	void Areal_amp(int ext_multiplier = 1)
+	void Areal_amp()
 	{
 		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
@@ -256,9 +252,10 @@ public class ArealMode : MonoBehaviour
 					{
 						int idx = Consts.PosToIndex((int)x, (int)z);
 						Vector3 currentpos = Consts.IndexToPos(idx);
+						float heightdiff = Consts.current_heights[index] - Consts.SliderValue2RealHeight(HeightSlider.value);
 						UndoBuffer.Add(currentpos);
-						Consts.current_heights[idx] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
-						Consts.former_heights[idx] = Consts.current_heights[idx];
+						Consts.former_heights[idx] += heightdiff * IntensitySlider.value/100f;
+						Consts.current_heights[idx] = Consts.former_heights[idx];
 						indexes.Add(idx);
 					}
 				}

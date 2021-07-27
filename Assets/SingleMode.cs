@@ -113,15 +113,11 @@ public class SingleMode : MonoBehaviour
 						Single_amp(); // single-action
 					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
 						Single_amp(); //auto-fire
-					else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
-						Single_amp(-1); // single-action
-					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
-						Single_amp(-1); //auto-fire
 				}
 			}
 		}
 	}
-	void Single_amp(int ext_multiplier = 1)
+	void Single_amp()
 	{
 		if (Highlight.over && Consts.IsWithinMapBounds(Highlight.pos))
 		{
@@ -132,12 +128,13 @@ public class SingleMode : MonoBehaviour
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
-
+			float heightdiff = Consts.current_heights[index]- Consts.SliderValue2RealHeight(HeightSlider.value);
+					
 			if (to_update.Count > 0)
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
-					Consts.current_heights[index] *= 1 + ext_multiplier * IntensitySlider.value/100f;
+					Consts.current_heights[index] += heightdiff * IntensitySlider.value/100f;
 					//Helper.current_heights[index] = Helper.former_heights[index];
 					Consts.UpdateMapColliders(new List<int> { index });
 					Build.UpdateTiles(to_update);
@@ -145,7 +142,7 @@ public class SingleMode : MonoBehaviour
 			}
 			else
 			{
-				Consts.former_heights[index] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
+				Consts.former_heights[index] += heightdiff * IntensitySlider.value/100f;
 				Consts.current_heights[index] = Consts.former_heights[index];
 				Consts.UpdateMapColliders(new List<int> { index });
 			}
