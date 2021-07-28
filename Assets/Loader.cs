@@ -19,9 +19,16 @@ public class Loader : MonoBehaviour
 	/// </summary>
 	public Text nazwa_toru;
 	public GameObject editorPanel;
+	void InitializeCone()
+	{
+		Consts.Cone = GameObject.Find("cone");
+		Consts.Cone = Consts.Cone.transform.GetChild(0).gameObject;
+		Consts.Cone.layer = 13;
+	}
 
 	void Awake()
 	{
+		InitializeCone();
 		Consts.MissingTilesNames.Clear();
 		if (Consts.Isloading)
 		{

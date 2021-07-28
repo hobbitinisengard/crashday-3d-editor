@@ -242,7 +242,7 @@ public class EditorMenu : MonoBehaviour
 				Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
 			}
 		}
-		MapParser.SaveMap(Consts.TRACK, path);
+		MapParser.SaveMap(Consts.TRACK, path + Consts.Trackname + ".trk");
 		save.SetActive(false);
 		StartCoroutine(DisplayMessage());
 	}

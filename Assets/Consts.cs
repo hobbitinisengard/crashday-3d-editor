@@ -13,6 +13,7 @@ public static class Consts
 	public readonly static int MAX_H = 20000;
 	public readonly static int MIN_H = -MAX_H;
 	public readonly static int RAY_H = MAX_H - MIN_H + 5;
+	public static GameObject Cone;
 	public static int GravityValue = 0;
 	/// <summary>
 	/// visible vertices in second form mode
@@ -60,7 +61,6 @@ public static class Consts
 	/// </summary>
 	public static void SaveTrackPath(string path)
 	{
-		Debug.Log("SaveTrack:" + path);
 		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
 		w.WriteLine(path);
 		w.Close();

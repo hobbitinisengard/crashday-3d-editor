@@ -7,14 +7,17 @@ using UnityEngine.UI;
 
 public class Build : MonoBehaviour
 {
-	private static readonly float spherecast_radius = 5e-5f;
+	/// <summary>
+	/// =tan(0.00001deg)
+	/// </summary>
+	private static readonly float NUMERICAL_CONST_FIX = Mathf.Tan(Mathf.Deg2Rad * 0.01f);
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
 	public Text CURRENTELEMENT; //name of currently selected element on top of the building menu
 	public Text CURRENTROTATION;
 	public Text CURRENTMIRROR;
-	
+	private Rigidbody cone;
 	public Text BuildButtonText; // text 'build' in build button
 	public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
 	public GameObject savePanel; // "save track scheme" menu
@@ -736,7 +739,7 @@ public class Build : MonoBehaviour
 			//nothing
 		}
 		else if (x == '1' && z == '2')
-		{ 
+		{
 			if (is_mirrored)
 			{
 				rotate_q = Quaternion.Euler(new Vector3(0, -rotation, 0));
@@ -773,7 +776,7 @@ public class Build : MonoBehaviour
 				// switch H1 with H2
 				if (RMCname.Contains("H1"))
 					RMCname = RMCname.Replace("H2", "Hx").Replace("H1", "H2").Replace("Hx", "H1");
-				else if(RMCname.Contains("H2"))
+				else if (RMCname.Contains("H2"))
 					RMCname = RMCname.Replace("H2", "H1");
 				if (rotation == 90)
 				{
@@ -853,13 +856,13 @@ public class Build : MonoBehaviour
 			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
-			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), spherecast_radius, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
+			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), 5e-3f, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
 			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else
 			{ // when tile vertex is out of its dimensions (eg crane), cast on foreign rmc or map
-				if (Physics.SphereCast(new Vector3(v.x, Consts.MIN_H - 1, v.z), spherecast_radius, Vector3.up, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Consts.MIN_H - 1, v.z), 5e-3f, Vector3.up, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
@@ -910,33 +913,50 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void Match_boundaries(int x, int z, Vector3Int TLpos, GameObject current_rmc)
 	{
-		x += TLpos.x;
-		z = TLpos.z + z;
-		Vector3 v = new Vector3(x, Consts.MAX_H, z);
-		if (!Consts.IsWithinMapBounds(x, z))
+		Vector3 global_pos = new Vector3(x + TLpos.x, Consts.MAX_H, z + TLpos.z);
+		if (x % 4 == 0 && z % 4 == 0)
 			return;
-		int index = Consts.PosToIndex(x, z);
-		if (index == -1)
+
+		if (!Consts.IsWithinMapBounds(global_pos))
 			return;
-		if (Physics.Raycast(v, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 10))
+		int index = Consts.PosToIndex(global_pos);
+
+		if (Physics.Raycast(global_pos, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 10))
 		{
 			Consts.current_heights[index] = hit.point.y;
 		}
 		else
-		{ // one dim casts sometimes won't hit rotated and even not rotated objects
-			Vector3 dir = current_rmc.transform.position - v;
-			v.x = dir.x > 0 ? v.x + spherecast_radius : v.x - spherecast_radius;
-			v.z = dir.z > 0 ? v.z + spherecast_radius : v.z - spherecast_radius;
-			if (Physics.Raycast(v, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
+		{
+			if (Conecast(global_pos, Vector3.down, out hit, 10))
 			{
 				Consts.current_heights[index] = hit.point.y;
 			}
 			else
 			{
-
+				Debug.LogError("");
 			}
 		}
-		return;
+	}
+	public static bool Conecast(Vector3 global_pos, Vector3 Direction, out RaycastHit hit, int layer)
+	{
+		Consts.Cone.transform.position = global_pos;
+		var hits = Consts.Cone.GetComponent<Rigidbody>().SweepTestAll(Direction, Mathf.Infinity);
+		if (hits.Length == 0)
+		{
+			hit = default;
+			return false;
+		}
+		try
+		{
+			hit = hits.Where(h => h.transform.gameObject.layer == layer).First();
+			
+		}
+		catch
+		{
+			hit = default;
+			return false;
+		}
+		return true;
 	}
 	/// <summary>
 	/// Matches vertices of RMCs one to another. rmc_o layer = 10
@@ -947,8 +967,10 @@ public class Build : MonoBehaviour
 		for (int i = 0; i < verts.Length; i++)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
+			if (v.x % 4 == 0 && v.z % 4 == 0)
+				continue;
 			v.y = Consts.MAX_H;
-			if (Physics.SphereCast(v, spherecast_radius, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9))
+			if (Conecast(v,Vector3.down, out RaycastHit hit, 9))
 			{
 				verts[i].y = hit.point.y;
 				Consts.current_heights[Consts.PosToIndex(v)] = hit.point.y;
