@@ -233,28 +233,25 @@ public class CopyPaste : MonoBehaviour
 
 		UndoBuffer.Add(CopyClipboard);
 		//Indexes of vertices for UpdateMapColliders()
-		List<int> indexes = new List<int>();
-
-		// List of tiles lying onto vertices that are now being pasted
-		List<GameObject> to_update = new List<GameObject>();
-
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (var mrk in CopyClipboard)
 		{
 			if (Consts.IsWithinMapBounds(Highlight.pos + mrk))
 			{
 				Vector3 pom = Highlight.pos + mrk;
 				// Update arrays of vertex heights
-				indexes.Add(Consts.PosToIndex(pom));
+				int newindex = Consts.PosToIndex(pom);
+				indexes.Add(newindex);
 				UndoBuffer.Add((int)pom.x, (int)pom.z);
 				if (pastingMode == PastingMode.fixed_height)
 				{
-					Consts.current_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
-					Consts.former_heights[indexes[indexes.Count - 1]] = fixed_height + mrk.y;
+					Consts.current_heights[newindex] = fixed_height + mrk.y;
+					Consts.former_heights[newindex] = fixed_height + mrk.y;
 				}
 				else if (pastingMode == PastingMode.addition)
 				{
-					Consts.current_heights[indexes[indexes.Count - 1]] = pom.y;
-					Consts.former_heights[indexes[indexes.Count - 1]] = pom.y;
+					Consts.current_heights[newindex] = pom.y;
+					Consts.former_heights[newindex] = pom.y;
 				}
 			}
 		}

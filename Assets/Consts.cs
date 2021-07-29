@@ -154,7 +154,7 @@ public static class Consts
 	{
 		if (mcs[0].layer == 11) // Argumentami znaczniki
 		{
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			foreach (GameObject znacznik in mcs)
 			{
 				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
@@ -228,7 +228,7 @@ public static class Consts
 	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
 	/// If recovering, the only indexes that are going to be recovered are those from indexes list
 	/// </summary>
-	public static void UpdateMapColliders(List<int> indexes, bool IsRecoveringTerrain = false)
+	public static void UpdateMapColliders(HashSet<int> indexes, bool IsRecoveringTerrain = false)
 	{
 		if (indexes.Count == 0)
 			return;
@@ -237,7 +237,7 @@ public static class Consts
 		{
 			Vector3Int v = Vector3Int.RoundToInt(Consts.IndexToPos(i));
 			v.y = Consts.MAX_H;
-			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Consts.RAY_H, 1 << 8);
+			RaycastHit[] hits = Physics.SphereCastAll(v, .1f, Vector3.down, Consts.RAY_H, 1 << 8);
 			foreach (RaycastHit hit in hits)
 				if (!mcs.Contains(hit.transform.gameObject))
 				{
@@ -279,7 +279,8 @@ public static class Consts
 				mf.mesh = mc.sharedMesh;
 			}
 			else
-			{// mesh has to have a collider but it can't be displayed with NaNs so we create collider with lowest points so it can be cast on
+			{// mesh has to have a collider but it can't be displayed with NaNs
+				// so we create collider with lowest points so it can be cast on
 
 				// meshfilter has NaNs
 				mf.mesh.vertices = verts;

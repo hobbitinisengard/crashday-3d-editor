@@ -7,10 +7,6 @@ using UnityEngine.UI;
 
 public class Build : MonoBehaviour
 {
-	/// <summary>
-	/// =tan(0.00001deg)
-	/// </summary>
-	private static readonly float NUMERICAL_CONST_FIX = Mathf.Tan(Mathf.Deg2Rad * 0.01f);
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
@@ -38,6 +34,7 @@ public class Build : MonoBehaviour
 	///<summary> current inversion of an element that is currently being shown</summary>
 	bool inversion = false;
 	private bool IsEnteringKeypadValue;
+	private static readonly float HEIGHTDIFF_TOLERANCE = 0.02f;
 
 	private void OnDisable()
 	{
@@ -268,9 +265,9 @@ public class Build : MonoBehaviour
 			Unhide_trawkas(current_rmc);
 			List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
 			DestroyImmediate(current_rmc);
-			int[] t_verts = Consts.TilePlacementArray[pos.z, pos.x].t_verts;
+			var t_verts = Consts.TilePlacementArray[pos.z, pos.x].t_verts;
 			if (t_verts != null)
-				RecoverTerrain(t_verts.ToList());
+				RecoverTerrain(t_verts);
 			UpdateTiles(surroundings);
 		}
 	}
@@ -331,9 +328,9 @@ public class Build : MonoBehaviour
 		to_return.z = ((int)rmc.transform.position.z - 2 + 4 * (dim.z - 1)) / 4;
 		return to_return;
 	}
-	public static int[] GetRmcIndices(GameObject rmc)
+	public static HashSet<int> GetRmcIndices(GameObject rmc)
 	{
-		List<int> to_return = new List<int>();
+		HashSet<int> to_return = new HashSet<int>();
 		Vector3Int TL = GetTLPos(rmc);
 		Vector3Int tileDims = GetRealTileDims(current_rmc);
 		for (int z = 0; z <= 4 * tileDims.z; z++)
@@ -343,9 +340,9 @@ public class Build : MonoBehaviour
 				to_return.Add(Consts.PosToIndex(TL.x + x, TL.z - z));
 			}
 		}
-		return to_return.ToArray();
+		return to_return;
 	}
-	public static List<GameObject> Get_surrounding_tiles(List<int> indexes)
+	public static List<GameObject> Get_surrounding_tiles(HashSet<int> indexes)
 	{
 		List<GameObject> to_return = new List<GameObject>();
 		foreach (int index in indexes)
@@ -425,7 +422,7 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static Vector3Int GetRealTileDims(GameObject rmc_o)
 	{
-		bool isRotated = Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 90 
+		bool isRotated = Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 90
 			|| Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 270;
 		Vector2Int dimVec = TileManager.GetRealDims(rmc_o.name, isRotated);
 		return new Vector3Int(dimVec.x, 0, dimVec.y);
@@ -444,13 +441,13 @@ public class Build : MonoBehaviour
 	/// <summary>
 	/// Recover terrain before "matching" terrain up. Tile whom terrain is recovered has to be already destroyed!
 	/// </summary>
-	static void RecoverTerrain(List<int> indexes)
+	static void RecoverTerrain(HashSet<int> indexes)
 	{
 		if (indexes == null || indexes.Count == 0)
 			return;
-		for (int i = 0; i < indexes.Count; i++)
+		foreach(var index in indexes)
 		{
-			Vector3 v = Consts.IndexToPos(indexes[i]);
+			Vector3 v = Consts.IndexToPos(index);
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 				continue;
 			v.y = Consts.MAX_H;
@@ -515,12 +512,14 @@ public class Build : MonoBehaviour
 			}
 			UpdateMeshes(rmc_o, verts);
 		}
+
 		//2. Matching edge of every rmc up if under or above given vertex already is another vertex (of another tile)
 		foreach (GameObject rmc_o in rmcs)
 		{
 			rmc_o.layer = 10;
 			// Match RMC up and take care of current_heights table
 			Match_rmc2rmc(rmc_o);
+			//rmc_o.layer = 10;
 			Vector3Int pos = Vpos2tpos(rmc_o);
 			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
@@ -540,11 +539,11 @@ public class Build : MonoBehaviour
 				{
 					if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 					{
-						Match_boundaries(x, -z, TLpos, rmc_o);
+						Match_boundaries(x, -z, TLpos);
 					}
 					else
 					{
-						//Hide_Inside(x, -z, TLpos);
+						Hide_Inside(x, -z, TLpos);
 					}
 				}
 			}
@@ -552,7 +551,6 @@ public class Build : MonoBehaviour
 			GetPrefabMesh(Mirrored, Prefab);
 			Tiles_to_RMC_Cast(Prefab, Mirrored, Height);
 			rmc_o.layer = 9;
-
 		}
 	}
 
@@ -665,11 +663,11 @@ public class Build : MonoBehaviour
 			{
 				if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 				{
-					Match_boundaries(x, -z, TLpos, current_rmc); // borders
+					Match_boundaries(x, -z, TLpos); // borders
 				}
 				else
 				{
-					//Hide_Inside(x, -z, TLpos);
+					Hide_Inside(x, -z, TLpos);
 				}
 			}
 		}
@@ -726,7 +724,7 @@ public class Build : MonoBehaviour
 			List<GameObject> to_restore = Get_surrounding_tiles(hit.transform.gameObject);
 			DestroyImmediate(hit.transform.gameObject);
 			Consts.TilePlacementArray[pos.z, pos.x].Name = null;
-			RecoverTerrain(Consts.TilePlacementArray[pos.z, pos.x].t_verts.ToList());
+			RecoverTerrain(Consts.TilePlacementArray[pos.z, pos.x].t_verts);
 			UpdateTiles(to_restore);
 		}
 	}
@@ -914,7 +912,7 @@ public class Build : MonoBehaviour
 	/// <summary>
 	/// Matches up height of terrain to height of vertex of current RMC (layer = 10)
 	/// </summary>
-	public static void Match_boundaries(int x, int z, Vector3Int TLpos, GameObject current_rmc)
+	public static void Match_boundaries(int x, int z, Vector3Int TLpos)
 	{
 		Vector3 global_pos = new Vector3(x + TLpos.x, Consts.MAX_H, z + TLpos.z);
 		if (x % 4 == 0 && z % 4 == 0)
@@ -924,20 +922,15 @@ public class Build : MonoBehaviour
 			return;
 		int index = Consts.PosToIndex(global_pos);
 
-		if (Physics.Raycast(global_pos, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 10))
+		if (Conecast(global_pos, Vector3.down, out RaycastHit hit, 10))
 		{
+			if (Mathf.Abs(Consts.current_heights[Consts.PosToIndex(global_pos)] - hit.point.y) < HEIGHTDIFF_TOLERANCE)
+				return;
 			Consts.current_heights[index] = hit.point.y;
 		}
 		else
 		{
-			if (Conecast(global_pos, Vector3.down, out hit, 10))
-			{
-				Consts.current_heights[index] = hit.point.y;
-			}
-			else
-			{
-				Debug.LogError("");
-			}
+			Debug.LogError("");
 		}
 	}
 	public static bool Conecast(Vector3 global_pos, Vector3 Direction, out RaycastHit hit, int layer)
@@ -952,7 +945,6 @@ public class Build : MonoBehaviour
 		try
 		{
 			hit = hits.Where(h => h.transform.gameObject.layer == layer).First();
-			
 		}
 		catch
 		{
@@ -962,7 +954,7 @@ public class Build : MonoBehaviour
 		return true;
 	}
 	/// <summary>
-	/// Matches vertices of RMCs one to another. rmc_o layer = 10
+	/// Matches vertices of RMCs one to another rmc.layer = 10
 	/// </summary>
 	public static void Match_rmc2rmc(GameObject rmc_o)
 	{
@@ -970,13 +962,22 @@ public class Build : MonoBehaviour
 		for (int i = 0; i < verts.Length; i++)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
+			// These points are always sensitive
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 				continue;
-			v.y = Consts.MAX_H;
-			if (Conecast(v,Vector3.down, out RaycastHit hit, 9))
+			// This condition is filled when tiles overlap (mixed mode)
+			if (v.x % 4 != 0 && v.z % 4 != 0)
+				continue;
+				v.y = Consts.MAX_H;
+			if (Conecast(v, Vector3.down, out RaycastHit hit, 9))
 			{
-				verts[i].y = hit.point.y;
-				Consts.current_heights[Consts.PosToIndex(v)] = hit.point.y;
+				if (Mathf.Abs(Consts.current_heights[Consts.PosToIndex(v)] - hit.point.y) < HEIGHTDIFF_TOLERANCE)
+					verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
+				else
+				{
+					verts[i].y = hit.point.y;
+					Consts.current_heights[Consts.PosToIndex(v)] = hit.point.y;
+				}
 			}
 		}
 		UpdateMeshes(rmc_o, verts);

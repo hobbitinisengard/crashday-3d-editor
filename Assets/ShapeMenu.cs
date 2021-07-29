@@ -241,7 +241,7 @@ public class ShapeMenu : MonoBehaviour
 		
 		float slider_value = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject znacznik in markings)
 		{
 			if (znacznik.name == "on")
@@ -450,7 +450,7 @@ public class ShapeMenu : MonoBehaviour
 		var surroundings = Build.Get_surrounding_tiles(markings);
 		float slider_value = FormPanel.GetComponent<Form>().HeightSlider.value;
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject marking in markings)
 		{
 			if (marking.name == "on")
@@ -484,7 +484,7 @@ public class ShapeMenu : MonoBehaviour
 		}
 
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject znacznik in markings)
 		{
 			if (znacznik.name == "on")

@@ -166,7 +166,6 @@ public class MainMenu : MonoBehaviour
 	}
 	public void CreateNewTrack()
 	{
-		StartCoroutine("EnableLoadingScreen");
 		ChangeSceneToEditor();
 	}
 	public void QuitGame()
