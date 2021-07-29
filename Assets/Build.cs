@@ -390,6 +390,7 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static List<GameObject> Get_surrounding_tiles(GameObject rmc_o)
 	{
+		int orig_layer = rmc_o.layer;
 		rmc_o.layer = 10;
 		List<GameObject> to_return = new List<GameObject>();
 		Vector3 extents = rmc_o.GetComponent<MeshFilter>().mesh.bounds.extents;
@@ -399,7 +400,7 @@ public class Build : MonoBehaviour
 		RaycastHit[] hits = Physics.BoxCastAll(v, extents, Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 		foreach (RaycastHit hit in hits)
 			to_return.Add(hit.transform.gameObject);
-		rmc_o.layer = 9;
+		rmc_o.layer = orig_layer;
 		return to_return;
 	}
 	/// <summary>
@@ -424,7 +425,8 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static Vector3Int GetRealTileDims(GameObject rmc_o)
 	{
-		bool isRotated = (Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 90 || Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 270) ? true : false;
+		bool isRotated = Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 90 
+			|| Mathf.RoundToInt(rmc_o.transform.rotation.eulerAngles.y) == 270;
 		Vector2Int dimVec = TileManager.GetRealDims(rmc_o.name, isRotated);
 		return new Vector3Int(dimVec.x, 0, dimVec.y);
 	}
@@ -679,6 +681,7 @@ public class Build : MonoBehaviour
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
 			Consts.UpdateMapColliders(current_rmc.transform.position, tileDims);
 			Tiles_to_RMC_Cast(Prefab, mirrored, MixingHeight);
+			current_rmc.layer = 9;
 			return null;
 		}
 		else
@@ -856,7 +859,7 @@ public class Build : MonoBehaviour
 			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
-			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), 5e-3f, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
+			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10))
 			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
