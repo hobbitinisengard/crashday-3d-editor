@@ -44,6 +44,7 @@ public class Loader : MonoBehaviour
 	void DisableLoadingScreen()
 	{
 		loadScreen.SetActive(false);
+		Isloading = false;
 	}
 	void Awake()
 	{
@@ -78,6 +79,11 @@ public class Loader : MonoBehaviour
 
 		if (Isloading)
 			StartCoroutine(PlaceLoadedTilesOnMap());
+		else
+		{
+			DisableLoadingScreen();
+			MainCamera.SetActive(true);
+		}
 
 		CreateTilesetMenu();
 
