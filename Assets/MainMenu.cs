@@ -10,8 +10,6 @@ using UnityEngine.UI;
 // Loads mods, handles menu and loads .trk file pointed by player
 public class MainMenu : MonoBehaviour
 {
-	public Text LoadingScreen_text_logo;
-	public GameObject loadScreen;
 	public GameObject LoadMenu;
 	public GameObject ResizeMenu;
 	public Text Resizemenu_Trackname;
@@ -34,7 +32,7 @@ public class MainMenu : MonoBehaviour
 		ResizeMenu_Up.text = "0";
 		ResizeMenu_Down.text = "0";
 		Consts.LoadMirrored = false;
-		Consts.Isloading = false;
+		Loader.Isloading = false;
 		// if we running this for the first time
 		if (TileManager.TileListInfo.Count == 0)
 		{
@@ -194,8 +192,7 @@ public class MainMenu : MonoBehaviour
 			}
 			else
 			{
-				Consts.Isloading = true;
-				StartCoroutine("EnableLoadingScreen");
+				Loader.Isloading = true;
 				ChangeSceneToEditor();
 			}
 		}
@@ -223,16 +220,9 @@ public class MainMenu : MonoBehaviour
 			int.Parse(ResizeMenu_Up.text), int.Parse(ResizeMenu_Down.text));
 		
 		Consts.TRACK = ResizedMap;
-		Consts.Isloading = true;
-		StartCoroutine("EnableLoadingScreen");
+		Loader.Isloading = true;
+		
 		ChangeSceneToEditor();
 	}
-	IEnumerator EnableLoadingScreen()
-	{
-		LoadingScreen_text_logo.text = "3D editor " + Consts.VERSION;
-		string nazwa = Mathf.RoundToInt(7 * UnityEngine.Random.value).ToString();
-		loadScreen.SetActive(true);
-		loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
-		yield return null;
-	}
+	
 }

@@ -10,10 +10,10 @@ public class Build : MonoBehaviour
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
 	// "znacznik" - tag - white small box spawned only in FORM mode. Form mode uses some static functions from here.
 	public GameObject editorPanel; //-> slidercase.cs
+	public GameObject PrefabPoolObject;
 	public Text CURRENTELEMENT; //name of currently selected element on top of the building menu
 	public Text CURRENTROTATION;
 	public Text CURRENTMIRROR;
-	private Rigidbody cone;
 	public Text BuildButtonText; // text 'build' in build button
 	public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
 	public GameObject savePanel; // "save track scheme" menu
@@ -47,7 +47,7 @@ public class Build : MonoBehaviour
 	}
 	void Update()
 	{
-		if (!MouseInputUIBlocker.BlockedByUI)
+		if (!MouseInputUIBlocker.BlockedByUI || !Loader.Isloading)
 		{
 			// Ctrl + RMB - picks up mixing height in mixing mode so rotation with ctrl is forbidden
 			if (Input.GetMouseButtonDown(1) && !Input.GetKey(KeyCode.LeftControl))
@@ -519,7 +519,6 @@ public class Build : MonoBehaviour
 			rmc_o.layer = 10;
 			// Match RMC up and take care of current_heights table
 			Match_rmc2rmc(rmc_o);
-			//rmc_o.layer = 10;
 			Vector3Int pos = Vpos2tpos(rmc_o);
 			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
@@ -606,19 +605,19 @@ public class Build : MonoBehaviour
 		if (rmcPlacement.z < 0)
 			return null;
 
-		if (enableMixing || Consts.Isloading)
+		if (enableMixing || Loader.Isloading)
 		{
 			if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
 			{
 				current_rmc = null;
-				if (Consts.Isloading)
+				if (Loader.Isloading)
 					Consts.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
 				return null;
 			}
 		}
 		else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
 		{
-			if (Consts.Isloading)
+			if (Loader.Isloading)
 				Consts.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
 			current_rmc = null;
 			return null;
@@ -671,7 +670,7 @@ public class Build : MonoBehaviour
 				}
 			}
 		}
-		if (!Consts.Isloading)
+		if (!Loader.Isloading)
 		{
 			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform, cum_rotation);
 			GetPrefabMesh(mirrored, Prefab);
@@ -697,7 +696,7 @@ public class Build : MonoBehaviour
 		// quarter of tile sticking out of bounds
 		if ((dims.z == 2 && rmc_pos.z < 4) || (dims.x == 2 && rmc_pos.x == 4 * Consts.TRACK.Width))
 			return false;
-		if (Consts.Isloading)
+		if (Loader.Isloading)
 			return true;
 		TLpos.x /= 4;
 		TLpos.z /= 4;

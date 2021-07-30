@@ -131,10 +131,6 @@ public class EditorMenu : MonoBehaviour
 		
 		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
 	}
-	void Awake()
-	{
-		NameOfTrack.text = GetComponent<Loader>().nazwa_toru.text;
-	}
 
 	public void SetMarkerDimsX(string val)
 	{

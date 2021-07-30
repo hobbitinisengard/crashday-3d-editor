@@ -21,7 +21,7 @@ public static class Consts
 	public static Vector2Int MarkerBounds = new Vector2Int(60, 60);
 	public static TrackSavable TRACK { get; set; }
 	///<summary> Is editor loading map? </summary>
-	public static bool Isloading { get; set; } = false;
+	
 	///<summary> requires BL pos</summary>
 	public static TilePlacement[,] TilePlacementArray { get; set; }
 	///<summary> String showed on the top bar of the editor during mapping </summary>

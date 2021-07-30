@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
@@ -12,6 +13,12 @@ public class Loader : MonoBehaviour
 	public GameObject TilesetContainer;
 	public GameObject TabTemplate;
 	public GameObject Tile1x1Template;
+	public GameObject MainCamera;
+
+	public Text LoadingScreen_text_logo;
+	public Text LoadingScreen_progressbar;
+	public GameObject loadScreen;
+
 	public TextAsset flatters;
 	public Material thismaterial;
 	/// <summary>
@@ -19,63 +26,44 @@ public class Loader : MonoBehaviour
 	/// </summary>
 	public Text nazwa_toru;
 	public GameObject editorPanel;
+	public static bool Isloading = false;
 	void InitializeCone()
 	{
 		Consts.Cone = GameObject.Find("cone");
 		Consts.Cone = Consts.Cone.transform.GetChild(0).gameObject;
 		Consts.Cone.layer = 13;
 	}
+	void EnableLoadingScreen()
+	{
+		LoadingScreen_text_logo.text = "3D editor " + Consts.VERSION;
+		string nazwa = Mathf.RoundToInt(7 * UnityEngine.Random.value).ToString();
+		loadScreen.SetActive(true);
+		loadScreen.transform.Find(nazwa).gameObject.SetActive(true);
 
+	}
+	void DisableLoadingScreen()
+	{
+		loadScreen.SetActive(false);
+	}
 	void Awake()
 	{
 		InitializeCone();
+		EnableLoadingScreen();
+		StartCoroutine(LoadTrackCoroutine());
+	}
+	IEnumerator LoadTrackCoroutine()
+	{
 		Consts.MissingTilesNames.Clear();
-		if (Consts.Isloading)
-		{
-			InitializeTilePlacementArray(Consts.TRACK.Height, Consts.TRACK.Width);
-			// Load tiles layout from TRACK to TilePlacementArray
-			for (int z = 0; z < Consts.TRACK.Height; z++)
-			{
-				for (int x = 0; x < Consts.TRACK.Width; x++)
-				{
-					TrackTileSavable tile = Consts.TRACK.TrackTiles[Consts.TRACK.Height - z - 1][x];
-					//  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as grass fields (FieldId = 0)  
-					if (tile.FieldId < Consts.TRACK.FieldFiles.Count && tile.FieldId != 0)
-					{
-						// without .cfl suffix
-						string TileName = Consts.TRACK.FieldFiles[tile.FieldId].Substring(0, Consts.TRACK.FieldFiles[tile.FieldId].Length - 4);
-						// ignore strange grass tiles
-						if (TileName == "border1" || TileName == "border2")
-							continue;
-						// Don't load tiles that aren't in tile database
-						if (!TileManager.TileListInfo.ContainsKey(TileName))
-						{
-							if (!Consts.MissingTilesNames.Contains(TileName))
-								Consts.MissingTilesNames.Add(TileName);
-							continue;
-						}
-						int Rotation = tile.Rotation * 90;
-						bool Inversion = tile.IsMirrored == 0 ? false : true;
-						//Inversed tiles rotate anti-clockwise so..
-						if (Inversion && Rotation != 0)
-							Rotation = 360 - Rotation;
-						byte Height = tile.Height;
-						Vector2Int dim = TileManager.GetRealDims(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
-						if (!Consts.LoadMirrored)
-						{
-							Consts.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
-						}
-						else
-							Consts.TilePlacementArray[z, Consts.TRACK.Width - 1 - x - dim.x + 1].Set(
-									TileName, 360 - Rotation, !Inversion, Height);
-					}
-				}
-			}
+
+		yield return null;
+		if (Isloading)
+		{ // load track
+			PopulateTilePlacementArray();
 			InitializeHeightArrays(Consts.TRACK.Height, Consts.TRACK.Width);
 			LoadTerrain(Consts.LoadMirrored);
 		}
 		else
-		{ // load new track
+		{ // generate track
 			Consts.TRACK = new TrackSavable((ushort)SliderWidth.val, (ushort)SliderHeight.val);
 			InitializeHeightArrays(Consts.TRACK.Height, Consts.TRACK.Width);
 			InitializeTilePlacementArray(SliderHeight.val, SliderWidth.val);
@@ -88,11 +76,57 @@ public class Loader : MonoBehaviour
 		nazwa_toru.text = Consts.Trackname;
 		CreateScatteredMeshColliders();
 
-		if (Consts.Isloading)
-			PlaceLoadedTilesOnMap();
-		else
-			Consts.Isloading = false;
+		if (Isloading)
+			StartCoroutine(PlaceLoadedTilesOnMap());
 
+		CreateTilesetMenu();
+
+		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Consts.CHKPOINTS_STR);
+	}
+	void PopulateTilePlacementArray()
+	{
+		InitializeTilePlacementArray(Consts.TRACK.Height, Consts.TRACK.Width);
+		// Load tiles layout from TRACK to TilePlacementArray
+		for (int z = 0; z < Consts.TRACK.Height; z++)
+		{
+			for (int x = 0; x < Consts.TRACK.Width; x++)
+			{
+				TrackTileSavable tile = Consts.TRACK.TrackTiles[Consts.TRACK.Height - z - 1][x];
+				//  tiles bigger than 1x1 have funny max uint numbers around center block. We ignore them as well as grass fields (FieldId = 0)  
+				if (tile.FieldId < Consts.TRACK.FieldFiles.Count)
+				{
+					// without .cfl suffix
+					string TileName = Consts.TRACK.FieldFiles[tile.FieldId].Substring(0, Consts.TRACK.FieldFiles[tile.FieldId].Length - 4);
+					// ignore strange grass tiles
+					if (TileName == "border1" || TileName == "border2" || TileName == "field")
+						continue;
+					// Don't load tiles that aren't in tile database
+					if (!TileManager.TileListInfo.ContainsKey(TileName))
+					{
+						if (!Consts.MissingTilesNames.Contains(TileName))
+							Consts.MissingTilesNames.Add(TileName);
+						continue;
+					}
+					int Rotation = tile.Rotation * 90;
+					bool Inversion = tile.IsMirrored == 0 ? false : true;
+					//Inversed tiles rotate anti-clockwise so..
+					if (Inversion && Rotation != 0)
+						Rotation = 360 - Rotation;
+					byte Height = tile.Height;
+					Vector2Int dim = TileManager.GetRealDims(TileName, (Rotation == 90 || Rotation == 270) ? true : false);
+					if (!Consts.LoadMirrored)
+					{
+						Consts.TilePlacementArray[z, x].Set(TileName, Rotation, Inversion, Height);
+					}
+					else
+						Consts.TilePlacementArray[z, Consts.TRACK.Width - 1 - x - dim.x + 1].Set(
+								TileName, 360 - Rotation, !Inversion, Height);
+				}
+			}
+		}
+	}
+	void CreateTilesetMenu()
+	{
 		// Fills sliderCase HeightSlider with tabs. This includes custom tilesets.
 		// -----------------------------------------------------------------
 		// Create empty tileset tabs
@@ -126,7 +160,6 @@ public class Loader : MonoBehaviour
 
 			}
 		}
-		editorPanel.GetComponent<SliderCase>().SwitchToTileset(Consts.CHKPOINTS_STR);
 	}
 	private void InitializeHeightArrays(int Height, int Width)
 	{
@@ -193,30 +226,42 @@ public class Loader : MonoBehaviour
 		}
 	}
 
-	void PlaceLoadedTilesOnMap()
+	IEnumerator PlaceLoadedTilesOnMap()
 	{
-		Stopwatch sw = Stopwatch.StartNew();
 		List<GameObject> to_update = new List<GameObject>();
-		for (int z = 0; z < Consts.TRACK.Height; z++)
-		{
-			for (int x = 0; x < Consts.TRACK.Width; x++)
+	
+		LoadingScreen_progressbar.text = "Applying restrictions.. ";
+		yield return null;
+			for (int z = 0; z < Consts.TRACK.Height; z++)
 			{
-				if (Consts.TilePlacementArray[z, x].Name == null)
-					continue;
-				Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z + 1));
+				for (int x = 0; x < Consts.TRACK.Width; x++)
+				{
+					if (Consts.TilePlacementArray[z, x].Name == null)
+						continue;
+					Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z + 1));
 
-				to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos,
-						Consts.TilePlacementArray[z, x].Name, Consts.TilePlacementArray[z, x].Rotation,
-						Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
+					to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos,
+							Consts.TilePlacementArray[z, x].Name, Consts.TilePlacementArray[z, x].Rotation,
+							Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
+				}
 			}
-		}
+		LoadingScreen_progressbar.text = "Placing tiles.. 0 %";
+		yield return null;
 		// when PlaceTile tries to place a tile sticking out of map bounds (because of resizing), it returns null. Nulls have to be removed from to_update
 		to_update.RemoveAll(go => go == null);
-		Build.UpdateTiles(to_update);
+		Stopwatch sw = Stopwatch.StartNew();
+		for (int i = 0; i < to_update.Count; i++)
+		{
+			Build.UpdateTiles(new List<GameObject> { to_update[i] });
+			if (sw.Elapsed.Seconds > 4)
+			{
+				LoadingScreen_progressbar.text = "Placing tiles.. " + (100 * i / to_update.Count).ToString() + " %";
+				sw.Restart();
+				yield return null;
+			}
+		}
 		Build.current_rmc = null;
-		Consts.Isloading = false;
-		sw.Stop();
-		if (sw.Elapsed.Seconds != 0)
-			UnityEngine.Debug.Log("Loading time [elements/s]" + to_update.Count / Mathf.Round(sw.Elapsed.Seconds));
+		DisableLoadingScreen();
+		MainCamera.SetActive(true);
 	}
 }
