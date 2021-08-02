@@ -20,6 +20,9 @@ public class SliderCase : MonoBehaviour
 		// Don't allow switching tilesets when ctrl+mousewheel (mixing) is used
 		if (Input.GetKey(KeyCode.LeftControl))
 			return;
+		// Don't allow when in deleting mode
+		if (Input.GetKey(KeyCode.X))
+			return;
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
 		{
 			HideCase(Current_tileset);

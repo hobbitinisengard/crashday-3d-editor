@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public static class Consts
 {
-	public readonly static string VERSION = "2.5";
+	public readonly static string VERSION = "build 11";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
@@ -46,21 +46,28 @@ public static class Consts
 	/// Loads latest path from StreamingAssets/Path.txt
 	/// </summary>
 	/// <returns></returns>
-	public static string LoadTrackPath()
+	public static string LoadLastFolderPath()
 	{
 		StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");
 		string LastTrackPath = w.ReadLine();
 		w.Close();
 		if (LastTrackPath == "")
 			LastTrackPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+		//Debug.Log("LoadPath:" + LastTrackPath);
 		return LastTrackPath;
 	}
 
 	/// <summary>
 	/// Saves latest path to StreamingAssets/Path.txt
 	/// </summary>
-	public static void SaveTrackPath(string path)
+	public static void SaveLastFolderPath(string path)
 	{
+		if(path == null)
+		{
+			Debug.LogError("path null");
+			return;
+		}
+		Debug.Log(path);
 		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
 		w.WriteLine(path);
 		w.Close();
@@ -73,7 +80,7 @@ public static class Consts
 		if (precision)
 			return point;
 		else
-			return new Vector3(Mathf.RoundToInt(point.x), point.y, Mathf.RoundToInt(point.z)); // return it
+			return RoundVector3(point);
 	}
 	/// <summary>
 	/// Distance on 2D map between 3D points
@@ -161,7 +168,6 @@ public static class Consts
 				indexes.Add(PosToIndex(v.x, v.z));
 			}
 			UpdateMapColliders(indexes, IsRecoveringTerrain);
-
 		}
 		else //Argumentami MapCollidery
 		{
@@ -220,10 +226,14 @@ public static class Consts
 	/// </summary>
 	/// <param name="v"></param>
 	/// <returns></returns>
-	public static Vector3 Round_X_Z_InVector(Vector3 v)
+	public static Vector3 RoundVector3(Vector3 v)
 	{
 		return new Vector3(Mathf.RoundToInt(v.x), v.y, Mathf.RoundToInt(v.z));
 	}
+	/// <summary>
+	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
+	/// If recovering, the only indexes that are going to be recovered are those from indexes list
+	/// </summary>
 	/// <summary>
 	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
 	/// If recovering, the only indexes that are going to be recovered are those from indexes list
@@ -268,6 +278,8 @@ public static class Consts
 				if (float.IsNaN(verts[i].y))
 					HasNaNs = true;
 			}
+			if (!grass.GetComponent<MeshRenderer>().enabled)
+				continue;
 			var mc = grass.GetComponent<MeshCollider>();
 			var mf = grass.GetComponent<MeshFilter>();
 

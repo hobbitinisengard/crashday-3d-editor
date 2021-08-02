@@ -4896,6 +4896,31 @@ PrefabInstance:
       propertyPath: m_Convex
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -2745567992595731601, guid: 0243c65508188f34081f753d123c839a,
+        type: 3}
+      propertyPath: m_CookingOptions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2745567992595731601, guid: 0243c65508188f34081f753d123c839a,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5975033157549033438, guid: 0243c65508188f34081f753d123c839a,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5975033157549033438, guid: 0243c65508188f34081f753d123c839a,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5975033157549033438, guid: 0243c65508188f34081f753d123c839a,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0243c65508188f34081f753d123c839a, type: 3}
 --- !u!1 &476832274 stripped
@@ -5575,7 +5600,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1478856712}
         m_MethodName: SaveMenu_works
-        m_Mode: 5
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -6891,6 +6916,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7440c04cdd52a24b8d1d4e01770a2fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MainCanvas: {fileID: 1478856706}
   TilesetContainer: {fileID: 951966835}
   TabTemplate: {fileID: 165042074}
   Tile1x1Template: {fileID: 1091685671}
@@ -6900,7 +6926,6 @@ MonoBehaviour:
   loadScreen: {fileID: 643070343}
   flatters: {fileID: 4900000, guid: 7b3c8c4e929bcf841ae079ca28215987, type: 3}
   thismaterial: {fileID: 2100000, guid: 26a36a1c566b1d04c86f2a863ee7309a, type: 2}
-  nazwa_toru: {fileID: 641100198}
   editorPanel: {fileID: 737123667}
 --- !u!20 &643070349
 Camera:
@@ -7954,6 +7979,8 @@ MonoBehaviour:
   savePanel: {fileID: 183996195}
   partiallytransparent: {fileID: 2100000, guid: d7bfda3feb265d343bf8b92dbed7dd2f,
     type: 2}
+  transparent: {fileID: 2100000, guid: 815f333d76060ef48af4ccdc0c942ae6, type: 2}
+  reddish: {fileID: 2100000, guid: 0360f7186a8ce624ba484d29c7756665, type: 2}
 --- !u!114 &737123672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15679,6 +15706,7 @@ MonoBehaviour:
   formPANEL: {fileID: 610547409}
   plusOn: {fileID: 1514092189}
   GravityEffectDropdown: {fileID: 938261802}
+  nazwa_toru: {fileID: 641100198}
   NameOfTrack: {fileID: 1763970049}
   upperPanel_t_version: {fileID: 228953256}
   SAVED_TEXT: {fileID: 1578662550}
@@ -19171,7 +19199,7 @@ GameObject:
   - component: {fileID: 1891839160}
   - component: {fileID: 1891839159}
   m_Layer: 5
-  m_Name: t_InitialText
+  m_Name: t_text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19382,7 +19410,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: Specify track name to save
 --- !u!222 &1901732021
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -119,7 +119,7 @@ public class CopyPaste : MonoBehaviour
 		{
 			if (mrk.name == "on")
 			{
-				Vector3 pom = Consts.Round_X_Z_InVector(mrk.transform.position - ShapeMenu.BL);
+				Vector3 pom = Consts.RoundVector3(mrk.transform.position - ShapeMenu.BL);
 				if (pom.x == 0 && pom.z == 0)
 					continue;
 				else

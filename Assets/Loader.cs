@@ -10,6 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class Loader : MonoBehaviour
 {
+	public GameObject MainCanvas;
 	public GameObject TilesetContainer;
 	public GameObject TabTemplate;
 	public GameObject Tile1x1Template;
@@ -21,10 +22,7 @@ public class Loader : MonoBehaviour
 
 	public TextAsset flatters;
 	public Material thismaterial;
-	/// <summary>
-	/// Text in upperPanel
-	/// </summary>
-	public Text nazwa_toru;
+	
 	public GameObject editorPanel;
 	public static bool Isloading = false;
 	void InitializeCone()
@@ -74,7 +72,8 @@ public class Loader : MonoBehaviour
 		if (Consts.LoadMirrored)
 			Consts.Trackname += " (mirrored)";
 
-		nazwa_toru.text = Consts.Trackname;
+		MainCanvas.GetComponent<EditorMenu>().nazwa_toru.text = Consts.Trackname;
+		MainCanvas.GetComponent<EditorMenu>().NameOfTrack.text = Consts.Trackname;
 		CreateScatteredMeshColliders();
 
 		if (Isloading)
@@ -251,11 +250,12 @@ public class Loader : MonoBehaviour
 							Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
 				}
 			}
-		LoadingScreen_progressbar.text = "Placing tiles.. 0 %";
+		LoadingScreen_progressbar.text = "Placing tiles..";
 		yield return null;
 		// when PlaceTile tries to place a tile sticking out of map bounds (because of resizing), it returns null. Nulls have to be removed from to_update
 		to_update.RemoveAll(go => go == null);
 		Stopwatch sw = Stopwatch.StartNew();
+		Stopwatch tw = Stopwatch.StartNew();
 		for (int i = 0; i < to_update.Count; i++)
 		{
 			Build.UpdateTiles(new List<GameObject> { to_update[i] });
@@ -266,6 +266,7 @@ public class Loader : MonoBehaviour
 				yield return null;
 			}
 		}
+		UnityEngine.Debug.Log("Loading time/s:" + to_update.Count / (float)tw.Elapsed.Seconds);
 		Build.current_rmc = null;
 		DisableLoadingScreen();
 		MainCamera.SetActive(true);

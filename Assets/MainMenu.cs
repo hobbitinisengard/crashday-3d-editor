@@ -172,18 +172,17 @@ public class MainMenu : MonoBehaviour
 	}
 	public void LoadTrackToVariablesAndRunEditor()
 	{
-		string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", Consts.LoadTrackPath(), "trk", false);
+		string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", Consts.LoadLastFolderPath(), "trk", false);
 		if (sourcepath.Length == 0)
 			return;
 		else// player hasnt clicked 'cancel' button
 		{
 			string path = sourcepath[0];
-			//Path can't have .trk suffix
 			Consts.TRACK = MapParser.ReadMap(path);
 			Consts.Trackname = path.Substring(path.LastIndexOf('\\') + 1, path.Length - path.LastIndexOf('\\') - 5);
-			Consts.SaveTrackPath(path);
+			path = path.Substring(0, path.LastIndexOf('\\'));
+			Consts.SaveLastFolderPath(path);
 			
-
 			if (ResizeToggle.isOn)
 			{
 				LoadMenu.SetActive(false);
