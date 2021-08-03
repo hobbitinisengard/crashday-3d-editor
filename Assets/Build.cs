@@ -911,7 +911,7 @@ public class Build : MonoBehaviour
 			}
 			else
 			{
-				if (Physics.SphereCast(new Vector3(v.x, Consts.MIN_H - 1, v.z), 5e-3f, Vector3.up, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), 5e-3f, Vector3.down, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));

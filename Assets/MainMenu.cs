@@ -144,6 +144,17 @@ public class MainMenu : MonoBehaviour
 		IO.RemoveCrashdayPath();
 		QuitGame();
 	}
+	public void RemoveModdataFolder()
+	{
+		string contentpath = IO.GetCrashdayPath() + "\\moddata\\";
+		try
+		{
+			Directory.Delete(contentpath, true);
+		}
+		catch
+		{ }
+		QuitGame();
+	}
 	public static void DeleteDirectory(string target_dir)
 	{
 		string[] files = Directory.GetFiles(target_dir);
