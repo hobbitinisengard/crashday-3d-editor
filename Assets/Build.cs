@@ -131,8 +131,8 @@ public class Build : MonoBehaviour
 				XTileSelection(); // X won't let PlacePrefab work
 			if (Input.GetKeyUp(KeyCode.X))
 				ExitXTileSelection();
-			//if (Input.GetKey(KeyCode.LeftAlt))
-			//	SwitchToNULL();
+			if (Input.GetKey(KeyCode.LeftAlt))
+				SwitchToNULL();
 
 			if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
 			{
@@ -900,16 +900,16 @@ public class Build : MonoBehaviour
 			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
-			//else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10)){
-			//	verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-			//}
-			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .25f, Vector3.down, out hit, Consts.RAY_H, 1 << 10 | 1 << 9))
+			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10)){
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
+			}
+			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
 			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else
 			{
-				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), 5e-3f, Vector3.down, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
