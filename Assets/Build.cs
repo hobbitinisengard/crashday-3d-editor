@@ -131,8 +131,8 @@ public class Build : MonoBehaviour
 				XTileSelection(); // X won't let PlacePrefab work
 			if (Input.GetKeyUp(KeyCode.X))
 				ExitXTileSelection();
-			if (Input.GetKey(KeyCode.LeftAlt))
-				SwitchToNULL();
+			//if (Input.GetKey(KeyCode.LeftAlt))
+			//	SwitchToNULL();
 
 			if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
 			{
@@ -702,21 +702,19 @@ public class Build : MonoBehaviour
 			try
 			{
 				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+				if (float.IsNaN(verts[index].y))
+				{
+					Destroy(current_rmc);
+					current_rmc = null;
+					return null;
+				}
 			}
 			catch
 			{ // rmc out of bounds
-				verts[index].y = 0;
+				verts[index].y = Consts.current_heights[0];
 			}
 		}
-		if (verts.Any(v => float.IsNaN(v.y)))
-		{
-			Destroy(current_rmc);
-			current_rmc = null;
-			return null;
-		}
 		UpdateMeshes(current_rmc, verts);
-
-		MeshCollider rmc_mc = current_rmc.GetComponent<MeshCollider>();
 
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
@@ -743,7 +741,7 @@ public class Build : MonoBehaviour
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
 			Consts.UpdateMapColliders(current_rmc.transform.position, tileDims);
 			Tile_to_RMC_Cast(Prefab, current_rmc, MixingHeight);
-			
+
 			return null;
 		}
 		else
@@ -917,6 +915,7 @@ public class Build : MonoBehaviour
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
 			}
 		}
+		
 		mesh.vertices = verts;
 		mesh.RecalculateBounds();
 		mesh.RecalculateNormals();
