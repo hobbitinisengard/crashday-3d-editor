@@ -91,7 +91,7 @@ public class CopyPaste : MonoBehaviour
 				RotateClockwiseSelection();
 			if (Input.GetMouseButtonDown(0))
 				PasteSelectionOntoTerrain();
-			if (Input.GetKeyDown(KeyCode.M))
+			if (Input.GetKeyDown(KeyCode.Q))
 				InverseSelection();
 			if (Input.GetKeyDown(KeyCode.I))
 				InverseHeights();
