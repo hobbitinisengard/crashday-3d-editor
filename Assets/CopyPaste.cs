@@ -168,7 +168,7 @@ public class CopyPaste : MonoBehaviour
 			FormMenu.SetActive(false);
 			PastingModeSwitch.gameObject.SetActive(true);
 			EnterCopyPasteMenu.interactable = true;
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("TAB/LMB/RMB/M/I/ESC/DEL");
+			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("TAB/LMB/RMB/Q/I/ESC/DEL");
 		}
 		else
 		{

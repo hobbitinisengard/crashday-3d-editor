@@ -179,7 +179,7 @@ public class P3DModel
 		{// every tile with grass (all of the tunnels) have link to "floor1.mat" material set in resources folder. That way we can globally change material's shader from every script we want
 			if (textureName == "floor1")
 				mat = Resources.Load<Material>("floor1");
-			else if (textureName == "pine") // pines have to look nice :>
+			else if(textureName == "pine")
 				mat = new Material(Shader.Find("Transparent/Bumped Diffuse"));
 			else
 				mat = new Material(Shader.Find("Mobile/Bumped Diffuse"));
@@ -232,11 +232,12 @@ public class P3DModel
 		//one model might contain more than one mesh
 		for (int i = 0; i < P3DNumMeshes; i++)
 		{
+
 			//avoid loading LODs
-			if (P3DMeshes[i].Name.Contains(".0") || P3DMeshes[i].Name.Contains(".1") || P3DMeshes[i].Name.Contains(".2") || P3DMeshes[i].Name.Contains(".3")
+			if (P3DMeshes[i].Name.Contains(".0") || P3DMeshes[i].Name.Contains(".1") || P3DMeshes[i].Name.Contains(".3") || P3DMeshes[i].Name.Contains(".2")
 						|| P3DMeshes[i].Name.Contains(".4")) continue;
 
-			//dont load destroyed parts of the mesh
+		 //dont load destroyed parts of the mesh
 			if (P3DMeshes[i].Name.Contains("dest_") || P3DMeshes[i].Name.Contains("metl_")) continue;
 
 			//iterate through every vertex and add it's position. Dont forget local object position

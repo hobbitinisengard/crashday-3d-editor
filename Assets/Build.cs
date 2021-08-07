@@ -851,6 +851,7 @@ public class Build : MonoBehaviour
 	{ //RMCname position: 
 		char x = RMCname[0];
 		char z = RMCname[2];
+		RMCname = RMCname.Replace("H1H1", "H1");
 		while (x == '1' && RMCname.Contains("V2"))
 			RMCname = RMCname.Replace("V2", "");
 		while (z == '1' && RMCname.Contains("H2"))
@@ -862,20 +863,12 @@ public class Build : MonoBehaviour
 	{
 		RMCname = NormalizeRMCname(RMCname);
 		// V1H1H2 => string(V1) string(H1) string(H2)
-		string[] restr = RMCname.Substring(3).SplitBy(2).ToArray();
-		string outname;
-		try
-		{
-			outname = Consts.RMC_NAMES.Where(name => name.Contains(RMCname.Substring(0, 3))
-		&& restr.All(r => name.Contains(r))
-		&& name.Length == 3 + restr.Length * 2).First();
-		}
-		catch
-		{
-			Debug.LogWarning(RMCname);
-			return null;
-		}
-		return Resources.Load<GameObject>("rmcs/" + outname);
+		var restr = RMCname.Substring(3).SplitBy(2).OrderBy(s => s).ToArray();
+		string outname = RMCname.Substring(0,3) + String.Join("", restr);
+		GameObject rmc = Resources.Load<GameObject>("rmcs/" + outname);
+		if(rmc == null)
+			rmc = Resources.Load<GameObject>("rmcs/" + RMCname.Substring(0, 3));
+		return rmc;
 	}
 	static void GetPrefabMesh(bool mirrored, GameObject prefab)
 	{
