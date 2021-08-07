@@ -128,7 +128,7 @@ public class SingleMode : MonoBehaviour
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
-			float heightdiff = Consts.current_heights[index]- Consts.SliderValue2RealHeight(HeightSlider.value);
+			float heightdiff = Consts.current_heights[index] - Consts.SliderValue2RealHeight(HeightSlider.value);
 					
 			if (to_update.Count > 0)
 			{

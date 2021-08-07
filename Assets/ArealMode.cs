@@ -252,7 +252,7 @@ public class ArealMode : MonoBehaviour
 					{
 						int idx = Consts.PosToIndex((int)x, (int)z);
 						Vector3 currentpos = Consts.IndexToPos(idx);
-						float heightdiff = Consts.current_heights[index] - Consts.SliderValue2RealHeight(HeightSlider.value);
+						float heightdiff = Consts.current_heights[idx] - Consts.SliderValue2RealHeight(HeightSlider.value);
 						UndoBuffer.Add(currentpos);
 						Consts.former_heights[idx] += heightdiff * IntensitySlider.value/100f;
 						Consts.current_heights[idx] = Consts.former_heights[idx];
