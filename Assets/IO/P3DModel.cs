@@ -241,7 +241,7 @@ public class P3DModel
 						|| P3DMeshes[i].Name.Contains(".4")) continue;
 
 		 //dont load destroyed parts of the mesh
-			if (P3DMeshes[i].Name.Contains("dest_")) continue;
+			if (P3DMeshes[i].Name.Contains("dest_") || P3DMeshes[i].Name.Contains("metl_d") || P3DMeshes[i].Name.Contains("metl_g")) continue;
 
 			//iterate through every vertex and add it's position. Dont forget local object position
 			for (int v = 0; v < P3DMeshes[i].NumVertices; v++)
