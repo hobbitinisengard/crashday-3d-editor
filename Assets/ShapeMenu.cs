@@ -46,7 +46,6 @@ public class ShapeMenu : MonoBehaviour
 	public static Vector3 BL;
 	private Vector3 mousePosition1;
 	private Vector3Int TR;
-	private Vector3Int TRcut;
 
 	void Start()
 	{
@@ -221,7 +220,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11))
 				{
-					TRcut = Vector3Int.RoundToInt(Highlight.pos);
+					TR = Vector3Int.RoundToInt(Highlight.pos);
 					StateSwitch(SelectionState.POINT_SELECTED);
 				}
 			}
@@ -307,7 +306,8 @@ public class ShapeMenu : MonoBehaviour
 
 		if (selectionState == SelectionState.POINT_SELECTED)
 		{
-			Set_rotated_BL_and_TR();
+			if (!SelectTR.isOn)
+				Set_rotated_BL_and_TR();
 			List<DuVec3> extremes = new List<DuVec3>();
 			if (Connect.isOn)
 				extremes = GetOpposingVerticesForConnect(BL, TR);
@@ -331,8 +331,6 @@ public class ShapeMenu : MonoBehaviour
 								BL.y = extremes[ext_index].P1.y;
 							}
 							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
-							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
-								goto endloop;
 						}
 						step += 1;
 					}
@@ -359,15 +357,12 @@ public class ShapeMenu : MonoBehaviour
 								BL.y = extremes[ext_index].P1.y;
 							}
 							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
-							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
-								goto endloop;
 						}
 						step += 1;
 					}
 				}
 			}
 
-			endloop:
 			Consts.UpdateMapColliders(markings);
 			//if (current != null)
 			//  Build.UpdateTiles(new List<GameObject> { current });

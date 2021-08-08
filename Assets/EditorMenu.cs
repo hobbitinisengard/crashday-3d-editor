@@ -1,4 +1,4 @@
-﻿using SFB;
+using SFB;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -186,7 +186,7 @@ public class EditorMenu : MonoBehaviour
 			for (int x = 0; x <= 4 * Consts.TRACK.Width; x++)
 			{
 				int i = x + 4 * y * Consts.TRACK.Width + y;
-				Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - y][x] = Consts.current_heights[i] * 5 + Consts.GravityValue / 5f;
+				Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - y][x] = Consts.current_heights[i] * 5 + Consts.GravityValue;
 				
 			}
 		}
@@ -292,3 +292,5 @@ public class EditorMenu : MonoBehaviour
 		}
 	}
 }
+
+
