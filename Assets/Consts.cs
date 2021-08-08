@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public static class Consts
 {
-	public readonly static string VERSION = "build 11";
+	public readonly static string VERSION = "3.0";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";

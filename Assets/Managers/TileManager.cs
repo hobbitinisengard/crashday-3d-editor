@@ -211,6 +211,7 @@ public static class TileManager
 			}
 
 			P3DModel model = P3DParser.LoadFromFile(Model_path);
+
 			List<Material> ModelMaterials = new List<Material>(model.P3DNumTextures);
 
 			for (int j = 0; j < model.P3DNumTextures; j++)

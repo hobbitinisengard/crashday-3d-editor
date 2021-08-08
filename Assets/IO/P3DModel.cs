@@ -120,6 +120,8 @@ public class P3DModel
 	{
 		Material mat;
 		string textureName = P3DRenderInfo[id].TextureFile.Remove(P3DRenderInfo[id].TextureFile.Length - 4);
+		if (textureName == "street14")
+			textureName = "street1";
 		// path to one of default (dds) textures
 		string path = IO.GetCrashdayPath() + "/data/content/textures/" + textureName + ".dds";
 
@@ -156,10 +158,10 @@ public class P3DModel
 		tex.Apply(true);
 
 		bool tr = P3DRenderInfo[id].TextureFile.Contains("transp");
-		bool gls = P3DRenderInfo[id].TextureFile.Contains("gls");
+		bool gls = P3DRenderInfo[id].TextureFile.Contains("gls") || P3DRenderInfo[id].TextureFile.Contains("glass");
 		if (tr || gls)
 		{
-			mat = new Material(Shader.Find("Standard"));
+			mat = new Material(Shader.Find("Sprites/Default"));
 
 			Color c = gls ? new Color(0.1f, 0.1f, 0.1f, 0.4f) : Color.clear;
 			mat.SetColor("_Color", c);
@@ -179,8 +181,10 @@ public class P3DModel
 		{// every tile with grass (all of the tunnels) have link to "floor1.mat" material set in resources folder. That way we can globally change material's shader from every script we want
 			if (textureName == "floor1")
 				mat = Resources.Load<Material>("floor1");
-			else if(textureName == "pine")
-				mat = new Material(Shader.Find("Transparent/Bumped Diffuse"));
+			else if (textureName.Contains("fen") || textureName == "pine" || textureName == "mtlgrid" || textureName.Contains("strut") || textureName.Contains("detail"))
+				mat = new Material(Shader.Find("Sprites/Default"));
+			else if (textureName == "window")
+				mat = new Material(Shader.Find("Unlit/Transparent"));
 			else
 				mat = new Material(Shader.Find("Mobile/Bumped Diffuse"));
 
@@ -228,17 +232,16 @@ public class P3DModel
 		}
 
 		int meshSizeOffset = 0;
-
+		int additionOffset = 0;
 		//one model might contain more than one mesh
 		for (int i = 0; i < P3DNumMeshes; i++)
 		{
-
 			//avoid loading LODs
 			if (P3DMeshes[i].Name.Contains(".0") || P3DMeshes[i].Name.Contains(".1") || P3DMeshes[i].Name.Contains(".3") || P3DMeshes[i].Name.Contains(".2")
 						|| P3DMeshes[i].Name.Contains(".4")) continue;
 
 		 //dont load destroyed parts of the mesh
-			if (P3DMeshes[i].Name.Contains("dest_") || P3DMeshes[i].Name.Contains("metl_")) continue;
+			if (P3DMeshes[i].Name.Contains("dest_")) continue;
 
 			//iterate through every vertex and add it's position. Dont forget local object position
 			for (int v = 0; v < P3DMeshes[i].NumVertices; v++)
@@ -251,52 +254,56 @@ public class P3DModel
 				int index = textures.FindIndex(x => x.Contains(P3DMeshes[i].Poly[v].Texture));
 
 				Vector2 uv1 = new Vector2(P3DMeshes[i].Poly[v].U1, P3DMeshes[i].Poly[v].V1);
-				if (vertices[P3DMeshes[i].Poly[v].P1].UvAssigned && vertices[P3DMeshes[i].Poly[v].P1].Uv != uv1)
+				if (vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P1].UvAssigned && vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P1].Uv != uv1)
 				{
 					vertices.Add(new Vert(P3DMeshes[i].Vertex[P3DMeshes[i].Poly[v].P1] + P3DMeshes[i].LocalPos));
+					additionOffset++;
 					vertices[vertices.Count - 1].UvAssigned = true;
 					vertices[vertices.Count - 1].Uv = uv1;
 					tri[index].Add(vertices.Count - 1);
 				}
 				else
 				{
-					vertices[P3DMeshes[i].Poly[v].P1].UvAssigned = true;
-					vertices[P3DMeshes[i].Poly[v].P1].Uv = uv1;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P1].UvAssigned = true;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P1].Uv = uv1;
 					tri[index].Add(meshSizeOffset + P3DMeshes[i].Poly[v].P1);
 				}
 
 				Vector2 uv2 = new Vector2(P3DMeshes[i].Poly[v].U2, P3DMeshes[i].Poly[v].V2);
-				if (vertices[P3DMeshes[i].Poly[v].P2].UvAssigned && vertices[P3DMeshes[i].Poly[v].P2].Uv != uv2)
+				if (vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P2].UvAssigned && vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P2].Uv != uv2)
 				{
 					vertices.Add(new Vert(P3DMeshes[i].Vertex[P3DMeshes[i].Poly[v].P2] + P3DMeshes[i].LocalPos));
+					additionOffset++;
 					vertices[vertices.Count - 1].UvAssigned = true;
 					vertices[vertices.Count - 1].Uv = uv2;
 					tri[index].Add(vertices.Count - 1);
 				}
 				else
 				{
-					vertices[P3DMeshes[i].Poly[v].P2].UvAssigned = true;
-					vertices[P3DMeshes[i].Poly[v].P2].Uv = uv2;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P2].UvAssigned = true;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P2].Uv = uv2;
 					tri[index].Add(meshSizeOffset + P3DMeshes[i].Poly[v].P2);
 				}
 
 				Vector2 uv3 = new Vector2(P3DMeshes[i].Poly[v].U3, P3DMeshes[i].Poly[v].V3);
-				if (vertices[P3DMeshes[i].Poly[v].P3].UvAssigned && vertices[P3DMeshes[i].Poly[v].P3].Uv != uv3)
+				if (vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P3].UvAssigned && vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P3].Uv != uv3)
 				{
 					vertices.Add(new Vert(P3DMeshes[i].Vertex[P3DMeshes[i].Poly[v].P3] + P3DMeshes[i].LocalPos));
+					additionOffset++;
 					vertices[vertices.Count - 1].UvAssigned = true;
 					vertices[vertices.Count - 1].Uv = uv3;
 					tri[index].Add(vertices.Count - 1);
 				}
 				else
 				{
-					vertices[P3DMeshes[i].Poly[v].P3].UvAssigned = true;
-					vertices[P3DMeshes[i].Poly[v].P3].Uv = uv3;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P3].UvAssigned = true;
+					vertices[meshSizeOffset + P3DMeshes[i].Poly[v].P3].Uv = uv3;
 					tri[index].Add(meshSizeOffset + P3DMeshes[i].Poly[v].P3);
 				}
 			}
-
 			meshSizeOffset += P3DMeshes[i].NumVertices;
+			meshSizeOffset += additionOffset;
+			additionOffset = 0;
 		}
 
 		foreach (Vert v in vertices)
