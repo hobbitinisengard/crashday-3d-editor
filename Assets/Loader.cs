@@ -190,7 +190,7 @@ public class Loader : MonoBehaviour
 	/// </summary>
 	void LoadTerrain(bool LoadMirrored)
 	{
-		Consts.GravityValue = (int)(Consts.TRACK.Heightmap[0][0] * 5f);
+		Consts.GravityValue = (int)(Consts.TRACK.Heightmap[0][0]);
 
 		for (int z = 0; z <= 4 * Consts.TRACK.Height; z++)
 		{
