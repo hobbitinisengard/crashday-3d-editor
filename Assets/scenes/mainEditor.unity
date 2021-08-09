@@ -1119,7 +1119,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.87000006}
-  m_AnchoredPosition: {x: -0.099975586, y: -19.498077}
+  m_AnchoredPosition: {x: -0.099975586, y: -19.498047}
   m_SizeDelta: {x: 0.00012207, y: -38.996}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &165042078
@@ -2036,8 +2036,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 309453265}
   m_HandleRect: {fileID: 309453264}
   m_Direction: 2
-  m_Value: 0.9999997
-  m_Size: 0.7216958
+  m_Value: 0.99999976
+  m_Size: 0.4786135
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2914,7 +2914,7 @@ RectTransform:
   m_Father: {fileID: 1458868392}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.27830413}
+  m_AnchorMin: {x: 0, y: 0.5213864}
   m_AnchorMax: {x: 1, y: 0.9999998}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -7207,7 +7207,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -0.00004530535, y: -0.000077876124}
-  m_SizeDelta: {x: 0, y: 1371.1}
+  m_SizeDelta: {x: 0, y: 2068.1}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &674601208
 MonoBehaviour:
@@ -19457,8 +19457,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 757.79987, y: -903.5}
-  m_SizeDelta: {x: 1515.6, y: 391.4}
+  m_AnchoredPosition: {x: 757.79987, y: -1567.7002}
+  m_SizeDelta: {x: 1515.6, y: 1719.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1913900441
 MonoBehaviour:
@@ -19493,22 +19493,39 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Form mode - Alt + Z - undo the last operation\r\n- Form-manual, form-shape
-    mode - LMB (+ Shift/Alt) - change height by 1/10/0.1 respectively\r\n- Form-manual
-    mode - amplitude - LMB - change terrain intensity (depending on the display value)\r\n-
-    Form-shape mode - Ctrl + LMB - select multiple tiles\r\n- Form-shape mode - Q
-    + LMB - select (specified) area of vertices\r\n- Form-shape mode - Shift + LMB
-    - force selection of insensitive vertices\r\n- Form-shape mode - E - invert current
-    selection\r\n- Form-shape mode - keep height (F1) - elevate the whole selected
-    area evenly by the display height / apply a slope with preserving the initial
-    height\r\n- Form-shape mode - connect (F2) - connect two opposing vertices rows
-    with a slope\r\n- Form-shape mode - TR (F3) - additionally set top-right vertex
-    of a slope (the boundary of terrain change)\r\n- Form-shape mode - amplify (K)
-    - multiply terrain intensity (relatively to the zero-level vertex) by the display
-    value\r\n- Form-shape mode - copy (C) - copy terrain vertices, enter copying mode\r\n-
-    Form-shape mode - paste (V) - enter copying mode with the last-copied terrain\r\n-
-    Form-shape mode - infinity - set an area to infinite height\r\n- Form-copy mode
-    - Tab - relative/absolute height\r\n- Form-copy mode - Q - mirror copied terrain"
+  m_Text: "Mouse scroll - sets height\n[CTRL] - picks height of vertex at mouse cursor
+    position\n[Alt] + [Z] undoes last operation\nEnter height with keypad and apply
+    it with [keypad*]\n\n[F] - switches between modes\n1. MANUAL MODE \na) Set [1]\n-
+    LMB - sets height of vertex at mouse cursor position to value set on slider [+
+    [Alt] = one per click]\n- click RMB on desired vertex and then RMB on another
+    to elevate many vertices at once to value set on slider (Esc cancels first RMB
+    click). \n\nb)Avg [2]\nLMB - smooth - sets height to average of surrounding vertices\nRMB
+    - distortion - sets height of neighbouring vertices to cursor\n\nc) Amp [3]\nAmplifies
+    height using height value\n\n[TAB] - switches to Areal mode which applies the
+    same functionality but for area of specified radius.\n \n2. SHAPE MODE\nSelect
+    height.\nSelect vertices with LMB, multiple with CTRL (force terrain vertices
+    with SHIFT), exit selection with [ESC] or RMB. [Q] + LMB forces grass vertices\nSelect
+    given function with button or key on keyboard and select bottom-left vertex.\n[C]/[V]
+    - opens copying menu\nIn copying menu: [Tab] - select copying mode, scroll - sets
+    height of selection\n\n3. PROFILES MODE\nLMB or [ctrl] + LMB selects profile\nEvery
+    profile has to have the same number of vertices\nRMB - accepts profile, [backspace]
+    - removes last profile\n\nForm mode - Alt + Z - undo the last operation\r\n- Form-manual,
+    form-shape mode - LMB (+ Shift/Alt) - change height by 1/10/0.1 respectively\r\n-
+    Form-manual mode - amplitude - LMB - change terrain intensity (depending on the
+    display value)\r\n- Form-shape mode - Ctrl + LMB - select multiple tiles\r\n-
+    Form-shape mode - Q + LMB - select (specified) area of vertices\r\n- Form-shape
+    mode - Shift + LMB - force selection of insensitive vertices\r\n- Form-shape mode
+    - E - invert current selection\r\n- Form-shape mode - keep height (F1) - elevate
+    the whole selected area evenly by the display height / apply a slope with preserving
+    the initial height\r\n- Form-shape mode - connect (F2) - connect two opposing
+    vertices rows with a slope\r\n- Form-shape mode - TR (F3) - additionally set top-right
+    vertex of a slope (the boundary of terrain change)\r\n- Form-shape mode - amplify
+    (K) - multiply terrain intensity (relatively to the zero-level vertex) by the
+    display value\r\n- Form-shape mode - copy (C) - copy terrain vertices, enter copying
+    mode\r\n- Form-shape mode - paste (V) - enter copying mode with the last-copied
+    terrain\r\n- Form-shape mode - infinity - set an area to infinite height\r\n-
+    Form-copy mode - Tab - relative/absolute height\r\n- Form-copy mode - Q - mirror
+    copied terrain"
 --- !u!222 &1913900442
 CanvasRenderer:
   m_ObjectHideFlags: 0
