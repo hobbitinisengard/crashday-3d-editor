@@ -10,9 +10,9 @@ public static class Consts
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
-	public readonly static int MAX_H = 20000;
+	public readonly static int MAX_H = 20000 + 5;
 	public readonly static int MIN_H = -MAX_H;
-	public readonly static int RAY_H = MAX_H - MIN_H + 5;
+	public readonly static int RAY_H = MAX_H + 1 - MIN_H;
 	public static GameObject Cone;
 	public static int GravityValue = 0;
 	/// <summary>
@@ -229,10 +229,6 @@ public static class Consts
 	{
 		return new Vector3(Mathf.RoundToInt(v.x), v.y, Mathf.RoundToInt(v.z));
 	}
-	/// <summary>
-	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
-	/// If recovering, the only indexes that are going to be recovered are those from indexes list
-	/// </summary>
 	/// <summary>
 	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
 	/// If recovering, the only indexes that are going to be recovered are those from indexes list

@@ -181,7 +181,8 @@ public class P3DModel
 		{// every tile with grass (all of the tunnels) have link to "floor1.mat" material set in resources folder. That way we can globally change material's shader from every script we want
 			if (textureName == "floor1")
 				mat = Resources.Load<Material>("floor1");
-			else if (textureName.Contains("fen") || textureName == "pine" || textureName == "mtlgrid" || textureName.Contains("strut") || textureName.Contains("detail"))
+			else if (textureName.Contains("decals") || textureName == "railings" ||textureName.Contains("fen") || textureName == "pine" 
+				|| textureName == "mtlgrid" || textureName.Contains("strut") || textureName.Contains("detail"))
 				mat = new Material(Shader.Find("Sprites/Default"));
 			else if (textureName == "window")
 				mat = new Material(Shader.Find("Unlit/Transparent"));

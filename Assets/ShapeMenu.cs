@@ -289,19 +289,20 @@ public class ShapeMenu : MonoBehaviour
 			FormMenu_toSlider();
 			return;
 		}
+		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float heightdiff = slider_realheight - BL.y;
+
 		//Flatter check
 		if (LastSelected == FormButton.flatter)
 		{
 			if (selected_tiles.Count != 1 || !IsFlatter(selected_tiles[0].name))
 				return;
 		}
-
-		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-		float heightdiff = slider_realheight - BL.y;
-
-		if (heightdiff == 0 && !Connect.isOn)
-			return;
-
+		else
+		{
+			if (heightdiff == 0 && !Connect.isOn)
+				return;
+		}
 		var surroundings = Build.Get_surrounding_tiles(markings);
 
 		if (selectionState == SelectionState.POINT_SELECTED)

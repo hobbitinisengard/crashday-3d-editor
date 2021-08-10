@@ -228,8 +228,13 @@ public class MainMenu : MonoBehaviour
 			return;
 		TrackSavable ResizedMap = new TrackSavable(Consts.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
 			int.Parse(ResizeMenu_Up.text), int.Parse(ResizeMenu_Down.text));
-		
+
+		var style = Consts.TRACK.Style;
+		var permission = Consts.TRACK.Permission;
 		Consts.TRACK = ResizedMap;
+		Consts.TRACK.Style = style;
+		Consts.TRACK.Permission = permission;
+
 		Loader.Isloading = true;
 		
 		ChangeSceneToEditor();
