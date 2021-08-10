@@ -248,19 +248,19 @@ public static class TileManager
 		if (name == "$ID trkdata/editor/fields.cat CategorySet1")
 			return "Roads";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet2")
-			return "Trunk roads";
+			return "Roads";//"Trunk roads";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet3")
-			return "Unsealed roads";
+			return "Roads";//"Unsealed roads";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet4")
 			return "Racetrack";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet5")
-			return "Arena";
+			return "Racetrack";//"Arena";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet6")
 			return "Elevated";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet7")
-			return "Tunnels";
+			return "Elevated";// Tunnels";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet8")
-			return "Tunnels 2";
+			return "Elevated";//"Tunnels 2";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet9")
 			return "Stunt Set";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet10")
