@@ -173,7 +173,7 @@ public class ProfileCreator : MonoBehaviour
 			return;
 		Vector3Int minV = Vector3Int.RoundToInt(RoadMesh.GetComponent<MeshFilter>().mesh.bounds.min);
 		Vector3Int maxV = Vector3Int.RoundToInt(RoadMesh.GetComponent<MeshFilter>().mesh.bounds.max);
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		for (int x = minV.x; x <= maxV.x; x++)
 		{
 			for (int z = minV.z; z <= maxV.z; z++)

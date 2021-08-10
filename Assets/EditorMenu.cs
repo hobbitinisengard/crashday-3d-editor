@@ -1,4 +1,4 @@
-﻿using SFB;
+using SFB;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -32,6 +32,10 @@ public class EditorMenu : MonoBehaviour
 	public GameObject formPANEL;
 	public Toggle plusOn;
 	public Dropdown GravityEffectDropdown;
+	/// <summary>
+	/// Text in upperPanel
+	/// </summary>
+	public Text nazwa_toru;
 	public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
 	public Text upperPanel_t_version;
 	public Text SAVED_TEXT; //for feedback when quick-saved
@@ -83,19 +87,11 @@ public class EditorMenu : MonoBehaviour
 		}
 	}
 	void QuickSave()
-	{ // track cannot be named 'untitled'
-		if (Consts.Trackname == "Untitled")
+	{ 
+		if (Consts.LoadLastFolderPath() == System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments))
 			ToggleSaveMenu();
 		else
-		{
-			string path = Consts.LoadTrackPath();
-			if (path == System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments))
-				ToggleSaveMenu();
-			else
-			{
-				SaveMenu_works(path);
-			}
-		}
+			SaveMenu_works(true);
 	}
 	IEnumerator DisplayMessage()
 	{
@@ -131,10 +127,6 @@ public class EditorMenu : MonoBehaviour
 		
 		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
 	}
-	void Awake()
-	{
-		NameOfTrack.text = GetComponent<Loader>().nazwa_toru.text;
-	}
 
 	public void SetMarkerDimsX(string val)
 	{
@@ -164,18 +156,27 @@ public class EditorMenu : MonoBehaviour
 		help.SetActive(!help.activeSelf);
 	}
 
-	public void SaveMenu_works(string path = null)
+	public void SaveMenu_works(bool Quicksave = false)
 	{
-		if(path == "" || path == null)
+		//Debug.Log("SaveMenu:" + path);
+		if (NameOfTrack.text == "")
+			return;
+		string path;
+
+		if (Quicksave)
+   path = Consts.LoadLastFolderPath();
+		else
 		{
-			string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", Consts.LoadTrackPath(), false);
+			string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", Consts.LoadLastFolderPath(), false);
 			path = originalpath[0];
 		}
-		if (path == "")
-			return;
-		Consts.SaveTrackPath(path);
+
+		Consts.SaveLastFolderPath(path);
+
+		path += "\\" + NameOfTrack.text + ".trk";
+
 		Consts.Trackname = NameOfTrack.text;
-		GetComponent<Loader>().nazwa_toru.text = Consts.Trackname;
+		nazwa_toru.text = NameOfTrack.text;
 		// save currently set gravity value to static variable to remember last dropdown selection
 		Consts.GravityValue = GravityEffectDropdown.value * 1000 * ((plusOn.isOn == true) ? 1 : -1);
 
@@ -185,7 +186,7 @@ public class EditorMenu : MonoBehaviour
 			for (int x = 0; x <= 4 * Consts.TRACK.Width; x++)
 			{
 				int i = x + 4 * y * Consts.TRACK.Width + y;
-				Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - y][x] = Consts.current_heights[i] * 5 + Consts.GravityValue / 5f;
+				Consts.TRACK.Heightmap[4 * Consts.TRACK.Height - y][x] = Consts.current_heights[i] * 5 + Consts.GravityValue;
 				
 			}
 		}
@@ -242,6 +243,7 @@ public class EditorMenu : MonoBehaviour
 				Debug.LogWarning("Index out of range: Y,X=" + q.Y + " " + q.X + " ");
 			}
 		}
+		Debug.Log("saveto:" + path);
 		MapParser.SaveMap(Consts.TRACK, path);
 		save.SetActive(false);
 		StartCoroutine(DisplayMessage());
@@ -290,3 +292,5 @@ public class EditorMenu : MonoBehaviour
 		}
 	}
 }
+
+

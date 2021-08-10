@@ -104,7 +104,7 @@ public class ArealMode : MonoBehaviour
 							Areal_amp(); // single-action
 						else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
 							Areal_amp(); //auto-fire
-						else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
+						if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
 							Areal_amp(-1); // single-action
 						else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
 							Areal_amp(-1); //auto-fire
@@ -137,7 +137,7 @@ public class ArealMode : MonoBehaviour
 				TargetDistValues.Clear();
 			}
 			// Highlight.pos is center vertex
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			for (float z = Highlight.pos.z - RadiusSlider.value; z <= Highlight.pos.z + RadiusSlider.value; z++)
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
@@ -163,8 +163,8 @@ public class ArealMode : MonoBehaviour
 						UndoBuffer.Add((int)x, (int)z);
 						Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
 						Consts.former_heights[idx] = Consts.current_heights[idx];
-						Consts.UpdateMapColliders(new List<int> { idx });
-						var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
+						Consts.UpdateMapColliders(new HashSet<int> { idx });
+						var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 						Build.UpdateTiles(tiles);
 						indexes.Add(idx);
 					}
@@ -190,7 +190,7 @@ public class ArealMode : MonoBehaviour
 				InitialPos = Highlight.pos;
 				TargetSmoothValues.Clear();
 			}
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			for (float z = Highlight.pos.z - RadiusSlider.value; z <= Highlight.pos.z + RadiusSlider.value; z++)
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
@@ -242,12 +242,12 @@ public class ArealMode : MonoBehaviour
 			Build.UpdateTiles(hitsList);
 		}
 	}
-	void Areal_amp(int ext_multiplier = 1)
+	void Areal_amp(int dir = 1)
 	{
 		if (Consts.IsWithinMapBounds(Highlight.pos))
 		{
 			// Highlight.pos is center vertex
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			for (float z = Highlight.pos.z - RadiusSlider.value; z <= Highlight.pos.z + RadiusSlider.value; z++)
 			{
 				for (float x = Highlight.pos.x - RadiusSlider.value; x <= Highlight.pos.x + RadiusSlider.value; x++)
@@ -256,9 +256,10 @@ public class ArealMode : MonoBehaviour
 					{
 						int idx = Consts.PosToIndex((int)x, (int)z);
 						Vector3 currentpos = Consts.IndexToPos(idx);
+						float heightdiff = Consts.current_heights[idx] - Consts.SliderValue2RealHeight(HeightSlider.value);
 						UndoBuffer.Add(currentpos);
-						Consts.current_heights[idx] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
-						Consts.former_heights[idx] = Consts.current_heights[idx];
+						Consts.former_heights[idx] += dir * heightdiff * IntensitySlider.value/100f;
+						Consts.current_heights[idx] = Consts.former_heights[idx];
 						indexes.Add(idx);
 					}
 				}
@@ -278,7 +279,7 @@ public class ArealMode : MonoBehaviour
 		{
 			// Highlight.pos is center vertex
 
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			float MaxRadius = RadiusSlider.value * 1.41f;
 			for (float z = Highlight.pos.z - RadiusSlider.value; z <= Highlight.pos.z + RadiusSlider.value; z++)
 			{
@@ -335,7 +336,7 @@ public class ArealMode : MonoBehaviour
 				Vector3Int LD = new Vector3Int(Mathf.Min(a.x, b.x), 0, Mathf.Min(a.z, b.z));
 				Vector3Int PG = new Vector3Int(Mathf.Max(a.x, b.x), 0, Mathf.Max(a.z, b.z));
 				{
-					List<int> indexes = new List<int>();
+					HashSet<int> indexes = new HashSet<int>();
 					int x_edge = PG.x - LD.x;
 					int z_edge = PG.z - LD.z;
 					for (int z = LD.z - (int)RadiusSlider.value; z <= PG.z + RadiusSlider.value; z++)

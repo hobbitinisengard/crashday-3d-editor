@@ -46,7 +46,6 @@ public class ShapeMenu : MonoBehaviour
 	public static Vector3 BL;
 	private Vector3 mousePosition1;
 	private Vector3Int TR;
-	private Vector3Int TRcut;
 
 	void Start()
 	{
@@ -221,7 +220,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11))
 				{
-					TRcut = Vector3Int.RoundToInt(Highlight.pos);
+					TR = Vector3Int.RoundToInt(Highlight.pos);
 					StateSwitch(SelectionState.POINT_SELECTED);
 				}
 			}
@@ -241,7 +240,7 @@ public class ShapeMenu : MonoBehaviour
 		
 		float slider_value = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject znacznik in markings)
 		{
 			if (znacznik.name == "on")
@@ -285,30 +284,31 @@ public class ShapeMenu : MonoBehaviour
 			SetToInfinity();
 			return;
 		}
+		if (LastSelected == FormButton.to_slider)
+		{
+			FormMenu_toSlider();
+			return;
+		}
+		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float heightdiff = slider_realheight - BL.y;
+
 		//Flatter check
 		if (LastSelected == FormButton.flatter)
 		{
 			if (selected_tiles.Count != 1 || !IsFlatter(selected_tiles[0].name))
 				return;
 		}
-
-		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-		float heightdiff = slider_realheight - BL.y;
-
-		if (heightdiff == 0)
-			return;
-
-		if (LastSelected == FormButton.to_slider)
+		else
 		{
-			FormMenu_toSlider();
-			return;
+			if (heightdiff == 0 && !Connect.isOn)
+				return;
 		}
-
 		var surroundings = Build.Get_surrounding_tiles(markings);
 
 		if (selectionState == SelectionState.POINT_SELECTED)
 		{
-			Set_rotated_BL_and_TR();
+			if (!SelectTR.isOn)
+				Set_rotated_BL_and_TR();
 			List<DuVec3> extremes = new List<DuVec3>();
 			if (Connect.isOn)
 				extremes = GetOpposingVerticesForConnect(BL, TR);
@@ -321,10 +321,17 @@ public class ShapeMenu : MonoBehaviour
 					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
 					{
 						for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
-						{
-							SetMarkingPos(x, z, step, steps, ref extremes);
-							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
-								goto endloop;
+						{		
+							// check for elements 
+							if (Connect.isOn)
+							{
+								int ext_index = (int)Mathf.Abs(z - BL.z);
+								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+								steps = (int)Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
+								slider_realheight = extremes[ext_index].P2.y;
+								BL.y = extremes[ext_index].P1.y;
+							}
+							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
 						}
 						step += 1;
 					}
@@ -341,16 +348,22 @@ public class ShapeMenu : MonoBehaviour
 					{
 						for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
 						{
-							SetMarkingPos(x, z, step, steps, ref extremes);
-							if (SelectTR.isOn && TRcut.x == x && TRcut.z == z)
-								goto endloop;
+							// check for elements 
+							if (Connect.isOn)
+							{
+								int ext_index = (int)Mathf.Abs(x - BL.x);
+								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
+								steps = (int)Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
+								slider_realheight = extremes[ext_index].P2.y;
+								BL.y = extremes[ext_index].P1.y;
+							}
+							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
 						}
 						step += 1;
 					}
 				}
 			}
 
-			endloop:
 			Consts.UpdateMapColliders(markings);
 			//if (current != null)
 			//  Build.UpdateTiles(new List<GameObject> { current });
@@ -433,7 +446,7 @@ public class ShapeMenu : MonoBehaviour
 		var surroundings = Build.Get_surrounding_tiles(markings);
 		float slider_value = FormPanel.GetComponent<Form>().HeightSlider.value;
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject marking in markings)
 		{
 			if (marking.name == "on")
@@ -467,7 +480,7 @@ public class ShapeMenu : MonoBehaviour
 		}
 
 		//Update terrain
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject znacznik in markings)
 		{
 			if (znacznik.name == "on")
@@ -563,31 +576,19 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-	void SetMarkingPos(int x, int z, int step, int steps, ref List<DuVec3> extremes)
+	void SetMarkingPos(int x, int z, int step, int steps, float slider_realheight, float heightdiff, ref List<DuVec3> extremes)
 	{
-		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-		float heightdiff = slider_realheight - BL.y;
-
 		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
 		if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
 		{
 
 			index = Consts.PosToIndex(x, z);
-			// check for elements 
-			if (Connect.isOn)
-			{
-				int ext_index = (int)Mathf.Abs(z - BL.z);
-				heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-				steps = (int)Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-				slider_realheight = extremes[ext_index].P2.y;
-				BL.y = extremes[ext_index].P1.y;
-			}
-
+ 
 			UndoBuffer.Add(Consts.IndexToPos(index));
 			float old_Y = Consts.current_heights[index]; // tylko do keepshape
 			float Y = old_Y;
 			if (LastSelected == FormButton.linear)
-				Y = BL.y + step / steps * heightdiff;
+				Y = BL.y + (float)step / steps * heightdiff;
 			else if (LastSelected == FormButton.integral)
 			{
 				if (2 * step <= steps)

@@ -1,4 +1,5 @@
-﻿///<summary>Info about element placed on the map during mapping</summary>
+﻿using System.Collections.Generic;
+///<summary>Info about element placed on the map during mapping</summary>
 public class TilePlacement
 {
 	public string Name;
@@ -8,7 +9,7 @@ public class TilePlacement
 	/// <summary>
 	/// terrain vertices = list of vertices' indexes that this element contains
 	/// </summary>
-	public int[] t_verts;
+	public HashSet<int> t_verts;
 
 	public TilePlacement()
 	{

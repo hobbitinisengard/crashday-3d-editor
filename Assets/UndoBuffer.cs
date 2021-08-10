@@ -86,7 +86,7 @@ public static class UndoBuffer
 	public static void Paste()
 	{
 		//Indexes of vertices for UpdateMapColliders()
-		List<int> indexes = new List<int>();
+		HashSet<int> indexes = new HashSet<int>();
 		// List of tiles lying onto vertices that are now being pasted
 		List<GameObject> tiles_to_update = new List<GameObject>();
 		foreach (var mrk_pos in UndoZnaczniki)
@@ -94,9 +94,10 @@ public static class UndoBuffer
 			if (Consts.IsWithinMapBounds(mrk_pos))
 			{
 				// Update arrays of vertex heights
-				indexes.Add(Consts.PosToIndex(mrk_pos));
-				Consts.current_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
-				Consts.former_heights[indexes[indexes.Count - 1]] = mrk_pos.y;
+				int newindex = Consts.PosToIndex(mrk_pos);
+				indexes.Add(newindex);
+				Consts.current_heights[newindex] = mrk_pos.y;
+				Consts.former_heights[newindex] = mrk_pos.y;
 
 				Vector3 pom = mrk_pos;
 

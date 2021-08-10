@@ -113,7 +113,7 @@ public class SingleMode : MonoBehaviour
 						Single_amp(); // single-action
 					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
 						Single_amp(); //auto-fire
-					else if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
+					if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
 						Single_amp(-1); // single-action
 					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
 						Single_amp(-1); //auto-fire
@@ -121,7 +121,7 @@ public class SingleMode : MonoBehaviour
 			}
 		}
 	}
-	void Single_amp(int ext_multiplier = 1)
+	void Single_amp(int dir = 1)
 	{
 		if (Highlight.over && Consts.IsWithinMapBounds(Highlight.pos))
 		{
@@ -132,22 +132,23 @@ public class SingleMode : MonoBehaviour
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
 				to_update.Add(hit.transform.gameObject);
-
+			float heightdiff = Consts.current_heights[index] - Consts.SliderValue2RealHeight(HeightSlider.value);
+					
 			if (to_update.Count > 0)
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
-					Consts.current_heights[index] *= 1 + ext_multiplier * IntensitySlider.value/100f;
+					Consts.current_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
 					//Helper.current_heights[index] = Helper.former_heights[index];
-					Consts.UpdateMapColliders(new List<int> { index });
+					Consts.UpdateMapColliders(new HashSet<int> { index });
 					Build.UpdateTiles(to_update);
 				}
 			}
 			else
 			{
-				Consts.former_heights[index] *= 1 + ext_multiplier * IntensitySlider.value / 100f;
+				Consts.former_heights[index] += heightdiff * IntensitySlider.value/100f;
 				Consts.current_heights[index] = Consts.former_heights[index];
-				Consts.UpdateMapColliders(new List<int> { index });
+				Consts.UpdateMapColliders(new HashSet<int> { index });
 			}
 		}
 	}
@@ -168,8 +169,8 @@ public class SingleMode : MonoBehaviour
 			UndoBuffer.Add(Highlight.pos);
 			Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
 			Consts.former_heights[idx] = Consts.current_heights[idx];
-			Consts.UpdateMapColliders(new List<int> { idx });
-			var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
+			Consts.UpdateMapColliders(new HashSet<int> { idx });
+			var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 			Build.UpdateTiles(tiles);
 		}
 	}
@@ -198,8 +199,8 @@ public class SingleMode : MonoBehaviour
 			UndoBuffer.Add(Highlight.pos);
 			Consts.former_heights[idx] += (avg - Consts.former_heights[idx]) * IntensitySlider.value / 100f;
 			Consts.current_heights[idx] = Consts.former_heights[idx];
-			Consts.UpdateMapColliders(new List<int> { idx });
-			var tiles = Build.Get_surrounding_tiles(new List<int> { idx });
+			Consts.UpdateMapColliders(new HashSet<int> { idx });
+			var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 			Build.UpdateTiles(tiles);
 		}
 	}
@@ -230,7 +231,7 @@ public class SingleMode : MonoBehaviour
 				Vector3Int a = Vector3Int.RoundToInt(Consts.IndexToPos(index));
 				Vector3Int b = Vector3Int.RoundToInt(Consts.IndexToPos(index2));
 				{
-					List<int> indexes = new List<int>();
+					HashSet<int> indexes = new HashSet<int>();
 					for (int z = Mathf.Min(a.z, b.z); z <= Mathf.Max(a.z, b.z); z++)
 					{
 						for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
@@ -277,7 +278,7 @@ public class SingleMode : MonoBehaviour
 				{
 					Consts.current_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
 					Consts.former_heights[index] = Consts.current_heights[index];
-					Consts.UpdateMapColliders(new List<int> { index });
+					Consts.UpdateMapColliders(new HashSet<int> { index });
 					Build.UpdateTiles(to_update);
 				}
 			}
@@ -285,7 +286,7 @@ public class SingleMode : MonoBehaviour
 			{
 				Consts.former_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
 				Consts.current_heights[index] = Consts.former_heights[index];
-				Consts.UpdateMapColliders(new List<int> { index });
+				Consts.UpdateMapColliders(new HashSet<int> { index });
 			}
 		}
 	}

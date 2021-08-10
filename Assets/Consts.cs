@@ -6,13 +6,14 @@ using UnityEngine;
 /// </summary>
 public static class Consts
 {
-	public readonly static string VERSION = "2.5";
+	public readonly static string VERSION = "3.0";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
-	public readonly static int MAX_H = 20000;
+	public readonly static int MAX_H = 20000 + 5;
 	public readonly static int MIN_H = -MAX_H;
-	public readonly static int RAY_H = MAX_H - MIN_H + 5;
+	public readonly static int RAY_H = MAX_H + 1 - MIN_H;
+	public static GameObject Cone;
 	public static int GravityValue = 0;
 	/// <summary>
 	/// visible vertices in second form mode
@@ -20,15 +21,14 @@ public static class Consts
 	public static Vector2Int MarkerBounds = new Vector2Int(60, 60);
 	public static TrackSavable TRACK { get; set; }
 	///<summary> Is editor loading map? </summary>
-	public static bool Isloading { get; set; } = false;
+	
 	///<summary> requires BL pos</summary>
 	public static TilePlacement[,] TilePlacementArray { get; set; }
 	///<summary> String showed on the top bar of the editor during mapping </summary>
 	public static string Trackname { get; set; } = "Untitled";
-	public static string DefaultTilesetName { get; set; } = "Hidden";
+	public static string DefaultTilesetName { get; set; } = "Nature";
 	public static float[] former_heights;
 	public static float[] current_heights;
-	public static readonly string[] RMC_NAMES = { "1x1", "1x1H1", "1x1H1V1", "1x1V1", "1x1V1H1", "1x2", "1x2H1H2", "1x2H1V1", "1x2H1V1H2", "1x2V1", "1x2H1", "1x2V1H1", "1x2V1H1H2", "2x1", "2x1H1", "2x1H1V1", "2x1H1V1V2", "2x1V1", "2x1V1H1", "2x1V1H1V2", "2x1V1V2", "2x2", "2x2H1V1", "2x2H1V1H2", "2x2H1V1H2V2", "2x2H2V2", "2x2V1", "2x2V1H1", "2x2V1H1H2", "2x2V1H1V2", "2x2V1H1V2H2", "2x2V1V2", "2x2V1V2H1H2", "2x2V1V2H2", "2x2V1V2H2H2", "2x2V2H2", "2x2V2H2H1", "2x2V2H1", "2x2V1H2"};
 	/// Load track by inversing elements
 	/// </summary>
 	public static bool LoadMirrored = false;
@@ -45,22 +45,28 @@ public static class Consts
 	/// Loads latest path from StreamingAssets/Path.txt
 	/// </summary>
 	/// <returns></returns>
-	public static string LoadTrackPath()
+	public static string LoadLastFolderPath()
 	{
 		StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");
 		string LastTrackPath = w.ReadLine();
 		w.Close();
 		if (LastTrackPath == "")
 			LastTrackPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+		//Debug.Log("LoadPath:" + LastTrackPath);
 		return LastTrackPath;
 	}
 
 	/// <summary>
 	/// Saves latest path to StreamingAssets/Path.txt
 	/// </summary>
-	public static void SaveTrackPath(string path)
+	public static void SaveLastFolderPath(string path)
 	{
-		Debug.Log("SaveTrack:" + path);
+		if(path == null)
+		{
+			Debug.LogError("path null");
+			return;
+		}
+		Debug.Log(path);
 		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
 		w.WriteLine(path);
 		w.Close();
@@ -73,7 +79,7 @@ public static class Consts
 		if (precision)
 			return point;
 		else
-			return new Vector3(Mathf.RoundToInt(point.x), point.y, Mathf.RoundToInt(point.z)); // return it
+			return RoundVector3(point);
 	}
 	/// <summary>
 	/// Distance on 2D map between 3D points
@@ -154,14 +160,13 @@ public static class Consts
 	{
 		if (mcs[0].layer == 11) // Argumentami znaczniki
 		{
-			List<int> indexes = new List<int>();
+			HashSet<int> indexes = new HashSet<int>();
 			foreach (GameObject znacznik in mcs)
 			{
 				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
 				indexes.Add(PosToIndex(v.x, v.z));
 			}
 			UpdateMapColliders(indexes, IsRecoveringTerrain);
-
 		}
 		else //Argumentami MapCollidery
 		{
@@ -220,7 +225,7 @@ public static class Consts
 	/// </summary>
 	/// <param name="v"></param>
 	/// <returns></returns>
-	public static Vector3 Round_X_Z_InVector(Vector3 v)
+	public static Vector3 RoundVector3(Vector3 v)
 	{
 		return new Vector3(Mathf.RoundToInt(v.x), v.y, Mathf.RoundToInt(v.z));
 	}
@@ -228,7 +233,7 @@ public static class Consts
 	/// List of map colliders, \-/ position from index cast ray (layer=8). If hit isn't on list, add it. Run overload for gameObjects.
 	/// If recovering, the only indexes that are going to be recovered are those from indexes list
 	/// </summary>
-	public static void UpdateMapColliders(List<int> indexes, bool IsRecoveringTerrain = false)
+	public static void UpdateMapColliders(HashSet<int> indexes, bool IsRecoveringTerrain = false)
 	{
 		if (indexes.Count == 0)
 			return;
@@ -237,7 +242,7 @@ public static class Consts
 		{
 			Vector3Int v = Vector3Int.RoundToInt(Consts.IndexToPos(i));
 			v.y = Consts.MAX_H;
-			RaycastHit[] hits = Physics.SphereCastAll(v, 0.002f, Vector3.down, Consts.RAY_H, 1 << 8);
+			RaycastHit[] hits = Physics.SphereCastAll(v, .1f, Vector3.down, Consts.RAY_H, 1 << 8);
 			foreach (RaycastHit hit in hits)
 				if (!mcs.Contains(hit.transform.gameObject))
 				{
@@ -268,6 +273,8 @@ public static class Consts
 				if (float.IsNaN(verts[i].y))
 					HasNaNs = true;
 			}
+			if (!grass.GetComponent<MeshRenderer>().enabled)
+				continue;
 			var mc = grass.GetComponent<MeshCollider>();
 			var mf = grass.GetComponent<MeshFilter>();
 
@@ -279,7 +286,8 @@ public static class Consts
 				mf.mesh = mc.sharedMesh;
 			}
 			else
-			{// mesh has to have a collider but it can't be displayed with NaNs so we create collider with lowest points so it can be cast on
+			{// mesh has to have a collider but it can't be displayed with NaNs
+				// so we create collider with lowest points so it can be cast on
 
 				// meshfilter has NaNs
 				mf.mesh.vertices = verts;

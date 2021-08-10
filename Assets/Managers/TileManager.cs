@@ -47,6 +47,7 @@ public static class TileManager
 			return;
 
 		string CdWorkshopPath = NavigateDirUp(IO.GetCrashdayPath(), 2) + "\\workshop\\content\\508980\\";
+
 		//Unpack custom tilesets
 		foreach (string Id in WorkshopModIds)
 			PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + Id).First(), Id);
@@ -210,6 +211,7 @@ public static class TileManager
 			}
 
 			P3DModel model = P3DParser.LoadFromFile(Model_path);
+
 			List<Material> ModelMaterials = new List<Material>(model.P3DNumTextures);
 
 			for (int j = 0; j < model.P3DNumTextures; j++)
@@ -246,9 +248,9 @@ public static class TileManager
 		if (name == "$ID trkdata/editor/fields.cat CategorySet1")
 			return "Roads";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet2")
-			return "Trunk roads";
+			return "Trunk Roads";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet3")
-			return "Unsealed roads";
+			return "Unsealed";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet4")
 			return "Racetrack";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet5")
@@ -258,7 +260,7 @@ public static class TileManager
 		if (name == "$ID trkdata/editor/fields.cat CategorySet7")
 			return "Tunnels";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet8")
-			return "Tunnels 2";
+			return "Tunnels";//"Tunnels 2";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet9")
 			return "Stunt Set";
 		if (name == "$ID trkdata/editor/fields.cat CategorySet10")
