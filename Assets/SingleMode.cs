@@ -113,11 +113,15 @@ public class SingleMode : MonoBehaviour
 						Single_amp(); // single-action
 					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
 						Single_amp(); //auto-fire
+					if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(1))
+						Single_amp(-1); // single-action
+					else if (!Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(1))
+						Single_amp(-1); //auto-fire
 				}
 			}
 		}
 	}
-	void Single_amp()
+	void Single_amp(int dir = 1)
 	{
 		if (Highlight.over && Consts.IsWithinMapBounds(Highlight.pos))
 		{
@@ -134,7 +138,7 @@ public class SingleMode : MonoBehaviour
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
-					Consts.current_heights[index] += heightdiff * IntensitySlider.value/100f;
+					Consts.current_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
 					//Helper.current_heights[index] = Helper.former_heights[index];
 					Consts.UpdateMapColliders(new HashSet<int> { index });
 					Build.UpdateTiles(to_update);
