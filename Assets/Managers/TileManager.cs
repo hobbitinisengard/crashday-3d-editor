@@ -181,23 +181,29 @@ public static class TileManager
 			}
 			// load icon of tile
 			Texture2D texture = Texture2D.blackTexture;
-			string[] files = Directory.GetFiles(NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\", name + ".*");
-			files = files.Where(f => f.Contains("dds") || f.Contains("tga")).ToArray();
-			if (files.Length == 0)
+			if(Directory.Exists(NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\"))
 			{
-				string datapath = IO.GetCrashdayPath() + "\\data\\content\\textures\\pictures\\tiles\\" + name + ".tga";
-				texture = TgaDecoder.LoadTGA(datapath);
+				string[] files = Directory.GetFiles(NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\", name + ".*");
+				files = files.Where(f => f.Contains("dds") || f.Contains("tga")).ToArray();
+				if (files.Length == 0)
+				{
+					string datapath = IO.GetCrashdayPath() + "\\data\\content\\textures\\pictures\\tiles\\" + name + ".tga";
+					texture = TgaDecoder.LoadTGA(datapath);
+				}
+				else if (files[0].Contains(".tga")) // tga format
+					texture = TgaDecoder.LoadTGA(files[0]);
+				else
+				{
+					// file is in dds format
+					string ddsFilePath = NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\" + name + ".dds";
+					byte[] bytes = System.IO.File.ReadAllBytes(ddsFilePath);
+					texture = DDSDecoder.LoadTextureDXT(bytes, TextureFormat.DXT1);
+				}
 			}
-			else if (files[0].Contains(".tga")) // tga format
-				texture = TgaDecoder.LoadTGA(files[0]);
 			else
 			{
-				// file is in dds format
-				string ddsFilePath = NavigateDirUp(Dir, 2) + "\\textures\\pictures\\tiles\\" + name + ".dds";
-				byte[] bytes = System.IO.File.ReadAllBytes(ddsFilePath);
-				texture = DDSDecoder.LoadTextureDXT(bytes, TextureFormat.DXT1);
+				texture = Resources.Load<Texture2D>("flag");
 			}
-
 			string Model_path = NavigateDirUp(Dir, 2) + "\\models\\" + modelName + ".p3d";
 
 			if (!System.IO.File.Exists(Model_path))

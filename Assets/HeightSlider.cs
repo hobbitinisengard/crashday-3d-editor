@@ -13,7 +13,7 @@ public class HeightSlider : MonoBehaviour
   private void Start()
   {
     HSlider.minValue = Consts.MIN_H;
-    HSlider.maxValue = Consts.MAX_H;
+    HSlider.maxValue = Consts.MAX_H - 5;
   }
   private void Update()
   {
