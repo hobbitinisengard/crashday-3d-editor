@@ -183,10 +183,11 @@ public class ProfileCreator : MonoBehaviour
 				if (Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 14))
 				{
 					int idx = Consts.PosToIndex(x, z);
-					UndoBuffer.Add(x, z);
+					indexes.Add(idx);
+					Vector3 for_buffer = Consts.IndexToPos(idx);
 					Consts.former_heights[idx] = hit.point.y;
 					Consts.current_heights[idx] = Consts.former_heights[idx];
-					indexes.Add(idx);
+					UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 				}
 			}
 		}
@@ -194,7 +195,7 @@ public class ProfileCreator : MonoBehaviour
 		//Search for any tiles
 		var surr = Build.Get_surrounding_tiles(indexes);
 		Build.UpdateTiles(surr);
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.next_operation = true;
 		RemovePreview(false);
 	}
 

@@ -55,7 +55,7 @@ public class SingleMode : MonoBehaviour
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(0))
-					UndoBuffer.ApplyOperation();
+					UndoBuffer.next_operation = true;
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
 				{
@@ -81,8 +81,8 @@ public class SingleMode : MonoBehaviour
 			DistortionSlider.transform.parent.gameObject.SetActive(true);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
-				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
-					UndoBuffer.ApplyOperation();
+				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
+					UndoBuffer.next_operation = true;
 
 				if (!MouseInputUIBlocker.BlockedByUI)
 				{
@@ -104,8 +104,8 @@ public class SingleMode : MonoBehaviour
 			DistortionSlider.transform.parent.gameObject.SetActive(false);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
-				if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
-					UndoBuffer.ApplyOperation();
+				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
+					UndoBuffer.next_operation = true;
 
 				if (!MouseInputUIBlocker.BlockedByUI)
 				{
@@ -127,7 +127,6 @@ public class SingleMode : MonoBehaviour
 		{
 			Vector3 v = Highlight.pos;
 			int index = Consts.PosToIndex(v);
-			UndoBuffer.Add(Consts.IndexToPos(index));
 			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Consts.MAX_H, v.z), 0.5f, Vector3.down, Consts.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
@@ -138,7 +137,9 @@ public class SingleMode : MonoBehaviour
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
+					Vector3 for_buffer = Consts.IndexToPos(index);
 					Consts.current_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
+					UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 					//Helper.current_heights[index] = Helper.former_heights[index];
 					Consts.UpdateMapColliders(new HashSet<int> { index });
 					Build.UpdateTiles(to_update);
@@ -146,8 +147,10 @@ public class SingleMode : MonoBehaviour
 			}
 			else
 			{
-				Consts.former_heights[index] += heightdiff * IntensitySlider.value/100f;
+				Vector3 for_buffer = Consts.IndexToPos(index);
+				Consts.former_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
 				Consts.current_heights[index] = Consts.former_heights[index];
+				UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 				Consts.UpdateMapColliders(new HashSet<int> { index });
 			}
 		}
@@ -166,9 +169,10 @@ public class SingleMode : MonoBehaviour
 				TargetDistValue = Random.Range(h_val - dist_val, h_val + dist_val);
 			}
 			int idx = Consts.PosToIndex(Highlight.pos);
-			UndoBuffer.Add(Highlight.pos);
+			Vector3 for_buffer = Highlight.pos;
 			Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
 			Consts.former_heights[idx] = Consts.current_heights[idx];
+			UndoBuffer.Add(for_buffer, Highlight.pos);
 			Consts.UpdateMapColliders(new HashSet<int> { idx });
 			var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 			Build.UpdateTiles(tiles);
@@ -196,9 +200,10 @@ public class SingleMode : MonoBehaviour
 			}
 			float avg = height_sum / 8f;
 			int idx = Consts.PosToIndex(Highlight.pos);
-			UndoBuffer.Add(Highlight.pos);
+			Vector3 for_buffer = Highlight.pos;
 			Consts.former_heights[idx] += (avg - Consts.former_heights[idx]) * IntensitySlider.value / 100f;
 			Consts.current_heights[idx] = Consts.former_heights[idx];
+			UndoBuffer.Add(for_buffer, Highlight.pos);
 			Consts.UpdateMapColliders(new HashSet<int> { idx });
 			var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 			Build.UpdateTiles(tiles);
@@ -237,9 +242,10 @@ public class SingleMode : MonoBehaviour
 						for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
 						{
 							int idx = x + 4 * z * Consts.TRACK.Width + z;
-							UndoBuffer.Add(Consts.IndexToPos(idx));
+							Vector3 for_buffer = Consts.IndexToPos(idx);
 							Consts.former_heights[idx] = Consts.SliderValue2RealHeight(HeightSlider.value);
 							Consts.current_heights[idx] = Consts.former_heights[idx];
+							UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 							indexes.Add(idx);
 						}
 					}
@@ -253,7 +259,7 @@ public class SingleMode : MonoBehaviour
 					to_update.Add(hit.transform.gameObject);
 
 				Build.UpdateTiles(to_update);
-				UndoBuffer.ApplyOperation();
+				UndoBuffer.next_operation = true;
 			}
 		}
 	}
@@ -266,7 +272,6 @@ public class SingleMode : MonoBehaviour
 		{
 			Vector3 v = Highlight.pos;
 			int index = Consts.PosToIndex(v);
-			UndoBuffer.Add(Consts.IndexToPos(index));
 			RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Consts.MAX_H, v.z), 0.5f, Vector3.down, Consts.RAY_H, 1 << 9);
 			List<GameObject> to_update = new List<GameObject>();
 			foreach (RaycastHit hit in hits)
@@ -276,16 +281,20 @@ public class SingleMode : MonoBehaviour
 			{
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
+					Vector3 for_buffer = Consts.IndexToPos(index);
 					Consts.current_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
 					Consts.former_heights[index] = Consts.current_heights[index];
+					UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 					Consts.UpdateMapColliders(new HashSet<int> { index });
 					Build.UpdateTiles(to_update);
 				}
 			}
 			else
 			{
+				Vector3 for_buffer = Consts.IndexToPos(index);
 				Consts.former_heights[index] = Consts.SliderValue2RealHeight(HeightSlider.value);
 				Consts.current_heights[index] = Consts.former_heights[index];
+				UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 				Consts.UpdateMapColliders(new HashSet<int> { index });
 			}
 		}

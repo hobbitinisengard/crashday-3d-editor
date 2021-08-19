@@ -69,6 +69,8 @@ public class Loader : MonoBehaviour
 			Consts.Trackname = "Untitled";
 		}
 
+		UndoBuffer.Reset();
+
 		if (Consts.LoadMirrored)
 			Consts.Trackname += " (mirrored)";
 
@@ -168,7 +170,6 @@ public class Loader : MonoBehaviour
 	}
 	private void InitializeHeightArrays(int Height, int Width)
 	{
-		// initialize height arrays
 		Consts.former_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
 		Consts.current_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
 	}

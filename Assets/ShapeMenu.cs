@@ -245,9 +245,8 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (znacznik.name == "on")
 			{
-				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
+				Vector3 v = znacznik.transform.position;
 				int index = Consts.PosToIndex(v);
-				UndoBuffer.Add(Consts.IndexToPos(index));
 				indexes.Add(index);
 
 				if (KeepShape.isOn)
@@ -255,13 +254,16 @@ public class ShapeMenu : MonoBehaviour
 					Consts.current_heights[index] += slider_value;
 				}
 				else
+				{
 					Consts.current_heights[index] = slider_value;
+				}
 
 				znacznik.transform.position = new Vector3(znacznik.transform.position.x, Consts.current_heights[index], znacznik.transform.position.z);
 				Consts.former_heights[index] = Consts.current_heights[index];
+				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.next_operation = true;
 		Consts.UpdateMapColliders(indexes);
 
 		Build.UpdateTiles(surroundings);
@@ -369,7 +371,7 @@ public class ShapeMenu : MonoBehaviour
 			//  Build.UpdateTiles(new List<GameObject> { current });
 			Build.UpdateTiles(surroundings);
 			surroundings.Clear();
-			UndoBuffer.ApplyOperation();
+			UndoBuffer.next_operation = true;
 		}
 
 		// LOCAL FUNCTIONS
@@ -451,18 +453,18 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (marking.name == "on")
 			{
-				Vector3Int v = Vector3Int.RoundToInt(marking.transform.position);
+				Vector3 v = marking.transform.position;
 				int index = Consts.PosToIndex(v);
-				UndoBuffer.Add(Consts.IndexToPos(index));
 				indexes.Add(index);
 
 				Consts.current_heights[index] = BL.y + slider_value * (Consts.current_heights[index] - BL.y);
 
 				marking.transform.position = new Vector3(marking.transform.position.x, Consts.current_heights[index], marking.transform.position.z);
 				Consts.former_heights[index] = Consts.current_heights[index];
+				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.next_operation = true;
 		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(surroundings);
 	}
@@ -485,15 +487,15 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (znacznik.name == "on")
 			{
-				Vector3Int v = Vector3Int.RoundToInt(znacznik.transform.position);
+				Vector3 v = znacznik.transform.position;
 				int index = Consts.PosToIndex(v);
-				UndoBuffer.Add(Consts.IndexToPos(index));
 				indexes.Add(index);
 				Consts.current_heights[index] = float.NaN;
 				Consts.former_heights[index] = Consts.current_heights[index];
+				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.next_operation = true;
 		Consts.UpdateMapColliders(indexes);
 	}
 	void Set_rotated_BL_and_TR()
@@ -584,7 +586,6 @@ public class ShapeMenu : MonoBehaviour
 
 			index = Consts.PosToIndex(x, z);
  
-			UndoBuffer.Add(Consts.IndexToPos(index));
 			float old_Y = Consts.current_heights[index]; // tylko do keepshape
 			float Y = old_Y;
 			if (LastSelected == FormButton.linear)
@@ -612,8 +613,10 @@ public class ShapeMenu : MonoBehaviour
 				Y += old_Y - BL.y;
 			if (float.IsNaN(Y))
 				return;
+			Vector3 for_buffer = Consts.IndexToPos(index);
 			Consts.former_heights[index] = Y;
 			Consts.current_heights[index] = Consts.former_heights[index];
+			UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 			GameObject znacznik = hit.transform.gameObject;
 			znacznik.transform.position = new Vector3(znacznik.transform.position.x, Y, znacznik.transform.position.z);
 		}

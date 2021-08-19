@@ -231,18 +231,17 @@ public class CopyPaste : MonoBehaviour
 		if (CopyClipboard.Count == 0)
 			return;
 
-		UndoBuffer.Add(CopyClipboard);
 		//Indexes of vertices for UpdateMapColliders()
 		HashSet<int> indexes = new HashSet<int>();
 		foreach (var mrk in CopyClipboard)
 		{
-			if (Consts.IsWithinMapBounds(Highlight.pos + mrk))
+			Vector3 pom = Highlight.pos + mrk;
+			if (Consts.IsWithinMapBounds(pom))
 			{
-				Vector3 pom = Highlight.pos + mrk;
 				// Update arrays of vertex heights
 				int newindex = Consts.PosToIndex(pom);
 				indexes.Add(newindex);
-				UndoBuffer.Add((int)pom.x, (int)pom.z);
+				Vector3 for_buffer = Consts.IndexToPos(newindex);
 				if (pastingMode == PastingMode.fixed_height)
 				{
 					Consts.current_heights[newindex] = fixed_height + mrk.y;
@@ -253,10 +252,11 @@ public class CopyPaste : MonoBehaviour
 					Consts.current_heights[newindex] = pom.y;
 					Consts.former_heights[newindex] = pom.y;
 				}
+				UndoBuffer.Add(for_buffer, Consts.IndexToPos(newindex));
 			}
 		}
 		Consts.UpdateMapColliders(indexes);
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.next_operation = true;
 		Build.UpdateTiles(Build.Get_surrounding_tiles(Markings, true));
 	}
 	void MousewheelWorks(float sliderval)

@@ -5,118 +5,85 @@ using UnityEngine;
 public static class UndoBuffer
 {
 	/// <summary>
-	/// Global coordinates of former vertices before last terrain operation
+	/// Global coordinates of former vertices. Layers<Vertices<Index, Height before and after oper-n>>
 	/// </summary>
-	private static List<Vector3> UndoZnaczniki = new List<Vector3>();
-	/// <summary>
-	/// is this vertex already in UndoZnaczniki?
-	/// </summary>
-	private static Dictionary<int, bool> UndoCreated = new Dictionary<int, bool>();
+	private static List<Dictionary<int, float[]>> Buffer = new List<Dictionary<int, float[]>>();
+	private static int current_layer = -1;
 	/// <summary>
 	/// Clear buffer before next call of AddZnacznik
 	/// </summary>
-	private static bool Clear_buffer_before_next_add = false;
-
-	private static void AddNewPoint(Vector3 point, bool ItIsAlreadyPresent = false)
+	public static bool next_operation = true;
+	public static void Reset()
 	{
-		UndoZnaczniki.Add(point);
-		if (!ItIsAlreadyPresent)
-			UndoCreated.Add(Consts.PosToIndex(point), true);
+		Buffer.Clear();
+		current_layer = -1;
 	}
-
-	private static bool IsAlreadyPresent(Vector3 point)
-	{
-		return UndoCreated.ContainsKey(Consts.PosToIndex(point));
-	}
-
-	private static void ClearBuffer()
-	{
-		UndoZnaczniki.Clear();
-		UndoCreated.Clear();
-	}
-
-	public static void Add(int x, int z, bool EnableOverwriting = false)
-	{
-		Vector3 mrk = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, z)], z);
-		Add(mrk, EnableOverwriting);
-	}
-
 	/// <summary>
 	/// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
 	/// </summary>
-	/// <param name="mrk"></param>
-	public static void Add(Vector3 mrk, bool EnableOverwriting = false)
+	public static void Add(Vector3 mrk1, Vector3 mrk2)
 	{
-		if (Clear_buffer_before_next_add)
+		if (next_operation)
 		{
-			ClearBuffer();
-			Clear_buffer_before_next_add = false;
-		}
-		bool ItIsAlreadyPresent = false;
+			for (int i = Buffer.Count - 1; i > current_layer; i--)
+				Buffer.RemoveAt(i);
 
-		if (IsAlreadyPresent(mrk))
-		{
-			if (EnableOverwriting)
-				ItIsAlreadyPresent = true;
+			if (Buffer.Count < 100)
+				current_layer++;
 			else
-				return;
+				Buffer.RemoveAt(0);
+
+			Buffer.Add(new Dictionary<int, float[]>());
+			next_operation = false;
+			Debug.Log(Buffer.Count);
+			Debug.Log(current_layer);
 		}
 
-		AddNewPoint(mrk, ItIsAlreadyPresent);
+		int index = Consts.PosToIndex(mrk1);
+		float old_height = mrk1.y;
+		float new_height = mrk2.y;
+
+		if (Buffer.Last().ContainsKey(index))
+			Buffer.Last()[index][1] = new_height;
+		else
+			Buffer.Last().Add(index, new float[] { old_height, new_height });
 	}
 	/// <summary>
-	/// Saves list of znaczniki to buffer as one operation to possible undo
+	/// When Ctrl + Z or Ctrl + Y is clicked
 	/// </summary>
-	/// <param name="Mrks"></param>
-	public static void Add(List<Vector3> Mrks)
+	public static void MoveThroughLayers(int direction)
 	{
-		UndoZnaczniki = Mrks.ToList();
-	}
-	/// <summary>
-	/// Signalizes that next call of AddZnacznik will belong to new operation
-	/// </summary>
-	public static void ApplyOperation()
-	{
-		Clear_buffer_before_next_add = true;
-		UndoZnaczniki = UndoZnaczniki.Distinct().ToList();
-	}
-	/// <summary>
-	/// When Ctrl + Z is clicked
-	/// </summary>
-	public static void Paste()
-	{
+		if (current_layer == (direction == 1 ? Buffer.Count - 1 : -1))
+			return;
 		//Indexes of vertices for UpdateMapColliders()
 		HashSet<int> indexes = new HashSet<int>();
 		// List of tiles lying onto vertices that are now being pasted
 		List<GameObject> tiles_to_update = new List<GameObject>();
-		foreach (var mrk_pos in UndoZnaczniki)
+		foreach (var item in Buffer[current_layer + direction])
 		{
-			if (Consts.IsWithinMapBounds(mrk_pos))
-			{
-				// Update arrays of vertex heights
-				int newindex = Consts.PosToIndex(mrk_pos);
-				indexes.Add(newindex);
-				Consts.current_heights[newindex] = mrk_pos.y;
-				Consts.former_heights[newindex] = mrk_pos.y;
+			int index = item.Key;
+			float height = item.Value[direction];
 
-				Vector3 pom = mrk_pos;
+			// Update arrays of vertex heights
+			indexes.Add(index);
+			Consts.current_heights[index] = height;
+			Consts.former_heights[index] = height;
 
-				// Mark pasted vertices
-				GameObject mrk = Consts.MarkAndReturnZnacznik(pom);
-				if (mrk != null)
-					mrk.transform.position = new Vector3(mrk.transform.position.x, mrk_pos.y, mrk.transform.position.z);
-				// Look for tiles lying here
-				pom.y = Consts.MAX_H;
-				var hits = Physics.SphereCastAll(pom, .1f, Vector3.down, Consts.MAX_H - Consts.MIN_H, 1 << 9);
-				foreach(var hit in hits)
-					if (!tiles_to_update.Contains(hit.transform.gameObject))
-						tiles_to_update.Add(hit.transform.gameObject);
-			}
+			// Mark pasted vertices
+			Vector3 pom = Consts.IndexToPos(index);
+			GameObject mrk = Consts.MarkAndReturnZnacznik(pom);
+			if (mrk != null)
+				mrk.transform.position = new Vector3(mrk.transform.position.x, height, mrk.transform.position.z);
+
+			// Look for tiles lying here
+			pom.y = Consts.MAX_H;
+			var hits = Physics.SphereCastAll(pom, .1f, Vector3.down, Consts.MAX_H - Consts.MIN_H, 1 << 9);
+			foreach (var hit in hits)
+				if (!tiles_to_update.Contains(hit.transform.gameObject))
+					tiles_to_update.Add(hit.transform.gameObject);
 		}
 		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(tiles_to_update);
-		ClearBuffer();
+		current_layer += direction * 2 - 1;
 	}
-
 }
-

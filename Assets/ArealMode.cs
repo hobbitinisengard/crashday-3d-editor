@@ -53,7 +53,8 @@ public class ArealMode : MonoBehaviour
 				DistortionSlider.transform.parent.gameObject.SetActive(false);
 
 				if (Input.GetMouseButtonUp(0))
-					UndoBuffer.ApplyOperation();
+					UndoBuffer.next_operation = true;
+
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
 				{
@@ -74,8 +75,8 @@ public class ArealMode : MonoBehaviour
 				DistortionSlider.transform.parent.gameObject.SetActive(true);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
-					if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
-						UndoBuffer.ApplyOperation();
+					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
+						UndoBuffer.next_operation = true;
 
 					if (!MouseInputUIBlocker.BlockedByUI)
 					{
@@ -95,8 +96,8 @@ public class ArealMode : MonoBehaviour
 				DistortionSlider.transform.parent.gameObject.SetActive(false);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
-					if ((Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0)) && !Input.GetKey(KeyCode.LeftAlt))
-						UndoBuffer.ApplyOperation();
+					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
+						UndoBuffer.next_operation = true;
 
 					if (!MouseInputUIBlocker.BlockedByUI)
 					{
@@ -160,9 +161,10 @@ public class ArealMode : MonoBehaviour
 							TargetDistValue = UnityEngine.Random.Range(h_val - dist_val, h_val + dist_val);
 							TargetDistValues.Add(idx, TargetDistValue);
 						}
-						UndoBuffer.Add((int)x, (int)z);
+						Vector3 for_buffer = Consts.IndexToPos(idx);
 						Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
 						Consts.former_heights[idx] = Consts.current_heights[idx];
+						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						Consts.UpdateMapColliders(new HashSet<int> { idx });
 						var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 						Build.UpdateTiles(tiles);
@@ -202,7 +204,6 @@ public class ArealMode : MonoBehaviour
 						float dist = Consts.Distance(currentpos, Highlight.pos);
 						if (dist > RadiusSlider.value)
 							continue;
-						UndoBuffer.Add(currentpos);
 						Vector3 pos = Highlight.pos;
 						pos.y = Consts.MAX_H;
 						float avg;
@@ -226,9 +227,10 @@ public class ArealMode : MonoBehaviour
 							avg = height_sum / 8f;
 							TargetSmoothValues.Add(idx, avg);
 						}
-						UndoBuffer.Add((int)x, (int)z);
+						Vector3 for_buffer = Consts.IndexToPos(idx);
 						Consts.current_heights[idx] += (avg - Consts.current_heights[idx]) * (IntensitySlider.value / 100f);
 						Consts.former_heights[idx] = Consts.current_heights[idx];
+						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						indexes.Add(idx);
 					}
 				}
@@ -255,11 +257,11 @@ public class ArealMode : MonoBehaviour
 					if (Consts.IsWithinMapBounds(x, z))
 					{
 						int idx = Consts.PosToIndex((int)x, (int)z);
-						Vector3 currentpos = Consts.IndexToPos(idx);
 						float heightdiff = Consts.current_heights[idx] - Consts.SliderValue2RealHeight(HeightSlider.value);
-						UndoBuffer.Add(currentpos);
+						Vector3 for_buffer = Consts.IndexToPos(idx);
 						Consts.former_heights[idx] += dir * heightdiff * IntensitySlider.value/100f;
 						Consts.current_heights[idx] = Consts.former_heights[idx];
+						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						indexes.Add(idx);
 					}
 				}
@@ -292,12 +294,12 @@ public class ArealMode : MonoBehaviour
 						float dist = Consts.Distance(currentpos, Highlight.pos);
 						if (dist > MaxRadius)
 							continue;
-						UndoBuffer.Add(currentpos);
 						float Hdiff = Consts.SliderValue2RealHeight(HeightSlider.value) - Consts.current_heights[idx];
 
 						float fullpossibleheight = Hdiff * IntensitySlider.value / 100f;
 						Consts.former_heights[idx] += fullpossibleheight * Consts.Smoothstep(0, 1, (MaxRadius - dist) / MaxRadius);
 						Consts.current_heights[idx] = Consts.former_heights[idx];
+						UndoBuffer.Add(currentpos, Consts.IndexToPos(idx));
 						indexes.Add(idx);
 					}
 				}
@@ -360,8 +362,8 @@ public class ArealMode : MonoBehaviour
 									float Hdiff = Consts.SliderValue2RealHeight(HeightSlider.value) - Consts.current_heights[idx];
 									Consts.former_heights[idx] += Hdiff * Consts.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
 								}
-								UndoBuffer.Add(currentpos);
 								Consts.current_heights[idx] = Consts.former_heights[idx];
+								UndoBuffer.Add(currentpos, Consts.IndexToPos(idx));
 								indexes.Add(idx);
 							}
 						}
@@ -374,7 +376,7 @@ public class ArealMode : MonoBehaviour
 						new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
 						Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9); //Search for tiles
 				Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
-				UndoBuffer.ApplyOperation();
+				UndoBuffer.next_operation = true;
 			}
 		}
 	}
