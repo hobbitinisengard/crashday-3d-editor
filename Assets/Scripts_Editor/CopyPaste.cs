@@ -256,7 +256,7 @@ public class CopyPaste : MonoBehaviour
 			}
 		}
 		Consts.UpdateMapColliders(indexes);
-		UndoBuffer.next_operation = true;
+		UndoBuffer.ApplyOperation();
 		Build.UpdateTiles(Build.Get_surrounding_tiles(Markings, true));
 	}
 	void MousewheelWorks(float sliderval)

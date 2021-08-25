@@ -234,7 +234,8 @@ public class Build : MonoBehaviour
 			MixingInfoText.text = "";
 			MixingInfoText.gameObject.SetActive(false);
 		}
-		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
+		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, 
+			KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
 		for (int i = 0; i < keyCodes.Length; i++)
 		{
 			if (Input.GetKeyDown(keyCodes[i]))

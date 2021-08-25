@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-//Handles HeightSlider in BUILD mode.
+
 //Tabs are added in Loader class
 public class SliderCase : MonoBehaviour
 {

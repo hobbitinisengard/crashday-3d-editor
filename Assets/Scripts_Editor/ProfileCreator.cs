@@ -195,7 +195,7 @@ public class ProfileCreator : MonoBehaviour
 		//Search for any tiles
 		var surr = Build.Get_surrounding_tiles(indexes);
 		Build.UpdateTiles(surr);
-		UndoBuffer.next_operation = true;
+		UndoBuffer.ApplyOperation();
 		RemovePreview(false);
 	}
 

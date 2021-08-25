@@ -1,22 +1,29 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+public enum BufferDirection { BACKWARD = 0, FORWARD = 1};
 public static class UndoBuffer
 {
+	private static readonly byte SIZE = 20;
 	/// <summary>
 	/// Global coordinates of former vertices. Layers<Vertices<Index, Height before and after oper-n>>
 	/// </summary>
 	private static List<Dictionary<int, float[]>> Buffer = new List<Dictionary<int, float[]>>();
+	
 	private static int current_layer = -1;
 	/// <summary>
 	/// Clear buffer before next call of AddZnacznik
 	/// </summary>
-	public static bool next_operation = true;
+	private static bool next_operation = true;
+
 	public static void Reset()
 	{
 		Buffer.Clear();
 		current_layer = -1;
+	}
+	public static void ApplyOperation()
+	{
+		next_operation = true;
 	}
 	/// <summary>
 	/// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
@@ -28,7 +35,7 @@ public static class UndoBuffer
 			for (int i = Buffer.Count - 1; i > current_layer; i--)
 				Buffer.RemoveAt(i);
 
-			if (Buffer.Count < 100)
+			if (Buffer.Count < SIZE)
 				current_layer++;
 			else
 				Buffer.RemoveAt(0);
@@ -51,10 +58,13 @@ public static class UndoBuffer
 	/// <summary>
 	/// When Ctrl + Z or Ctrl + Y is clicked
 	/// </summary>
-	public static void MoveThroughLayers(int direction)
+	public static void MoveThroughLayers(BufferDirection buffer_direction)
 	{
+		int direction = (int)buffer_direction;
+
 		if (current_layer == (direction == 1 ? Buffer.Count - 1 : -1))
 			return;
+
 		//Indexes of vertices for UpdateMapColliders()
 		HashSet<int> indexes = new HashSet<int>();
 		// List of tiles lying onto vertices that are now being pasted
@@ -84,6 +94,7 @@ public static class UndoBuffer
 		}
 		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(tiles_to_update);
+
 		current_layer += direction * 2 - 1;
 	}
 }

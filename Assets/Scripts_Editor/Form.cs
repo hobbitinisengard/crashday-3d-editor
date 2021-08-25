@@ -47,9 +47,9 @@ public class Form : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Tab))
             ToggleManipMode();
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Z))
-            UndoBuffer.MoveThroughLayers(0);
+            UndoBuffer.MoveThroughLayers(BufferDirection.BACKWARD);
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Y))
-            UndoBuffer.MoveThroughLayers(1);
+            UndoBuffer.MoveThroughLayers(BufferDirection.FORWARD);
     }
   
     /// <summary>

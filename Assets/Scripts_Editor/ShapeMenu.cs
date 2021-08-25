@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, WAITING4TR, POINT_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,amplify,}
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,amplify}
 /// <summary>
 /// Hooked to ShapeMenu
 /// </summary>
@@ -263,7 +263,7 @@ public class ShapeMenu : MonoBehaviour
 				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.next_operation = true;
+		UndoBuffer.ApplyOperation();
 		Consts.UpdateMapColliders(indexes);
 
 		Build.UpdateTiles(surroundings);
@@ -371,7 +371,7 @@ public class ShapeMenu : MonoBehaviour
 			//  Build.UpdateTiles(new List<GameObject> { current });
 			Build.UpdateTiles(surroundings);
 			surroundings.Clear();
-			UndoBuffer.next_operation = true;
+			UndoBuffer.ApplyOperation();
 		}
 
 		// LOCAL FUNCTIONS
@@ -464,7 +464,7 @@ public class ShapeMenu : MonoBehaviour
 				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.next_operation = true;
+		UndoBuffer.ApplyOperation();
 		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(surroundings);
 	}
@@ -495,7 +495,7 @@ public class ShapeMenu : MonoBehaviour
 				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.next_operation = true;
+		UndoBuffer.ApplyOperation();
 		Consts.UpdateMapColliders(indexes);
 	}
 	void Set_rotated_BL_and_TR()

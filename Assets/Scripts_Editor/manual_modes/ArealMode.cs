@@ -53,8 +53,7 @@ public class ArealMode : MonoBehaviour
 				DistortionSlider.transform.parent.gameObject.SetActive(false);
 
 				if (Input.GetMouseButtonUp(0))
-					UndoBuffer.next_operation = true;
-
+					UndoBuffer.ApplyOperation();
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
 				{
@@ -76,7 +75,7 @@ public class ArealMode : MonoBehaviour
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
-						UndoBuffer.next_operation = true;
+						UndoBuffer.ApplyOperation();
 
 					if (!MouseInputUIBlocker.BlockedByUI)
 					{
@@ -97,7 +96,7 @@ public class ArealMode : MonoBehaviour
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
-						UndoBuffer.next_operation = true;
+						UndoBuffer.ApplyOperation();
 
 					if (!MouseInputUIBlocker.BlockedByUI)
 					{
@@ -376,7 +375,7 @@ public class ArealMode : MonoBehaviour
 						new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
 						Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9); //Search for tiles
 				Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
-				UndoBuffer.next_operation = true;
+				UndoBuffer.ApplyOperation();
 			}
 		}
 	}

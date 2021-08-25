@@ -55,7 +55,7 @@ public class SingleMode : MonoBehaviour
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(0))
-					UndoBuffer.next_operation = true;
+					UndoBuffer.ApplyOperation();
 
 				if (Input.GetKeyDown(KeyCode.Escape)) //ESC toggles off Make_Elevation()
 				{
@@ -82,7 +82,7 @@ public class SingleMode : MonoBehaviour
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
-					UndoBuffer.next_operation = true;
+					UndoBuffer.ApplyOperation();
 
 				if (!MouseInputUIBlocker.BlockedByUI)
 				{
@@ -105,7 +105,7 @@ public class SingleMode : MonoBehaviour
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
-					UndoBuffer.next_operation = true;
+					UndoBuffer.ApplyOperation();
 
 				if (!MouseInputUIBlocker.BlockedByUI)
 				{
@@ -259,7 +259,7 @@ public class SingleMode : MonoBehaviour
 					to_update.Add(hit.transform.gameObject);
 
 				Build.UpdateTiles(to_update);
-				UndoBuffer.next_operation = true;
+				UndoBuffer.ApplyOperation();
 			}
 		}
 	}
