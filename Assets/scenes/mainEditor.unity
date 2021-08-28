@@ -15420,7 +15420,7 @@ MonoBehaviour:
 
     U - toggles underground mode
 
-    LAlt - switch tile to NULL
+    LAlt - toggle tile visibility
 
     M - mixing mode
 

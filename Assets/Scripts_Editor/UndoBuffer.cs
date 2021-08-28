@@ -4,16 +4,13 @@ using UnityEngine;
 public enum BufferDirection { BACKWARD = 0, FORWARD = 1};
 public static class UndoBuffer
 {
-	private static readonly byte SIZE = 20;
+	private static readonly byte SIZE = 30;
 	/// <summary>
 	/// Global coordinates of former vertices. Layers<Vertices<Index, Height before and after oper-n>>
 	/// </summary>
 	private static List<Dictionary<int, float[]>> Buffer = new List<Dictionary<int, float[]>>();
 	
 	private static int current_layer = -1;
-	/// <summary>
-	/// Clear buffer before next call of AddZnacznik
-	/// </summary>
 	private static bool next_operation = true;
 
 	public static void Reset()
@@ -21,17 +18,21 @@ public static class UndoBuffer
 		Buffer.Clear();
 		current_layer = -1;
 	}
+	/// <summary>
+	/// Called after every operation in form mode
+	/// </summary>
 	public static void ApplyOperation()
 	{
 		next_operation = true;
 	}
 	/// <summary>
-	/// Adds new znacznik to buffer. Moreover if ApplyOperation was run before, f. will clear buffer once before addition.
+	/// Adds new pair of markings to the last layer of the buffer. Moreover if ApplyOperation was run before, f. will create a new layer.
 	/// </summary>
 	public static void Add(Vector3 mrk1, Vector3 mrk2)
 	{
 		if (next_operation)
 		{
+			// This will remove the latest layers if player makes an operation after pressing CTRL + Z
 			for (int i = Buffer.Count - 1; i > current_layer; i--)
 				Buffer.RemoveAt(i);
 
@@ -49,7 +50,7 @@ public static class UndoBuffer
 		int index = Consts.PosToIndex(mrk1);
 		float old_height = mrk1.y;
 		float new_height = mrk2.y;
-
+		// We only need to overwrite the new heights (if some vertices are changed several times in a single oper-n, usually in manual sub-mode)
 		if (Buffer.Last().ContainsKey(index))
 			Buffer.Last()[index][1] = new_height;
 		else

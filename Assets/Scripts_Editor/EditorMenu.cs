@@ -39,11 +39,7 @@ public class EditorMenu : MonoBehaviour
 	public InputField NameOfTrack; // Canvas/savePANEL/NameofTrack
 	public Text upperPanel_t_version;
 	public Text SAVED_TEXT; //for feedback when quick-saved
-	/// <summary>
-	/// tile name we are currently placing in building mode
-	/// </summary>
-
-	public static string tile_name = "NULL";
+	
 	private void Start()
 	{
 		upperPanel_t_version.text = Consts.VERSION;

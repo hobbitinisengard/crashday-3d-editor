@@ -12,6 +12,9 @@ public class ShowTileName : MonoBehaviour
     }
     void Poka_nazwe()
     {
-        EditorMenu.tile_name = this.name;
+        if (Build.tile_name == "NULL" && !(Build.previous_tile_name == "NULL"))
+            Build.ChangeCurrentTile(this.name, false);
+        else
+            Build.ChangeCurrentTile(this.name, true);
     }
 }

@@ -27,7 +27,10 @@ public class Build : MonoBehaviour
 	public static GameObject current_rmc;
 	public static bool enableMixing = false;
 	public static byte MixingHeight = 0;
-	/// <summary>current tile</summary>
+	/// <summary>current tile or null</summary>
+	public static string tile_name = "NULL";
+	/// <summary>the last selected tile before it was reset to null</summary>
+	public static string previous_tile_name = "NULL";
 	/// <summary>former position of temporary placement of tile in build mode</summary>
 	Vector3 last_trawa;
 	public static bool over_b4 = Highlight.over;
@@ -47,6 +50,19 @@ public class Build : MonoBehaviour
 				DelLastPrefab();
 			over_b4 = false;
 		}
+		enableMixing = false;
+		MixingHeight = 0;
+		cum_rotation = 0;
+		inversion = false;
+		tile_name = "NULL";
+		previous_tile_name = "NULL";
+	}
+	public static void ChangeCurrentTile(string name, bool visibility_enabled)
+	{
+		if (visibility_enabled)
+			tile_name = name;
+		else
+			previous_tile_name = name;
 	}
 	void ExitXTileSelection()
 	{
@@ -118,7 +134,7 @@ public class Build : MonoBehaviour
 			if (Input.GetMouseButtonDown(1) && !Input.GetKey(KeyCode.LeftControl))
 				cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
 
-			CURRENTELEMENT.text = EditorMenu.tile_name;
+			CURRENTELEMENT.text = tile_name;
 			CURRENTROTATION.text = cum_rotation.ToString();
 			CURRENTMIRROR.text = inversion.ToString();
 			if (Input.GetKeyUp(KeyCode.M))
@@ -131,8 +147,8 @@ public class Build : MonoBehaviour
 				XTileSelection(); // X won't let PlacePrefab work
 			if (Input.GetKeyUp(KeyCode.X))
 				ExitXTileSelection();
-			if (Input.GetKey(KeyCode.LeftAlt))
-				SwitchToNULL();
+			if (Input.GetKeyUp(KeyCode.LeftAlt))
+				ToggleVisibility();
 
 			if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
 			{
@@ -169,7 +185,7 @@ public class Build : MonoBehaviour
 					if (!over_b4)
 					{
 						//Debug.Log("cursor: void -> terrain");
-						PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 						last_trawa = Highlight.TL;
 						over_b4 = true;
 					}
@@ -179,20 +195,20 @@ public class Build : MonoBehaviour
 						if (!LMBclicked)//If element hasn't been placed
 							DelLastPrefab();
 						ExitXTileSelection();
-						PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 						last_trawa = Highlight.TL;
 						LMBclicked = false;
 					}
 					else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && AllowLMB)
 					{//Place currently showed tile on terrain
 						LMBclicked = true;
-						Save_tile_properties(EditorMenu.tile_name, inversion, cum_rotation,
+						Save_tile_properties(tile_name, inversion, cum_rotation,
 								new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), enableMixing ? MixingHeight : (byte)0);
 					}
 					if (Input.GetMouseButtonDown(1) && Highlight.over && !LMBclicked)
 					{//Rotation with RMB
 						DelLastPrefab();
-						PlaceTile(Highlight.TL, EditorMenu.tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 						over_b4 = true;
 					}
 				}
@@ -273,7 +289,18 @@ public class Build : MonoBehaviour
 				else
 					return;
 			}
-			MixingHeightPreview();
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+			{
+				if (tile_name == "NULL")
+				{
+					MixingHeightPreview();
+				}
+				else
+				{
+					DelLastPrefab();
+					PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+				}
+			}
 		}
 	}
 	/// <summary>Displays transparent cuboid for 2 secs.</summary>
@@ -288,17 +315,39 @@ public class Build : MonoBehaviour
 		Destroy(preview, 2);
 	}
 	/// <summary>
-	/// Toggles off tile preview 
+	/// Toggles tile preview 
 	/// </summary>
-	void SwitchToNULL()
+	void ToggleVisibility()
 	{
 		if (!LMBclicked)
-			DelLastPrefab();
+		{
+			if (tile_name == "NULL")
+			{
+				if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+				{
+					PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion);
+				}
+			}
+			else
+			{
+				DelLastPrefab();
+				over_b4 = false;
+			}
+		}
 		else
 			LMBclicked = false;
-		over_b4 = false;
-		EditorMenu.tile_name = "NULL";
+
+		if (tile_name == "NULL")
+		{
+			tile_name = previous_tile_name;
+		}
+		else
+		{
+			previous_tile_name = tile_name;
+			tile_name = "NULL";
+		}
 	}
+
 	void InverseState()
 	{
 		inversion = !inversion;
@@ -316,6 +365,11 @@ public class Build : MonoBehaviour
 		else
 		{
 			BuildButtonText.color = new Color32(255, 161, 54, 255);
+		}
+		if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+		{
+			DelLastPrefab();
+			PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 		}
 	}
 	public static void DelLastPrefab()
@@ -345,11 +399,17 @@ public class Build : MonoBehaviour
 		bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9);
 		if (traf)
 		{
-			EditorMenu.tile_name = hit.transform.name;
+			if (tile_name == "NULL")
+				previous_tile_name = hit.transform.name;
+			else
+				tile_name = hit.transform.name;
 			var pos = Vpos2tpos(hit.transform.gameObject);
 			inversion = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			cum_rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
-			editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[EditorMenu.tile_name].TilesetName);
+			if (tile_name == "NULL")
+				editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[previous_tile_name].TilesetName);
+			else
+				editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[tile_name].TilesetName);
 		}
 	}
 	public static bool IsCheckpoint(string nazwa_tilesa)
