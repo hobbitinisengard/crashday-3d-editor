@@ -6,6 +6,7 @@ public class SliderCase : MonoBehaviour
 {
 	public Text title;
 	public ScrollRect TabTemplate;
+	public GameObject TileDescription;
 	public GameObject TileTemplate;
 	public GameObject TilesetContainer;
 	private string Current_tileset = Consts.CHKPOINTS_STR;
@@ -15,6 +16,7 @@ public class SliderCase : MonoBehaviour
 	{
 		Tilesets = tilesets;
 	}
+
 	void Update()
 	{
 		// Don't allow switching tilesets when ctrl+mousewheel (mixing) is used
@@ -25,56 +27,82 @@ public class SliderCase : MonoBehaviour
 			return;
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
 		{
-			HideCase(Current_tileset);
-			if (Input.GetAxis("Mouse ScrollWheel") > 0)
-				Current_tileset = GetNextTabName(Current_tileset);
-			else
-				Current_tileset = GetPreviousTabName(Current_tileset);
+			HideTileDescription();
+			HideCase();
 
-			ShowCase(Current_tileset);
+			if (Input.GetAxis("Mouse ScrollWheel") > 0)
+				Current_tileset = GetNextTabName();
+			else
+				Current_tileset = GetPreviousTabName();
+
+			ShowCase();
+			MoveTileDescription();
 			title.text = Current_tileset;
 		}
 	}
+
 	public void SwitchToTileset(string tileset_name)
 	{
-		HideCase(Current_tileset);
+		HideCase();
 
 		Current_tileset = tileset_name;
 
-		ShowCase(Current_tileset);
+		ShowCase();
+		MoveTileDescription();
 		title.text = Current_tileset;
 	}
-	private string GetPreviousTabName(string tileset_name)
+
+	private string GetPreviousTabName()
 	{
-		int n = TilesetContainer.transform.Find(tileset_name).GetSiblingIndex();
+		int n = TilesetContainer.transform.Find(Current_tileset).GetSiblingIndex();
 		if (n == 0)
 			return TilesetContainer.transform.GetChild(Tilesets.Length - 1).name;
 		else
 			return TilesetContainer.transform.GetChild(n - 1).name;
 	}
 
-	private string GetNextTabName(string tileset_name)
+	private string GetNextTabName()
 	{
-		int n = TilesetContainer.transform.Find(tileset_name).GetSiblingIndex();
+		int n = TilesetContainer.transform.Find(Current_tileset).GetSiblingIndex();
 		if (Tilesets.Length == n + 1)
 			return TilesetContainer.transform.GetChild(0).name;
 		else
 			return TilesetContainer.transform.GetChild(n + 1).name;
 	}
 
-	private void ShowCase(string tileset_name)
+	private void ShowCase()
 	{
-		TilesetContainer.transform.Find(tileset_name).gameObject.SetActive(true);
+		TilesetContainer.transform.Find(Current_tileset).gameObject.SetActive(true);
 	}
-	private void HideCase(string tileset_name)
+
+	private void HideCase()
 	{
 		try
 		{
-			TilesetContainer.transform.Find(tileset_name).gameObject.SetActive(false);
+			TilesetContainer.transform.Find(Current_tileset).gameObject.SetActive(false);
 		}
 		catch
 		{
-			Debug.LogWarning("No tileset with name " + tileset_name);
+			Debug.LogWarning("No tileset with name " + Current_tileset);
 		}
+	}
+
+	public void ShowTileDescription(string tile_name)
+	{
+		TileDescription.GetComponent<Text>().text = TileManager.TileListInfo[tile_name].Description;
+	}
+
+	public void HideTileDescription()
+	{
+		TileDescription.GetComponent<Text>().text = "";
+	}
+
+	public void MoveTileDescription()
+    {
+		GameObject Tileset = TilesetContainer.transform.Find(Current_tileset).gameObject;
+		Transform Content = Tileset.transform.GetChild(0).transform.GetChild(0);
+		TileDescription.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+			TileDescription.GetComponent<RectTransform>().anchoredPosition.x,
+			Tileset.GetComponent<RectTransform>().anchoredPosition.y - Mathf.Ceil((float)Content.childCount / 6f) * 64f - 40f);
 	}
 }

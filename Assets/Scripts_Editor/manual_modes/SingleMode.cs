@@ -138,7 +138,7 @@ public class SingleMode : MonoBehaviour
 				if (AreListedObjectsHavingRMCVertexHere(to_update, index))
 				{
 					Vector3 for_buffer = Consts.IndexToPos(index);
-					Consts.current_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
+					Consts.current_heights[index] += dir * heightdiff * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 					UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 					//Helper.current_heights[index] = Helper.former_heights[index];
 					Consts.UpdateMapColliders(new HashSet<int> { index });
@@ -148,7 +148,7 @@ public class SingleMode : MonoBehaviour
 			else
 			{
 				Vector3 for_buffer = Consts.IndexToPos(index);
-				Consts.former_heights[index] += dir * heightdiff * IntensitySlider.value/100f;
+				Consts.former_heights[index] += dir * heightdiff * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 				Consts.current_heights[index] = Consts.former_heights[index];
 				UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 				Consts.UpdateMapColliders(new HashSet<int> { index });
@@ -170,7 +170,7 @@ public class SingleMode : MonoBehaviour
 			}
 			int idx = Consts.PosToIndex(Highlight.pos);
 			Vector3 for_buffer = Highlight.pos;
-			Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
+			Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 			Consts.former_heights[idx] = Consts.current_heights[idx];
 			UndoBuffer.Add(for_buffer, Highlight.pos);
 			Consts.UpdateMapColliders(new HashSet<int> { idx });
@@ -201,7 +201,7 @@ public class SingleMode : MonoBehaviour
 			float avg = height_sum / 8f;
 			int idx = Consts.PosToIndex(Highlight.pos);
 			Vector3 for_buffer = Highlight.pos;
-			Consts.former_heights[idx] += (avg - Consts.former_heights[idx]) * IntensitySlider.value / 100f;
+			Consts.former_heights[idx] += (avg - Consts.former_heights[idx]) * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 			Consts.current_heights[idx] = Consts.former_heights[idx];
 			UndoBuffer.Add(for_buffer, Highlight.pos);
 			Consts.UpdateMapColliders(new HashSet<int> { idx });

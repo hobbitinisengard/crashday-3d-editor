@@ -1,5 +1,7 @@
 ﻿using SFB;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -53,74 +55,139 @@ public class MainMenu : MonoBehaviour
 	private void Populate_Manage_Tilesets_Menu()
 	{
 		// if there is any custom tileset (with workshopId)
-		if (TileManager.TileListInfo.Where(t => t.Value.Custom_tileset_id != null).Any())
+		if (TileManager.CustomTileSections.Count > 0)
 		{
 			Enable_manage_tiles_button();
 
 			GameObject manage_entry_template = ManageTilesets_ScrollView.content.transform.GetChild(0).gameObject;
-			string[] mod_ids = TileManager.TileListInfo.Select(t => t.Value.Custom_tileset_id).Distinct().ToArray();
+			string[] mod_ids = TileManager.CustomTileSections.Keys.ToArray();
+
 			foreach (var mod_id in mod_ids)
 			{
-				if (mod_id != null)
-				{
-					GameObject NewEntry = Instantiate(manage_entry_template, manage_entry_template.transform.parent);
-					NewEntry.transform.Find("Id").GetComponent<Text>().text = mod_id;
-					NewEntry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Value.TilesetName).Distinct().ToArray());
-
-					// entry gameobject's name is workshopId
-					NewEntry.name = mod_id;
-					NewEntry.SetActive(true);
-				}
+				GameObject NewEntry = Instantiate(manage_entry_template, manage_entry_template.transform.parent);
+				SwitchAppearance(NewEntry, mod_id, TileManager.CustomTileSections[mod_id].Enabled);
+				NewEntry.name = mod_id;
+				NewEntry.SetActive(true);
 			}
 		}
 	}
-	public void RemoveJustUnzippedFolder(GameObject Id_GO)
+	public void UpdateTileset(GameObject Id_GO)
 	{
-		string Mod_id = Id_GO.GetComponent<Text>().text;
+		string mod_id = Id_GO.GetComponent<Text>().text;
+		bool enabled = TileManager.CustomTileSections[mod_id].Enabled;
+		GameObject Entry = ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject;
 
-		//remove custom tiles of this tileset
-		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == Mod_id).Select(t => t.Key).ToArray();
+		// Remove this tileset and its custom tiles from the database 
+		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
 		foreach (var name in to_remove_names)
 			TileManager.TileListInfo.Remove(name);
+		TileManager.CustomTileSections.Remove(mod_id);
 
-		//remove folder in moddata
-		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\", true);
+		// Remove folder in moddata
+		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
 
-		// remove entry in menu
-		DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(Mod_id).gameObject);
+		// Unpack and load updated tileset
+		PackageManager.LoadCPK(Directory.GetFiles(TileManager.CdWorkshopPath + mod_id).First(), mod_id);
+		TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", mod_id, enabled);
+		if (enabled)
+			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id);
 
-		if (ManageTilesets_ScrollView.content.childCount == 1) // if we only have empty invisible manage_entry_template remaining
-		{
-			Disable_manage_tiles_button();
-		}
-
+		// Update tile sections in the menu
+		List<string> sections = TileManager.CustomTileSections[mod_id].TileSections;
+		Entry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", sections.ToArray());
+		Entry.SetActive(false);
+		Entry.SetActive(true);
 	}
+
 	public void RemoveTileset(GameObject Id_GO)
 	{
-		string Mod_id = Id_GO.GetComponent<Text>().text;
+		string mod_id = Id_GO.GetComponent<Text>().text;
 
-		//remove custom tiles of this tileset
-		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == Mod_id).Select(t => t.Key).ToArray();
+		// Remove this tileset and its custom tiles from the database 
+		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
 		foreach (var name in to_remove_names)
 			TileManager.TileListInfo.Remove(name);
+		TileManager.CustomTileSections.Remove(mod_id); ;
 
-		//remove entry in tilesets.txt
-		string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "\\tilesets.txt").Where(line => line != Mod_id).ToArray();
+		// Remove entry in tilesets.txt
+		string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "\\tilesets.txt").Where(line => line != mod_id && line != "#" + mod_id).ToArray();
 		File.WriteAllLines(Application.streamingAssetsPath + "\\tilesets.txt", lines_to_keep);
 
-		//remove folder in moddata
-		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + Mod_id + "\\", true);
+		// Remove folder in moddata
+		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
 
-		// remove entry in menu
-		DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(Mod_id).gameObject);
+		// Remove entry in tileset menu
+		DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject);
 
-		if (ManageTilesets_ScrollView.content.childCount == 1) // if we only have empty invisible manage_entry_template remaining
+		// Disable the menu if we only have the invisible template remaining
+		if (ManageTilesets_ScrollView.content.childCount == 1)
 		{
-			// disable menu
 			ManageTilesets_button.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
 			ManageTilesets_button.interactable = false;
 		}
 	}
+
+	public void ToggleTileset(GameObject Id_GO)
+    {
+		string mod_id = Id_GO.GetComponent<Text>().text;
+		string[] mod_ids = File.ReadAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt");
+		bool enable = !TileManager.CustomTileSections[mod_id].Enabled;
+		GameObject Entry = ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject;
+
+		if (enable)
+		{
+			// Remove the prefix from the tileset ID
+			mod_ids[Array.IndexOf(mod_ids, "#" + mod_id)] = mod_id;
+
+			// Load the full tileset
+			TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", mod_id, true);
+			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id);
+		}
+		else
+		{
+			// Add the prefix to the tileset ID
+			mod_ids[Array.IndexOf(mod_ids, mod_id)] = "#" + mod_id;
+
+			// Remove custom tiles of this tileset
+			string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
+			foreach (var name in to_remove_names)
+				TileManager.TileListInfo.Remove(name);
+			TileManager.CustomTileSections[mod_id].Enabled = false;
+		}
+
+		SwitchAppearance(Entry, mod_id, enable);
+		Entry.SetActive(false);
+		Entry.SetActive(true);
+
+		// Update tilesets.txt
+		File.WriteAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt", mod_ids);
+	}
+
+	// TO DO:
+	// Add tileset
+	// Update all
+	// Remove all
+	// Enable/disable all
+
+	private void SwitchAppearance(GameObject Entry, string mod_id, bool enable)
+    {
+		Entry.transform.Find("Id").GetComponent<Text>().text = mod_id;
+		Entry.transform.Find("Sets").GetComponent<Text>().text = string.Join(", ", TileManager.CustomTileSections[mod_id].TileSections.ToArray());
+
+		if (enable)
+        {
+			Entry.transform.Find("Id").GetComponent<Text>().color = new Color32(255, 255, 255, 255);
+			Entry.transform.Find("Sets").GetComponent<Text>().color = new Color32(255, 255, 255, 255);
+			Entry.transform.Find("button_toggle").gameObject.transform.Find("Text").GetComponent<Text>().text = "Disable";
+		}
+		else
+        {
+			Entry.transform.Find("Id").GetComponent<Text>().color = new Color32(160, 160, 160, 160);
+			Entry.transform.Find("Sets").GetComponent<Text>().color = new Color32(160, 160, 160, 160);
+			Entry.transform.Find("button_toggle").gameObject.transform.Find("Text").GetComponent<Text>().text = "Enable";
+		}
+	}
+
 	private void ChangeSceneToEditor()
 	{
 		if (CanCreateTrack)
@@ -239,5 +306,4 @@ public class MainMenu : MonoBehaviour
 		
 		ChangeSceneToEditor();
 	}
-	
 }

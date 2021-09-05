@@ -69,6 +69,7 @@ public class Loader : MonoBehaviour
 			Consts.Trackname = "Untitled";
 		}
 
+		Build.Reset();
 		UndoBuffer.Reset();
 
 		if (Consts.LoadMirrored)

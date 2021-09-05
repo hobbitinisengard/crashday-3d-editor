@@ -25,19 +25,20 @@ public class Build : MonoBehaviour
 	bool AllowLMB = false;
 	/// <summary>obj_rmc = current RMC</summary>
 	public static GameObject current_rmc;
-	public static bool enableMixing = false;
-	public static byte MixingHeight = 0;
 	/// <summary>current tile or null</summary>
 	public static string tile_name = "NULL";
 	/// <summary>the last selected tile before it was reset to null</summary>
 	public static string previous_tile_name = "NULL";
+	/// <summary>current rotation of currently showed element</summary>
+	public static int cum_rotation = 0;
+	///<summary> current inversion of an element that is currently being shown</summary>
+	public static bool inversion = false;
+	public static bool enableMixing = false;
+	/// <summary>Tile's own height in mixing mode</summary>
+	public static byte MixingHeight = 0;
 	/// <summary>former position of temporary placement of tile in build mode</summary>
 	Vector3 last_trawa;
 	public static bool over_b4 = Highlight.over;
-	/// <summary>current rotation of currently showed element</summary>
-	int cum_rotation = 0;
-	///<summary> current inversion of an element that is currently being shown</summary>
-	bool inversion = false;
 	private bool IsEnteringKeypadValue;
 	private static GameObject outlined_element;
 
@@ -50,6 +51,9 @@ public class Build : MonoBehaviour
 				DelLastPrefab();
 			over_b4 = false;
 		}
+	}
+	public static void Reset()
+	{
 		enableMixing = false;
 		MixingHeight = 0;
 		cum_rotation = 0;
@@ -137,8 +141,9 @@ public class Build : MonoBehaviour
 			CURRENTELEMENT.text = tile_name;
 			CURRENTROTATION.text = cum_rotation.ToString();
 			CURRENTMIRROR.text = inversion.ToString();
-			if (Input.GetKeyUp(KeyCode.M))
+			if (Input.GetKeyUp(KeyCode.M)) {
 				SwitchMixingMode();
+			}
 			if (enableMixing)
 				CtrlWithMousewheelWorks();
 			if (Input.GetKeyDown(KeyCode.Q))
@@ -229,8 +234,6 @@ public class Build : MonoBehaviour
 		}
 	}
 
-
-
 	/// <summary>
 	/// Handles setting sliderheight with keypad
 	/// </summary>
@@ -249,6 +252,20 @@ public class Build : MonoBehaviour
 			IsEnteringKeypadValue = false;
 			MixingInfoText.text = "";
 			MixingInfoText.gameObject.SetActive(false);
+			
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+			{
+				if (tile_name == "NULL")
+				{
+					MixingHeightPreview();
+				}
+				else
+				{
+					DelLastPrefab();
+					PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+				}
+			}
+			StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		}
 		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, 
 			KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
@@ -301,12 +318,12 @@ public class Build : MonoBehaviour
 					PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 				}
 			}
+			StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		}
 	}
 	/// <summary>Displays transparent cuboid for 2 secs.</summary>
 	public void MixingHeightPreview()
 	{
-		StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
 		Destroy(preview.GetComponent<BoxCollider>());
 		preview.GetComponent<MeshRenderer>().material = partiallytransparent;

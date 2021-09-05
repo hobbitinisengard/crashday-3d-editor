@@ -6,9 +6,11 @@ public class FlyCamera : MonoBehaviour
 	[DllImport("user32.dll")]
 	static extern bool SetCursorPos(int X, int Y);
 	bool over_UI = false;
-	public float mainSpeed;// = 25; //regular speed
-	public float shiftAdd;// = 50; //multiplied by how long shift is held.  Basically running
-	public float maxShift;// = 100 //Maximum speed when holdin gshift
+	public float mainSpeed;// = 20; //regular speed
+	public float shiftAdd;// = 50; //multiplied by how long shift is held. Basically running
+	public float maxShift;// = 100; //Maximum speed when holding shift
+	public float ctrlAdd;// = 8; //multiplied by how long ctrl is held. Basically running
+	public float maxCtrl;// = 5; //Maximum speed when holding ctrl
 	public float camSens;// = 0.25f; //How sensitive it with mouse
 	private Vector3 lastMouse = new Vector3(0, 0, 0); //kind of in the middle of the screen, rather than at the top (play)
 	private float totalRun = 1.0f;
@@ -143,15 +145,23 @@ public class FlyCamera : MonoBehaviour
 		if (Input.GetKey(KeyCode.LeftShift))
 		{
 			//totalRun += Time.deltaTime;
-			p = p * shiftAdd;
+			p *= shiftAdd;
 			p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
 			p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
 			p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
 		}
+		else if (Input.GetKey(KeyCode.LeftControl))
+		{
+			//totalRun += Time.deltaTime;
+			p *= ctrlAdd;
+			p.x = Mathf.Clamp(p.x, -maxCtrl, maxCtrl);
+			p.y = Mathf.Clamp(p.y, -maxCtrl, maxCtrl);
+			p.z = Mathf.Clamp(p.z, -maxCtrl, maxCtrl);
+		}
 		else
 		{
 			totalRun = Mathf.Clamp(totalRun * 0.5f, 1f, 1000f);
-			p = p * mainSpeed;
+			p *= mainSpeed;
 		}
 
 		//Lock to XZ plane

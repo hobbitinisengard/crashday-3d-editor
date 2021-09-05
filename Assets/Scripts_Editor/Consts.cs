@@ -26,7 +26,7 @@ public static class Consts
 	public static TilePlacement[,] TilePlacementArray { get; set; }
 	///<summary> String showed on the top bar of the editor during mapping </summary>
 	public static string Trackname { get; set; } = "Untitled";
-	public static string DefaultTilesetName { get; set; } = "Default";
+	public static string DefaultTilesetName { get; set; } = "Hidden";
 	public static float[] former_heights;
 	public static float[] current_heights;
 	/// Load track by inversing elements

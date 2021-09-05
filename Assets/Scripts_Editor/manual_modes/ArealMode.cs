@@ -161,7 +161,7 @@ public class ArealMode : MonoBehaviour
 							TargetDistValues.Add(idx, TargetDistValue);
 						}
 						Vector3 for_buffer = Consts.IndexToPos(idx);
-						Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * IntensitySlider.value / 100f;
+						Consts.current_heights[idx] += (TargetDistValue - Consts.current_heights[idx]) * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 						Consts.former_heights[idx] = Consts.current_heights[idx];
 						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						Consts.UpdateMapColliders(new HashSet<int> { idx });
@@ -227,7 +227,7 @@ public class ArealMode : MonoBehaviour
 							TargetSmoothValues.Add(idx, avg);
 						}
 						Vector3 for_buffer = Consts.IndexToPos(idx);
-						Consts.current_heights[idx] += (avg - Consts.current_heights[idx]) * (IntensitySlider.value / 100f);
+						Consts.current_heights[idx] += (avg - Consts.current_heights[idx]) * (Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f);
 						Consts.former_heights[idx] = Consts.current_heights[idx];
 						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						indexes.Add(idx);
@@ -258,7 +258,7 @@ public class ArealMode : MonoBehaviour
 						int idx = Consts.PosToIndex((int)x, (int)z);
 						float heightdiff = Consts.current_heights[idx] - Consts.SliderValue2RealHeight(HeightSlider.value);
 						Vector3 for_buffer = Consts.IndexToPos(idx);
-						Consts.former_heights[idx] += dir * heightdiff * IntensitySlider.value/100f;
+						Consts.former_heights[idx] += dir * heightdiff * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 						Consts.current_heights[idx] = Consts.former_heights[idx];
 						UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
 						indexes.Add(idx);
@@ -295,7 +295,7 @@ public class ArealMode : MonoBehaviour
 							continue;
 						float Hdiff = Consts.SliderValue2RealHeight(HeightSlider.value) - Consts.current_heights[idx];
 
-						float fullpossibleheight = Hdiff * IntensitySlider.value / 100f;
+						float fullpossibleheight = Hdiff * Mathf.Pow(IntensitySlider.value, 1.5f) / 1000f;
 						Consts.former_heights[idx] += fullpossibleheight * Consts.Smoothstep(0, 1, (MaxRadius - dist) / MaxRadius);
 						Consts.current_heights[idx] = Consts.former_heights[idx];
 						UndoBuffer.Add(currentpos, Consts.IndexToPos(idx));

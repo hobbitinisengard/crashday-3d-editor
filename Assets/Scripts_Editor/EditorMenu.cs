@@ -160,7 +160,7 @@ public class EditorMenu : MonoBehaviour
 		string path;
 
 		if (Quicksave)
-   path = Consts.LoadLastFolderPath();
+			path = Consts.LoadLastFolderPath();
 		else
 		{
 			string[] originalpath = StandaloneFileBrowser.OpenFolderPanel("Select folder to save this track in ..", Consts.LoadLastFolderPath(), false);
@@ -288,5 +288,3 @@ public class EditorMenu : MonoBehaviour
 		}
 	}
 }
-
-
