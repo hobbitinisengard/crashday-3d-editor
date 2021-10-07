@@ -53,7 +53,13 @@ public static class TileManager
 		ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
 
 		// unpack every bin (zip) tileset if it's id exists in WorkshopModIds to unpacked crashday content folder
-		string[] WorkshopModIds = File.ReadAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt");
+		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+		if (!Directory.Exists(MyDocuments + "\\Crashday 3D Editor\\"))
+			Directory.CreateDirectory(MyDocuments + "\\Crashday 3D Editor\\");
+		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\tilesets.txt"))
+			File.Create(MyDocuments + "\\Crashday 3D Editor\\tilesets.txt").Dispose();
+
+		string[] WorkshopModIds = File.ReadAllLines(MyDocuments + "\\Crashday 3D Editor\\tilesets.txt");
 
 		if (WorkshopModIds.Length == 1 && WorkshopModIds[0] == "")
 			return;

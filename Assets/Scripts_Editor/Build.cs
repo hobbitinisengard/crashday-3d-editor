@@ -44,7 +44,7 @@ public class Build : MonoBehaviour
 
 	private void OnDisable()
 	{
-		ExitXTileSelection();
+		ExitTileSelection();
 		if (current_rmc != null)
 		{
 			if (!LMBclicked || (LMBclicked && !AllowLMB))
@@ -68,7 +68,7 @@ public class Build : MonoBehaviour
 		else
 			previous_tile_name = name;
 	}
-	void ExitXTileSelection()
+	void ExitTileSelection()
 	{
 		if (outlined_element)
 		{
@@ -82,6 +82,13 @@ public class Build : MonoBehaviour
 		DelLastPrefab();
 		if (Input.GetMouseButtonDown(0))
 			Del_selected_element();
+	}
+	void CTileSelection()
+	{
+		Outline_underlying();
+		DelLastPrefab();
+		if (Input.GetMouseButtonDown(0))
+			PickUpTileUnderCursor();
 	}
 	void Outline_underlying()
 	{
@@ -141,25 +148,21 @@ public class Build : MonoBehaviour
 			CURRENTELEMENT.text = tile_name;
 			CURRENTROTATION.text = cum_rotation.ToString();
 			CURRENTMIRROR.text = inversion.ToString();
-			if (Input.GetKeyUp(KeyCode.M)) {
+			if (Input.GetKeyUp(KeyCode.M))
 				SwitchMixingMode();
-			}
 			if (enableMixing)
 				CtrlWithMousewheelWorks();
 			if (Input.GetKeyDown(KeyCode.Q))
 				InverseState(); // Q enabled inversion
 			if (Input.GetKey(KeyCode.X))
 				XTileSelection(); // X won't let PlacePrefab work
-			if (Input.GetKeyUp(KeyCode.X))
-				ExitXTileSelection();
+			if (Input.GetKey(KeyCode.C))
+				CTileSelection(); // Choose the tile to be picked up with C
+			if (Input.GetKeyUp(KeyCode.X) || Input.GetKeyUp(KeyCode.C))
+				ExitTileSelection();
 			if (Input.GetKeyUp(KeyCode.LeftAlt))
 				ToggleVisibility();
 
-			if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(0))
-			{
-				PickUpTileUnderCursor();// Pick up tile under cursor
-				return;
-			}
 			if (enableMixing && !IsEnteringKeypadValue && Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(1))
 			{// Pick up mixing height with RMB + ctrl
 				PickUpTileHeightUnderCursor();
@@ -199,7 +202,7 @@ public class Build : MonoBehaviour
 						//Debug.Log("cursor: terrain chunk -> terrain chunk");
 						if (!LMBclicked)//If element hasn't been placed
 							DelLastPrefab();
-						ExitXTileSelection();
+						ExitTileSelection();
 						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
 						last_trawa = Highlight.TL;
 						LMBclicked = false;
@@ -411,16 +414,13 @@ public class Build : MonoBehaviour
 	}
 	void PickUpTileUnderCursor()
 	{
-		Vector3 v = Highlight.pos;
-		v.y = Consts.MAX_H;
-		bool traf = Physics.Raycast(v, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9);
-		if (traf)
+		if (outlined_element != null)
 		{
 			if (tile_name == "NULL")
-				previous_tile_name = hit.transform.name;
+				previous_tile_name = outlined_element.name;
 			else
-				tile_name = hit.transform.name;
-			var pos = Vpos2tpos(hit.transform.gameObject);
+				tile_name = outlined_element.name;
+			var pos = Vpos2tpos(outlined_element);
 			inversion = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			cum_rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
 			if (tile_name == "NULL")
@@ -963,10 +963,10 @@ public class Build : MonoBehaviour
 		float pzero = GetPzero(prefab.name);
 		// Raycast tiles(H) \ rmc
 		
-		for (int i = 0; i < mesh.vertices.Length; i++)
+		for (int i = 0; i < verts.Length; i++)
 		{
 			RaycastHit hit;
-			Vector3 v = prefab.transform.TransformPoint(mesh.vertices[i]);
+			Vector3 v = prefab.transform.TransformPoint(verts[i]);
 			if (Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 10))
 			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));

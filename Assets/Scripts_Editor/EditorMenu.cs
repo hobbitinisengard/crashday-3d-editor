@@ -1,6 +1,8 @@
 using SFB;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -30,6 +32,8 @@ public class EditorMenu : MonoBehaviour
 	public GameObject MissingTilesPanel_content;
 	public GameObject editorPANEL;
 	public GameObject formPANEL;
+	public InputField MarkingBoundsWidth;
+	public InputField MarkingBoundsHeight;
 	public Toggle plusOn;
 	public Dropdown GravityEffectDropdown;
 	/// <summary>
@@ -44,6 +48,14 @@ public class EditorMenu : MonoBehaviour
 	{
 		upperPanel_t_version.text = Consts.VERSION;
 		floor1 = Resources.Load<Material>("floor1");
+
+		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\userdata.txt"))
+		{
+			File.Create(MyDocuments + "\\Crashday 3D Editor\\userdata.txt").Dispose();
+			help.SetActive(true);
+		}
+
 		if (Consts.MissingTilesNames.Count > 0)
 		{
 			MissingTilesPanel.SetActive(true);
@@ -128,22 +140,46 @@ public class EditorMenu : MonoBehaviour
 	{
 		try
 		{
-			Consts.MarkerBounds.x = int.Parse(val) > 5 ? int.Parse(val) : 5;
+			if (int.Parse(val) < 1)
+			{
+				MarkingBoundsWidth.text = "1";
+				Consts.MarkerBounds.x = 1;
+			}
+			else if (int.Parse(val) > Consts.TRACK.Width * 8 + 1)
+			{
+				MarkingBoundsWidth.text = Convert.ToString(Consts.TRACK.Width * 8 + 1);
+				Consts.MarkerBounds.x = Consts.TRACK.Width * 8 + 1;
+			}
+			else
+				Consts.MarkerBounds.x = int.Parse(val);
 		}
 		catch
 		{
-
+			MarkingBoundsWidth.text = "";
+			Consts.MarkerBounds.x = 60;
 		}
 	}
 	public void SetMarkerDimsZ(string val)
 	{
 		try
 		{
-			Consts.MarkerBounds.y = int.Parse(val) > 5 ? int.Parse(val) : 5;
+			if (int.Parse(val) < 1)
+			{
+				MarkingBoundsHeight.text = "1";
+				Consts.MarkerBounds.y = 1;
+			}
+			else if (int.Parse(val) > Consts.TRACK.Height * 8 + 1)
+			{
+				MarkingBoundsHeight.text = Convert.ToString(Consts.TRACK.Height * 8 + 1);
+				Consts.MarkerBounds.y = Consts.TRACK.Height * 8 + 1;
+			}
+			else
+				Consts.MarkerBounds.y = int.Parse(val);
 		}
 		catch
 		{
-
+			MarkingBoundsHeight.text = "";
+			Consts.MarkerBounds.y = 60;
 		}
 	}
 

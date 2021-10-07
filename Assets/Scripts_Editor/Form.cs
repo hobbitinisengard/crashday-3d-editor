@@ -12,16 +12,22 @@ public class DuVec3
     }
 }
 
-public enum ManualMode { single, areal }
+public enum ManualMode { Single, Areal }
+public enum ManualSubMode { Set, Avg, Amp }
 /// <summary>
 /// hooked to e_formPANEL. Handles Form workflow
 /// </summary>
 public class Form : MonoBehaviour
 {
-    // Manual mode menus
+    // Manual mode menu
     public GameObject ManualMenu;
-    public GameObject ArealMenu;
-    public GameObject SingleMenu;
+    public Text CurrentModeText;
+    public Button SingleModeButton;
+    public Button SmoothModeButton;
+    public Button AmplifyModeButton;
+    public GameObject IntensitySlider;
+    public GameObject DistortionSlider;
+    public GameObject RadiusSlider;
 
     // Shape mode menu
     public GameObject ShapeMenu;
@@ -33,15 +39,27 @@ public class Form : MonoBehaviour
     public Slider HeightSlider;
     public Slider FormSlider;
     public static ManualMode mode;
+    public static ManualSubMode submode;
 
     private void Start()
     {
-        mode = ManualMode.single;
+        mode = ManualMode.Single;
         Physics.queriesHitBackfaces = true;
     }
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            SwitchMode(0);
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SwitchMode(1);
+            ManualMenu.GetComponent<SingleMode>().RemoveIndicator();
+            ManualMenu.GetComponent<ArealMode>().RemoveIndicator();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+            SwitchMode(2);
+
         if (Input.GetKeyDown(KeyCode.F))
             ToggleFormingMode(Input.GetKey(KeyCode.LeftShift));
         if (Input.GetKeyDown(KeyCode.Tab))
@@ -57,10 +75,52 @@ public class Form : MonoBehaviour
     /// </summary>
     void ToggleManipMode()
     {
-        ArealMenu.SetActive(!ArealMenu.activeSelf);
-        SingleMenu.SetActive(!SingleMenu.activeSelf);
+        if (ManualMenu.activeSelf)
+        {
+            if (mode == ManualMode.Single)
+            {
+                mode = ManualMode.Areal;
+                CurrentModeText.text = "Areal Mode";
+            }
+            else
+            {
+                mode = ManualMode.Single;
+                CurrentModeText.text = "Single Mode";
+            }
+
+            if (submode == ManualSubMode.Set)
+                IntensitySlider.SetActive(!IntensitySlider.activeSelf);
+
+            RadiusSlider.SetActive(!RadiusSlider.activeSelf);
+        }
     }
-  
+
+    // buttons use this function
+    public void SwitchMode(float mode)
+    {
+        submode = (ManualSubMode)mode;
+        SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+        SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+        AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+        if (mode == 0)
+        {
+            SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = new Color32(219, 203, 178, 255);
+            IntensitySlider.SetActive(Form.mode == ManualMode.Areal);
+            DistortionSlider.SetActive(false);
+        }
+        else if (mode == 1)
+        {
+            SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = new Color32(219, 203, 178, 255);
+            IntensitySlider.SetActive(true);
+            DistortionSlider.SetActive(true);
+        }
+        else if (mode == 2)
+        {
+            AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = new Color32(219, 203, 178, 255);
+            IntensitySlider.SetActive(true);
+            DistortionSlider.SetActive(true);
+        }
+    }
     /// <summary>
     /// Toggles between manual and shape forming
     /// </summary>

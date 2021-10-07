@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-public enum SelectionState { NOSELECTION, VERTICES_EMERGED, SELECTING_VERTICES, SELECTING_NOW, WAITING4LD, WAITING4TR, POINT_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity,amplify}
+public enum SelectionState { NOSELECTION, SELECTING_VERTICES, MARKING_VERTICES, LMB_DOWN, WAITING4LD, WAITING4TR, POINT_SELECTED }
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity, amplify }
+public enum MarkingPattern { rect, triangle, triangle_inv, diagonal }
 /// <summary>
 /// Hooked to ShapeMenu
 /// </summary>
@@ -29,23 +32,42 @@ public class ShapeMenu : MonoBehaviour
 	public Toggle KeepShape;
 	public Toggle Connect;
 	public Toggle SelectTR;
+	public Toggle Inversion_mode;
+	public Toggle Addition_mode;
+	public Toggle Exclusion_mode;
 	/// <summary>
 	/// Indicates type of selected shape in FormMenu 
 	/// </summary>
 	public static FormButton LastSelected = FormButton.none;
 	public static SelectionState selectionState = SelectionState.NOSELECTION;
+	public static MarkingPattern CurrentPattern = MarkingPattern.rect;
 	int index = 0;
 	/// <summary>
 	/// list of selected tiles
 	/// </summary>
 	public static List<GameObject> selected_tiles = new List<GameObject>();
-	public static List<GameObject> markings = new List<GameObject>();
+	public static Dictionary<int, GameObject> markings = new Dictionary<int, GameObject>();
+	/// <summary>
+	///Whether the user is currently selecting vertices with Q
+	/// </summary>
+	private static bool areal_selection = false;
 	/// <summary>
 	/// Bottom Left pointing vector set in waiting4LD state
 	/// </summary>
 	public static Vector3 BL;
-	private Vector3 mousePosition1;
 	private Vector3Int TR;
+	/// <summary>
+	/// Where the user has pressed LMB in LMB_DOWN state
+	/// </summary>
+	private Vector3Int p1;
+	/// <summary>
+	/// The current position of the cursor in LMB_DOWN state
+	/// </summary
+	private Vector3Int p2;
+	/// <summary>
+	/// Former state of markings before being marked/unmarked
+	/// </summary>
+	private static Dictionary<int, string> BeforeMarking = new Dictionary<int, string>();
 
 	void Start()
 	{
@@ -91,29 +113,19 @@ public class ShapeMenu : MonoBehaviour
 		if (!CopyPaste.IsEnabled())
 		{
 			CheckNumericShortcuts();
+			SelectionMarkingSwitch();
+			if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyUp(KeyCode.R))
+				MarkingPatternSwitch();
+
 			if (!MouseInputUIBlocker.BlockedByUI)
 			{
-				if (Input.GetMouseButtonUp(0))
-				{
-					UpdateCurrent();
-					SpawnVertexBoxes(Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
-				}
-				VerticesVisibleState(); // wait for left ctrl release
-				VertexSelectionState(); 
+				VertexSelectionState();
+				VertexMarkingState(); 
 				Waiting4_Top_Right_state();
 				Waiting4_Bottom_Left_state();
-				SelectShape(); // apply selected shape
+				ApplyOperation();
 			}
 		}
-
-	}
-	void VerticesVisibleState()
-	{
-		if (selectionState == SelectionState.VERTICES_EMERGED)
-			if (!Input.GetKey(KeyCode.LeftControl))
-			{
-				StateSwitch(SelectionState.SELECTING_VERTICES);
-			}
 	}
 	void EnsureModifiersNAND()
 	{
@@ -125,29 +137,47 @@ public class ShapeMenu : MonoBehaviour
 		else if (Connect.isOn && SelectTR.isOn == Connect.isOn)
 		{
 			Connect.isOn = false;
-			KeepShape.isOn = false;
+			SelectTR.isOn = false;
 		}
 	}
 	public static Vector3 V(Vector3 v)
 	{
 		return new Vector3(v.x, Consts.MAX_H, v.z);
 	}
-	void UpdateCurrent()
+
+	void SelectionMarkingSwitch()
 	{
-		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.VERTICES_EMERGED)
+		if (selectionState == SelectionState.SELECTING_VERTICES && !Input.GetKey(KeyCode.LeftControl))
 		{
-			RaycastHit hit;
-			if (Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 9)
-				|| Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
-			{
-					if (!selected_tiles.Contains(hit.transform.gameObject))
-						selected_tiles.Add(hit.transform.gameObject);
-			}
+			StateSwitch(SelectionState.MARKING_VERTICES);
+		}
+		else if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyDown(KeyCode.LeftControl))
+		{
+			StateSwitch(SelectionState.SELECTING_VERTICES);
 		}
 	}
 	void VertexSelectionState()
 	{
-		if (selectionState == SelectionState.SELECTING_VERTICES || selectionState == SelectionState.SELECTING_NOW)
+		if (Input.GetMouseButtonUp(0) && Highlight.over)
+		{
+			if (selectionState == SelectionState.NOSELECTION)
+				StateSwitch(SelectionState.SELECTING_VERTICES);
+			if (selectionState == SelectionState.SELECTING_VERTICES)
+			{
+				RaycastHit hit;
+				if (Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 9)
+					|| Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+				{
+					GameObject tile = hit.transform.gameObject;
+
+					SpawnVertexBoxes(tile, selected_tiles.Count == 0 && Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
+				}
+			}
+		}
+	}
+	void VertexMarkingState()
+	{
+		if (selectionState == SelectionState.MARKING_VERTICES || selectionState == SelectionState.LMB_DOWN)
 		{
 			if (Input.GetMouseButtonDown(1) || Input.GetKey(KeyCode.Escape))
 			{ // RMB  or ESC turns formMenu off
@@ -158,7 +188,7 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-	void SelectShape()
+	void ApplyOperation()
 	{
 		if (selectionState == SelectionState.POINT_SELECTED)
 		{
@@ -168,7 +198,7 @@ public class ShapeMenu : MonoBehaviour
 			else
 			{
 				ApplyFormingFunction();
-				StateSwitch(SelectionState.SELECTING_VERTICES);
+				StateSwitch(SelectionState.MARKING_VERTICES);
 			}
 			LastSelected = FormButton.none;
 		}
@@ -182,7 +212,7 @@ public class ShapeMenu : MonoBehaviour
 			if (LastSelected == FormButton.infinity || LastSelected == FormButton.to_slider)
 				StateSwitch(SelectionState.POINT_SELECTED);
 
-			foreach (GameObject mrk in markings)
+			foreach (GameObject mrk in markings.Values)
 			{
 				mrk.GetComponent<BoxCollider>().enabled = true;
 				mrk.layer = 11;
@@ -202,10 +232,9 @@ public class ShapeMenu : MonoBehaviour
 			}
 			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
 			{
-				StateSwitch(SelectionState.SELECTING_VERTICES);
+				StateSwitch(SelectionState.MARKING_VERTICES);
 				LastSelected = FormButton.none;
 			}
-
 		}
 	}
 	
@@ -226,7 +255,7 @@ public class ShapeMenu : MonoBehaviour
 			}
 			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
 			{
-				StateSwitch(SelectionState.SELECTING_VERTICES);
+				StateSwitch(SelectionState.MARKING_VERTICES);
 				LastSelected = FormButton.none;
 			}
 		}
@@ -236,12 +265,12 @@ public class ShapeMenu : MonoBehaviour
 	/// </summary>
 	void FormMenu_toSlider()
 	{
-		var surroundings = Build.Get_surrounding_tiles(markings);
+		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 		
 		float slider_value = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
 		//Update terrain
 		HashSet<int> indexes = new HashSet<int>();
-		foreach (GameObject znacznik in markings)
+		foreach (GameObject znacznik in markings.Values)
 		{
 			if (znacznik.name == "on")
 			{
@@ -305,7 +334,7 @@ public class ShapeMenu : MonoBehaviour
 			if (heightdiff == 0 && !Connect.isOn)
 				return;
 		}
-		var surroundings = Build.Get_surrounding_tiles(markings);
+		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 
 		if (selectionState == SelectionState.POINT_SELECTED)
 		{
@@ -366,7 +395,7 @@ public class ShapeMenu : MonoBehaviour
 				}
 			}
 
-			Consts.UpdateMapColliders(markings);
+			Consts.UpdateMapColliders(markings.Values.ToList());
 			//if (current != null)
 			//  Build.UpdateTiles(new List<GameObject> { current });
 			Build.UpdateTiles(surroundings);
@@ -399,7 +428,7 @@ public class ShapeMenu : MonoBehaviour
 				{
 					Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
 					Vector3 P2 = new Vector3(float.MinValue, 0, 0);
-					foreach (var mrk in markings)
+					foreach (var mrk in markings.Values)
 					{
 						if (mrk.name == "on" && mrk.transform.position.z == z)
 						{
@@ -423,7 +452,7 @@ public class ShapeMenu : MonoBehaviour
 				{
 					Vector3 P1 = new Vector3(0, 0, float.MaxValue);
 					Vector3 P2 = new Vector3(0, 0, float.MinValue);
-					foreach (var mrk in markings)
+					foreach (var mrk in markings.Values)
 					{
 						if (mrk.name == "on" && mrk.transform.position.x == x)
 						{
@@ -445,11 +474,11 @@ public class ShapeMenu : MonoBehaviour
 	}
 	void Amplify()
 	{
-		var surroundings = Build.Get_surrounding_tiles(markings);
+		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 		float slider_value = FormPanel.GetComponent<Form>().HeightSlider.value;
 		//Update terrain
 		HashSet<int> indexes = new HashSet<int>();
-		foreach (GameObject marking in markings)
+		foreach (GameObject marking in markings.Values)
 		{
 			if (marking.name == "on")
 			{
@@ -474,7 +503,7 @@ public class ShapeMenu : MonoBehaviour
 	void SetToInfinity()
 	{
 		// NaNs grass break tiles
-		var surroundings = Build.Get_surrounding_tiles(markings);
+		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 		if (surroundings.Count != 0)
 		{
 			surroundings.Clear();
@@ -483,7 +512,7 @@ public class ShapeMenu : MonoBehaviour
 
 		//Update terrain
 		HashSet<int> indexes = new HashSet<int>();
-		foreach (GameObject znacznik in markings)
+		foreach (GameObject znacznik in markings.Values)
 		{
 			if (znacznik.name == "on")
 			{
@@ -502,7 +531,7 @@ public class ShapeMenu : MonoBehaviour
 	{
 		//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
 		int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
-		foreach (GameObject znacznik in markings)
+		foreach (GameObject znacznik in markings.Values)
 		{
 			if (znacznik.name == "on")
 			{
@@ -640,42 +669,67 @@ public class ShapeMenu : MonoBehaviour
 		else
 			return false;
 	}
+
 	void MarkVertices()
 	{
 		if (Input.GetKeyUp(KeyCode.E))
 			InverseSelection();
+
 		if (Input.GetMouseButtonDown(0))
 		{ // Beginning of selection..
-			StateSwitch(SelectionState.SELECTING_NOW);
-			mousePosition1 = Input.mousePosition;
+			StateSwitch(SelectionState.LMB_DOWN);
+
+			foreach (int index in markings.Keys)
+				BeforeMarking.Add(index, markings[index].name);
+			p1 = Vector3Int.RoundToInt(Highlight.pos); //Input.mousePosition;
+			p2 = new Vector3Int(-1, -1, -1);
+		}
+		if (Input.GetMouseButton(0) && (Vector3Int.RoundToInt(Highlight.pos) != p2 || Input.GetKeyUp(KeyCode.R)))
+		{
+			foreach (int index in markings.Keys)
+			{
+				Vector3 pos = Consts.IndexToPos(index);
+				if (IsWithinMarkingBounds(Consts.IndexToPos(index)))
+				{
+					markings[index].name = BeforeMarking[index];
+					markings[index].GetComponent<MeshRenderer>().sharedMaterial = BeforeMarking[index] == "on" ? red : white;
+				}
+			}
+			if (Vector3Int.RoundToInt(Highlight.pos) != p2)
+				p2 = Vector3Int.RoundToInt(Highlight.pos);
+
+			if (Input.GetKeyUp(KeyCode.R))
+				MarkingPatternSwitch();
+
+			foreach (int index in markings.Keys)
+			{
+				Vector3 pos = Consts.IndexToPos(index);
+				if (IsWithinMarkingBounds(Consts.IndexToPos(index)))
+				{
+					if (markings[index].name == "Cube" && (Addition_mode.isOn || Inversion_mode.isOn))
+					{
+						markings[index].name = "on";
+						markings[index].GetComponent<MeshRenderer>().sharedMaterial = red;
+					}
+					else if (markings[index].name == "on" && (Exclusion_mode.isOn || Inversion_mode.isOn))
+					{
+						markings[index].name = "Cube";
+						markings[index].GetComponent<MeshRenderer>().sharedMaterial = white;
+					}
+				}
+			}
 		}
 		if (Input.GetMouseButtonUp(0))
 		{ // .. end of selection
-			foreach (GameObject znacznik in markings)
-			{
-				if (IsWithinSelectionBounds(znacznik) && IsMarkingVisible(znacznik))
-				{
-					if (znacznik.GetComponent<MeshRenderer>().sharedMaterial == white)
-					{
-						znacznik.name = "on";
-						znacznik.GetComponent<MeshRenderer>().sharedMaterial = red;
-					}
-					else
-					{
-						znacznik.name = "off";
-						znacznik.GetComponent<MeshRenderer>().sharedMaterial = white;
-					}
-
-				}
-			}
-			StateSwitch(SelectionState.SELECTING_VERTICES);
+			BeforeMarking.Clear();
+			StateSwitch(SelectionState.MARKING_VERTICES);
 		}
-		if (selectionState == SelectionState.SELECTING_VERTICES && LastSelected != FormButton.none)
+		if (selectionState == SelectionState.MARKING_VERTICES && LastSelected != FormButton.none)
 			StateSwitch(SelectionState.WAITING4LD);
 
 		void InverseSelection()
 		{
-			foreach (var z in markings)
+			foreach (var z in markings.Values)
 			{
 				if (z.name == "on")
 				{
@@ -691,90 +745,254 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-	void OnGUI()
+	//void OnGUI()
+	//{
+	//	if (selectionState == SelectionState.LMB_DOWN)
+	//	{
+	//		// Create a rect from both mouse positions
+	//		Rect rect = Utils.GetScreenRect(p1, Input.mousePosition);
+	//		Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
+	//	}
+	//}
+	public bool IsWithinMarkingBounds(Vector3 posf) //GameObject znacznik)
 	{
-		if (selectionState == SelectionState.SELECTING_NOW)
-		{
-			// Create a rect from both mouse positions
-			Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
-			Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
-		}
-	}
-	public bool IsWithinSelectionBounds(GameObject gameObject)
-	{
-		if (selectionState != SelectionState.SELECTING_NOW)
+		if (selectionState != SelectionState.LMB_DOWN)
 			return false;
-		Camera camera = Camera.main;
-		Bounds viewportBounds = Utils.GetViewportBounds(camera, mousePosition1, Input.mousePosition);
-		return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
-	}
-	void SpawnVertexBoxes(bool checkTerrain, bool ForceMapVertices)
-	{
+		//Camera camera = Camera.main;
+		//Bounds viewportBounds = Utils.GetViewportBounds(camera, p1, Input.mousePosition);
+		//return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
+		Vector3Int pos = Vector3Int.RoundToInt(posf);
 
-		if (!Highlight.over)
-			return;
-		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.VERTICES_EMERGED)
+		if (CurrentPattern == MarkingPattern.rect)
 		{
-			if (checkTerrain) // Working with terrain vertices
-				CreateTerrainMarkings();
-			else if (selected_tiles.Count == 0)
-				CreateTerrainMarkings();
+			int x_min, x_max, z_min, z_max;
+			x_min = Math.Min(p1.x, p2.x);
+			x_max = Math.Max(p1.x, p2.x);
+			z_min = Math.Min(p1.z, p2.z);
+			z_max = Math.Max(p1.z, p2.z);
+			return pos.x >= x_min && pos.x <= x_max && pos.z >= z_min && pos.z <= z_max;
+		}
+		else if (CurrentPattern == MarkingPattern.triangle)
+        {
+			if (p2.z != p1.z && p2.x != p1.x)
+			{
+				if (p1.x < p2.x && p1.z < p2.z && (pos.x < p1.x || pos.z > p2.z))
+					return false;
+				else if (p1.x < p2.x && p1.z > p2.z && (pos.z > p1.z || pos.x > p2.x))
+					return false;
+				else if (p1.x > p2.x && p1.z < p2.z && (pos.z < p1.z || pos.x < p2.x))
+					return false;
+				else if (p1.x > p2.x && p1.z > p2.z && (pos.x > p1.x || pos.z < p2.z))
+					return false;
+
+				float k = (float)(p2.z - p1.z) / (float)(p2.x - p1.x);
+				if (p2.x - p1.x > 0)
+					return pos.z - p1.z >= k * (pos.x - p1.x);
+				else
+					return pos.z - p1.z <= k * (pos.x - p1.x);
+			}
 			else
-				CreateNewSetOfMarkingsFromTile(ForceMapVertices);
+            {
+				int x_min, x_max, z_min, z_max;
+				x_min = Math.Min(p1.x, p2.x);
+				x_max = Math.Max(p1.x, p2.x);
+				z_min = Math.Min(p1.z, p2.z);
+				z_max = Math.Max(p1.z, p2.z);
+				return pos.x >= x_min && pos.x <= x_max && pos.z >= z_min && pos.z <= z_max;
+			}
+		}
+		else if (CurrentPattern == MarkingPattern.triangle_inv)
+		{
+			if (p2.z != p1.z && p2.x != p1.x)
+			{
+				if (p1.x < p2.x && p1.z < p2.z && (pos.x > p2.x || pos.z < p1.z))
+					return false;
+				else if (p1.x < p2.x && p1.z > p2.z && (pos.z < p2.z || pos.x < p1.x))
+					return false;
+				else if (p1.x > p2.x && p1.z < p2.z && (pos.z > p2.z || pos.x > p1.x))
+					return false;
+				else if (p1.x > p2.x && p1.z > p2.z && (pos.x < p2.x || pos.z > p1.z))
+					return false;
+
+				float k = (float)(p2.z - p1.z) / (float)(p2.x - p1.x);
+				if (p2.x - p1.x > 0)
+					return pos.z - p1.z <= k * (pos.x - p1.x);
+				else
+					return pos.z - p1.z >= k * (pos.x - p1.x);
+			}
+			else
+			{
+				int x_min, x_max, z_min, z_max;
+				x_min = Math.Min(p1.x, p2.x);
+				x_max = Math.Max(p1.x, p2.x);
+				z_min = Math.Min(p1.z, p2.z);
+				z_max = Math.Max(p1.z, p2.z);
+				return pos.x >= x_min && pos.x <= x_max && pos.z >= z_min && pos.z <= z_max;
+			}
+		}
+		else if (CurrentPattern == MarkingPattern.diagonal)
+        {
+			int xz_sum_min, xz_sum_max, xz_dif_min, xz_dif_max;
+			xz_sum_min = Math.Min(p1.x + p1.z, p2.x + p2.z);
+			xz_sum_max = Math.Max(p1.x + p1.z, p2.x + p2.z);
+			xz_dif_min = Math.Min(p1.x - p1.z, p2.x - p2.z);
+			xz_dif_max = Math.Max(p1.x - p1.z, p2.x - p2.z);
+			return pos.x + pos.z >= xz_sum_min && pos.x + pos.z <= xz_sum_max
+				&& pos.x - pos.z >= xz_dif_min && pos.x - pos.z <= xz_dif_max;
+		}
+		return false;
+	}
+
+	void SpawnVertexBoxes(GameObject tile, bool checkTerrain, bool ForceMapVertices)
+	{
+		if (selectionState == SelectionState.NOSELECTION || selectionState == SelectionState.SELECTING_VERTICES)
+		{
+			if (checkTerrain) // Selecting with Q
+			{
+				areal_selection = true;
+			}
+			if (areal_selection)
+			{
+				CreateMarkingsWithFixedBounds();
+			}
+			else if (!selected_tiles.Contains(tile))
+			{
+				if (ForceMapVertices)
+					CreateNewSetOfMarkingsFromGrass();
+				else
+					CreateNewSetOfMarkingsFromTile();
+			}
+			else
+				DeleteMarkings();
 		}
 
 		//local functions
-		void CreateTerrainMarkings()
+		void CreateMarkingsWithFixedBounds()
 		{
 			Vector3 v = Highlight.pos;
 			for (int z = (int)(v.z - Consts.MarkerBounds.y / 2); z <= v.z + Consts.MarkerBounds.y / 2; z++)
 			{
 				for (int x = (int)(v.x - Consts.MarkerBounds.x / 2); x <= v.x + Consts.MarkerBounds.x / 2; x++)
 				{
-					if (Consts.IsWithinMapBounds(x, z))
+					if (x >= 0 && x <= 4 * Consts.TRACK.Width && z >= 0 && z <= 4 * Consts.TRACK.Height
+						&& !markings.ContainsKey(Consts.PosToIndex(x, z)))
 					{
 						GameObject znacznik = Consts.CreateMarking(white, Consts.IndexToPos(Consts.PosToIndex(x, z)));
-						markings.Add(znacznik);
+						markings.Add(Consts.PosToIndex(x, z), znacznik);
 					}
 				}
 			}
-			StateSwitch(SelectionState.SELECTING_VERTICES);
 		}
-		void CreateNewSetOfMarkingsFromTile(bool ForceMapVerticesForTile = false) // creates markings based on all markings over rmc of area
+		void CreateNewSetOfMarkingsFromGrass() // creates markings based on all markings over rmc of area
 		{
-			if (ForceMapVerticesForTile)
-			{ // force map vertices for this tile
-				var Last = selected_tiles[selected_tiles.Count - 1];
-				Vector3 v = Last.transform.position;
-				v.y = Consts.MAX_H;
-				var corresponding_grasses = Physics.RaycastAll(v, Vector3.down, Consts.RAY_H, 1 << 8);
-				foreach (var grass in corresponding_grasses)
+			List<Vector3> vertices = GetAllVerticesOfTile();
+			RaycastHit hit;
+			foreach (var v in vertices)
+			{
+				if (!Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 11)
+					&& !Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 12))
 				{
-					GameObject grass_tile = grass.transform.gameObject;
-					Mesh rmc = grass_tile.GetComponent<MeshFilter>().mesh;
+					markings.Add(Consts.PosToIndex(v), Consts.CreateMarking(white, v));
+				}
+			}
+			selected_tiles.Add(tile);
+		}
 
-					for (int i = 0; i < rmc.vertexCount; i++)
+		void CreateNewSetOfMarkingsFromTile()
+		{
+			Vector3[] vertices = tile.GetComponent<MeshFilter>().mesh.vertices;
+			foreach (var v in vertices)
+			{
+				Vector3 pos = tile.transform.TransformPoint(v);
+
+				if (!Physics.Raycast(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 11)
+					&& !Physics.Raycast(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 12))
+				{
+					RaycastHit[] hits = Physics.RaycastAll(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 9);
+
+					// Don't create marking if the corresponding vertex is insensitive due to the restrictions of any surrounding tile
+					List<GameObject> surroundings = Build.Get_surrounding_tiles(new HashSet<int> { Consts.PosToIndex(pos) });
+					bool sensitive = true;
+					foreach (var hit in hits)
 					{
-						v = grass_tile.transform.TransformPoint(rmc.vertices[i]);
-						if (!Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, Consts.RAY_H, 1 << 11))
-							markings.Add(Consts.CreateMarking(white, grass_tile.transform.TransformPoint(rmc.vertices[i])));
+						GameObject hit_tile = hit.transform.gameObject;
+						if (hit_tile == tile)
+							continue;
+
+						Vector3[] vertices_of_hit_tile = hit_tile.transform.GetComponent<MeshFilter>().mesh.vertices;
+						bool sensitive_for_this_tile = false;
+						foreach (var vertex_of_hit_tile in vertices_of_hit_tile)
+						{
+							if (hit_tile.transform.TransformPoint(vertex_of_hit_tile) == pos)
+							{
+								sensitive_for_this_tile = true;
+								break;
+							}
+						}
+						if (!sensitive_for_this_tile)
+						{
+							sensitive = false;
+							break;
+						}
+					}
+					if (sensitive)
+						markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
+				}
+			}
+			selected_tiles.Add(tile);
+		}
+
+		void DeleteMarkings()
+		{
+			List<Vector3> vertices = GetAllVerticesOfTile();
+			RaycastHit hit_mrk;
+			foreach (var v in vertices)
+			{
+				if (Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit_mrk, Consts.RAY_H, 1 << 11)
+					|| Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit_mrk, Consts.RAY_H, 1 << 12))
+				{
+					RaycastHit[] hit_tiles = Physics.RaycastAll(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, Consts.RAY_H, 1 << 8)
+						.Concat(Physics.RaycastAll(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, Consts.RAY_H, 1 << 9)).ToArray();
+
+					// Don't delete marking if it belongs to another selected tile
+					bool shared = false;
+					foreach (var h in hit_tiles)
+						if (h.transform.gameObject != tile && selected_tiles.Contains(h.transform.gameObject))
+							shared = true;
+
+					if (!shared)
+					{
+						Destroy(hit_mrk.transform.gameObject);
+						markings.Remove(Consts.PosToIndex(v));
 					}
 				}
 			}
+			selected_tiles.Remove(tile);
+		}
+
+		List<Vector3> GetAllVerticesOfTile()
+		{
+			Vector3 pos = tile.transform.position;
+			pos.y = Consts.MAX_H;
+			GameObject[] corresponding_grasses;
+			if (tile.layer == 8)
+				corresponding_grasses = new GameObject[] { tile };
 			else
-			{ // normal tile selection
-				var Last = selected_tiles[selected_tiles.Count - 1];
-				Mesh rmc = Last.GetComponent<MeshFilter>().mesh;
-				// add new points
-				for (int i = 0; i < rmc.vertexCount; i++)
-				{
-					Vector3 v = Last.transform.TransformPoint(rmc.vertices[i]);
-					if (!Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, Consts.RAY_H, 1 << 11))
-						markings.Add(Consts.CreateMarking(white, Last.transform.TransformPoint(rmc.vertices[i])));
-				}
-				
+			{
+				RaycastHit[] hits = Physics.RaycastAll(pos, Vector3.down, Consts.RAY_H, 1 << 8);
+				corresponding_grasses = new GameObject[hits.Length];
+				for (int i = 0; i < hits.Length; i++)
+					corresponding_grasses[i] = hits[i].transform.gameObject;
 			}
-			StateSwitch(SelectionState.VERTICES_EMERGED);
+			List<Vector3> vertices = new List<Vector3>();
+			foreach (var grass in corresponding_grasses)
+			{
+				Vector3[] sub_vertices = grass.GetComponent<MeshFilter>().mesh.vertices;
+				foreach (var v in sub_vertices)
+					if (!vertices.Contains(grass.transform.TransformPoint(v)))
+						vertices.Add(grass.transform.TransformPoint(v));
+			}
+			return vertices;
 		}
 	}
 
@@ -782,13 +1000,19 @@ public class ShapeMenu : MonoBehaviour
 	{
 		if (markings.Count != 0)
 		{
-			foreach (var mrk in markings)
+			foreach (var mrk in markings.Values)
 				Destroy(mrk);
 			markings.Clear();
 			selected_tiles.Clear();
+			BeforeMarking.Clear();
 		}
-
 	}
+	
+	private void MarkingPatternSwitch()
+    {
+		CurrentPattern = (MarkingPattern)(((int)CurrentPattern + 1) % Enum.GetNames(typeof(MarkingPattern)).Length);
+    }
+
 	/// <summary>
 	/// internal => visible also for every script attached to ShapeMenu
 	/// </summary>
@@ -797,23 +1021,24 @@ public class ShapeMenu : MonoBehaviour
 		selectionState = newstate;
 		if (newstate == SelectionState.NOSELECTION)
 		{
+			areal_selection = false;
 			Del_znaczniki();
 			FormMenu.SetActive(false);
 			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Shape forming");
 		}
-		else if (newstate == SelectionState.VERTICES_EMERGED)
-		{
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Tiles selection");
-		}
 		else if (newstate == SelectionState.SELECTING_VERTICES)
 		{
 			FormMenu.SetActive(true);
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Marking vertices");
+			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Selecting vertices..");
+		}
+		else if (newstate == SelectionState.MARKING_VERTICES)
+		{
+			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Marking vertices..");
 		}
 		else if (newstate == SelectionState.WAITING4LD)
 		{
 			if(LastSelected == FormButton.amplify)
-				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Select h0 vertex ..");
+				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Select h0 vertex..");
 			else
 				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for bottom-left vertex..");
 		}

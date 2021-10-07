@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 /// <summary>
@@ -47,11 +48,15 @@ public static class Consts
 	/// <returns></returns>
 	public static string LoadLastFolderPath()
 	{
-		StreamReader w = new StreamReader(Application.dataPath + "/StreamingAssets/path.txt");
+		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\path.txt"))
+			File.Create(MyDocuments + "\\Crashday 3D Editor\\path.txt").Dispose();
+
+		StreamReader w = new StreamReader(MyDocuments + "/Crashday 3D Editor/path.txt");
 		string LastTrackPath = w.ReadLine();
 		w.Close();
 		if (LastTrackPath == "")
-			LastTrackPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+			LastTrackPath = MyDocuments;
 		//Debug.Log("LoadPath:" + LastTrackPath);
 		return LastTrackPath;
 	}
@@ -61,13 +66,17 @@ public static class Consts
 	/// </summary>
 	public static void SaveLastFolderPath(string path)
 	{
-		if(path == null)
+		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\path.txt"))
+			File.Create(MyDocuments + "\\Crashday 3D Editor\\path.txt").Dispose();
+
+		if (path == null)
 		{
 			Debug.LogError("path null");
 			return;
 		}
 		Debug.Log(path);
-		StreamWriter w = new StreamWriter(Application.dataPath + "/StreamingAssets/path.txt");
+		StreamWriter w = new StreamWriter(MyDocuments + "/Crashday 3D Editor/path.txt");
 		w.WriteLine(path);
 		w.Close();
 	}
@@ -130,7 +139,7 @@ public static class Consts
 		if (hasCollider)
 			znacznik.GetComponent<BoxCollider>().enabled = true;
 		else
-			Object.Destroy(znacznik.GetComponent<BoxCollider>());
+			UnityEngine.Object.Destroy(znacznik.GetComponent<BoxCollider>());
 
 		znacznik.GetComponent<MeshRenderer>().material = material;
 
@@ -210,7 +219,7 @@ public static class Consts
 					Vector3[] newverts = new Vector3[verts.Length];
 					for (int i = 0; i < verts.Length; i++)
 						newverts[i].Set(verts[i].x, lowestPoint, verts[i].z);
-					Mesh mcMesh = Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
+					Mesh mcMesh = UnityEngine.Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
 					mcMesh.vertices = newverts;
 					mcMesh.RecalculateBounds();
 					mc.sharedMesh = mcMesh;
@@ -299,7 +308,7 @@ public static class Consts
 				Vector3[] newverts = new Vector3[verts.Length];
 				for (int i = 0; i < verts.Length; i++)
 					newverts[i].Set(verts[i].x, lowestPoint, verts[i].z);
-				Mesh mcMesh = Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
+				Mesh mcMesh = UnityEngine.Object.Instantiate(Resources.Load<Mesh>("rmcs/basic"));
 				mcMesh.vertices = newverts;
 				mcMesh.RecalculateBounds();
 				mc.sharedMesh = mcMesh;
@@ -348,7 +357,3 @@ public static class Consts
 		return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
 	}
 }
-
-
-
-

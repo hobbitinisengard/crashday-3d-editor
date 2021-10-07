@@ -115,7 +115,7 @@ public class CopyPaste : MonoBehaviour
 		fixed_height = ShapeMenu.BL.y;
 		// reserve place for first marking = Vector3 zero.
 		CopyClipboard.Add(Vector3.zero);
-		foreach (var mrk in ShapeMenu.markings)
+		foreach (var mrk in ShapeMenu.markings.Values)
 		{
 			if (mrk.name == "on")
 			{

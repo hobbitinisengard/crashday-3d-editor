@@ -4,54 +4,34 @@ using UnityEngine.UI;
 
 public class SingleMode : MonoBehaviour
 {
-	private ManualSubMode CurrentMode;
 	Color32 Color_selected = new Color32(219, 203, 178, 255);
-	public GameObject ArealMenu;
 	public Slider HeightSlider;
 	public Slider IntensitySlider;
 	public Slider DistortionSlider;
 	public Button SingleModeButton;
 	public Button SmoothModeButton;
-	public Button AmpModeButton;
+	public Button AmplifyModeButton;
 
 	private GameObject indicator;
 	private int index;
 	private float TargetDistValue = 0;
 	private Vector3 InitialPos;
 
-	public void OnDisable()
+	public void RemoveIndicator()
 	{
 		index = 0;
 		if (indicator != null)
 			Destroy(indicator);
 	}
-	// buttons use this function
-	public void SwitchMode(float mode)
+	public void OnDisable()
 	{
-		CurrentMode = (ManualSubMode)mode;
-		SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		AmpModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		if (mode == 0)
-			SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
-		else if(mode == 1)
-			SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
-		else if (mode == 2)
-			AmpModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
+		RemoveIndicator();
 	}
 
 	void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Alpha1))
-			SwitchMode(0);
-		else if (Input.GetKeyDown(KeyCode.Alpha2))
-			SwitchMode(1);
-		else if (Input.GetKeyDown(KeyCode.Alpha3))
-			SwitchMode(2);
-		if (CurrentMode == ManualSubMode.Set)
+		if (Form.submode == ManualSubMode.Set)
 		{
-			IntensitySlider.transform.parent.gameObject.SetActive(false);
-			DistortionSlider.transform.parent.gameObject.SetActive(false);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(0))
@@ -74,11 +54,8 @@ public class SingleMode : MonoBehaviour
 				}
 			}
 		}
-		else if (CurrentMode == ManualSubMode.Avg)
+		else if (Form.submode == ManualSubMode.Avg)
 		{
-
-			IntensitySlider.transform.parent.gameObject.SetActive(true);
-			DistortionSlider.transform.parent.gameObject.SetActive(true);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
@@ -97,11 +74,8 @@ public class SingleMode : MonoBehaviour
 				}
 			}
 		}
-		else if (CurrentMode == ManualSubMode.Amp)
+		else if (Form.submode == ManualSubMode.Amp)
 		{
-
-			IntensitySlider.transform.parent.gameObject.SetActive(true);
-			DistortionSlider.transform.parent.gameObject.SetActive(false);
 			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))

@@ -43,8 +43,6 @@ public static class UndoBuffer
 
 			Buffer.Add(new Dictionary<int, float[]>());
 			next_operation = false;
-			Debug.Log(Buffer.Count);
-			Debug.Log(current_layer);
 		}
 
 		int index = Consts.PosToIndex(mrk1);

@@ -110,8 +110,9 @@ public class MainMenu : MonoBehaviour
 		TileManager.CustomTileSections.Remove(mod_id); ;
 
 		// Remove entry in tilesets.txt
-		string[] lines_to_keep = File.ReadAllLines(Application.streamingAssetsPath + "\\tilesets.txt").Where(line => line != mod_id && line != "#" + mod_id).ToArray();
-		File.WriteAllLines(Application.streamingAssetsPath + "\\tilesets.txt", lines_to_keep);
+		string[] lines_to_keep = File.ReadAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt")
+			.Where(line => line != mod_id && line != "#" + mod_id).ToArray();
+		File.WriteAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt", lines_to_keep);
 
 		// Remove folder in moddata
 		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
@@ -130,7 +131,7 @@ public class MainMenu : MonoBehaviour
 	public void ToggleTileset(GameObject Id_GO)
     {
 		string mod_id = Id_GO.GetComponent<Text>().text;
-		string[] mod_ids = File.ReadAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt");
+		string[] mod_ids = File.ReadAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt");
 		bool enable = !TileManager.CustomTileSections[mod_id].Enabled;
 		GameObject Entry = ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject;
 

@@ -2,15 +2,12 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-public enum ManualSubMode { Set, Avg, Amp }
 /// <summary>
 /// First submode of manual mode: Areal mode. Second one is Single mode
 /// You switch between them with [Tab]
 /// </summary>
-
 public class ArealMode : MonoBehaviour
 {
-	private ManualSubMode CurrentMode;
 	Color32 Color_selected = new Color32(219, 203, 178, 255);
 	public Slider HeightSlider;
 	public Slider IntensitySlider;
@@ -24,7 +21,8 @@ public class ArealMode : MonoBehaviour
 	private Vector3 InitialPos;
 	private Dictionary<int, float> TargetDistValues = new Dictionary<int, float>();
 	private Dictionary<int, float> TargetSmoothValues = new Dictionary<int, float>();
-	void RemoveIndicator()
+	
+	public void RemoveIndicator()
 	{
 		index = 0;
 		if (indicator != null)
@@ -36,22 +34,10 @@ public class ArealMode : MonoBehaviour
 	}
 	void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Alpha1))
-			SwitchMode(0);
-		else if (Input.GetKeyDown(KeyCode.Alpha2))
-		{
-			SwitchMode(1);
-			RemoveIndicator();
-		}
-		else if (Input.GetKeyDown(KeyCode.Alpha3))
-			SwitchMode(2);
-
 		if (!Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
 		{
-			if (CurrentMode == ManualSubMode.Set)
+			if (Form.submode == ManualSubMode.Set)
 			{
-				DistortionSlider.transform.parent.gameObject.SetActive(false);
-
 				if (Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();
 
@@ -69,9 +55,8 @@ public class ArealMode : MonoBehaviour
 						Make_areal_elevation();
 				}
 			}
-			else if (CurrentMode == ManualSubMode.Avg)
+			else if (Form.submode == ManualSubMode.Avg)
 			{
-				DistortionSlider.transform.parent.gameObject.SetActive(true);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
@@ -90,9 +75,8 @@ public class ArealMode : MonoBehaviour
 					}
 				}
 			}
-			else if (CurrentMode == ManualSubMode.Amp)
+			else if (Form.submode == ManualSubMode.Amp)
 			{
-				DistortionSlider.transform.parent.gameObject.SetActive(false);
 				if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
 				{
 					if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
@@ -112,20 +96,6 @@ public class ArealMode : MonoBehaviour
 				}
 			}
 		}
-	}
-	// buttons use this function
-	public void SwitchMode(float mode)
-	{
-		CurrentMode = (ManualSubMode)mode;
-		SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
-		if (mode == 0)
-			SingleModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
-		else if(mode == 1)
-			SmoothModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
-		else if (mode == 2)
-			AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = Color_selected;
 	}
 	private void Areal_distortion()
 	{

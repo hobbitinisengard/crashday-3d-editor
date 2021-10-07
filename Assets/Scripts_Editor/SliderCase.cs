@@ -9,6 +9,7 @@ public class SliderCase : MonoBehaviour
 	public GameObject TileDescription;
 	public GameObject TileTemplate;
 	public GameObject TilesetContainer;
+	public GameObject HelpPanel;
 	private string Current_tileset = Consts.CHKPOINTS_STR;
 	private string[] Tilesets;
 
@@ -22,8 +23,8 @@ public class SliderCase : MonoBehaviour
 		// Don't allow switching tilesets when ctrl+mousewheel (mixing) is used
 		if (Input.GetKey(KeyCode.LeftControl))
 			return;
-		// Don't allow when in deleting mode
-		if (Input.GetKey(KeyCode.X))
+		// Don't allow when in deleting or selecting mode
+		if (Input.GetKey(KeyCode.X) || Input.GetKey(KeyCode.C) || HelpPanel.activeSelf)
 			return;
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
 		{
