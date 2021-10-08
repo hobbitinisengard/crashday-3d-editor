@@ -189,7 +189,8 @@ public class P3DModel
 			else
 				mat = new Material(Shader.Find("Mobile/Bumped Diffuse"));
 
-			mat.SetFloat("_Glossiness", 0);
+				mat.SetFloat("_Glossiness", 0);
+
 		}
 		mat.mainTexture = tex;
 		mat.name = textureName;

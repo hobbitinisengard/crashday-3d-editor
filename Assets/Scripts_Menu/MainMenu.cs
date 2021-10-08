@@ -29,6 +29,7 @@ public class MainMenu : MonoBehaviour
 	public static bool CanCreateTrack = true;
 	void Awake()
 	{
+		Initialize_Documents_Folder();
 		ResizeMenu_Right.text = "0";
 		ResizeMenu_Left.text = "0";
 		ResizeMenu_Up.text = "0";
@@ -41,6 +42,19 @@ public class MainMenu : MonoBehaviour
 			TileManager.LoadTiles();
 		}
 		Populate_Manage_Tilesets_Menu();
+	}
+	void Initialize_Documents_Folder()
+	{
+		if (!Directory.Exists(Consts.documents_3deditor_path))
+		{
+			Directory.CreateDirectory(Consts.documents_3deditor_path);
+			File.Create(Consts.path_path).Dispose();
+			File.WriteAllLines(Consts.path_path, new string[] { Consts.documents_3deditor_path });
+			File.Create(Consts.userdata_path).Dispose();
+			File.WriteAllLines(Consts.userdata_path, new string[] { "0" });
+			File.Create(Consts.tilesets_path).Dispose();
+			
+		}
 	}
 	private void Enable_manage_tiles_button()
 	{
@@ -110,9 +124,9 @@ public class MainMenu : MonoBehaviour
 		TileManager.CustomTileSections.Remove(mod_id); ;
 
 		// Remove entry in tilesets.txt
-		string[] lines_to_keep = File.ReadAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt")
+		string[] lines_to_keep = File.ReadAllLines(Consts.tilesets_path)
 			.Where(line => line != mod_id && line != "#" + mod_id).ToArray();
-		File.WriteAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt", lines_to_keep);
+		File.WriteAllLines(Consts.tilesets_path, lines_to_keep);
 
 		// Remove folder in moddata
 		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
@@ -131,7 +145,7 @@ public class MainMenu : MonoBehaviour
 	public void ToggleTileset(GameObject Id_GO)
     {
 		string mod_id = Id_GO.GetComponent<Text>().text;
-		string[] mod_ids = File.ReadAllLines(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt");
+		string[] mod_ids = File.ReadAllLines(Consts.tilesets_path);
 		bool enable = !TileManager.CustomTileSections[mod_id].Enabled;
 		GameObject Entry = ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject;
 
@@ -161,7 +175,7 @@ public class MainMenu : MonoBehaviour
 		Entry.SetActive(true);
 
 		// Update tilesets.txt
-		File.WriteAllLines(Application.dataPath + "\\StreamingAssets\\tilesets.txt", mod_ids);
+		File.WriteAllLines(Consts.tilesets_path, mod_ids);
 	}
 
 	// TO DO:

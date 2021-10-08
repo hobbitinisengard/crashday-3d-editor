@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Linq;
 //Handles all variables essential for editor
 public class DuVecInt
 {
@@ -49,11 +50,12 @@ public class EditorMenu : MonoBehaviour
 		upperPanel_t_version.text = Consts.VERSION;
 		floor1 = Resources.Load<Material>("floor1");
 
-		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\userdata.txt"))
+		string[] lines = File.ReadLines(Consts.userdata_path).ToArray();
+		if(lines[0] == "0")
 		{
-			File.Create(MyDocuments + "\\Crashday 3D Editor\\userdata.txt").Dispose();
 			help.SetActive(true);
+			lines[0] = "1";
+			File.WriteAllLines(Consts.userdata_path, lines);
 		}
 
 		if (Consts.MissingTilesNames.Count > 0)

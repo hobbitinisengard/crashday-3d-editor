@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public static class Consts
 {
-	public readonly static string VERSION = "3.0";
+	public readonly static string VERSION = "3.1";
 	/// <summary>Maximum tile limit</summary>
 	public readonly static int MAX_ELEMENTS = 8000;
 	internal static readonly string CHKPOINTS_STR = "Checkpoints";
@@ -16,6 +16,10 @@ public static class Consts
 	public readonly static int RAY_H = MAX_H + 1 - MIN_H;
 	public static GameObject Cone;
 	public static int GravityValue = 0;
+	public readonly static string tilesets_path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\tilesets.txt";
+	public readonly static string userdata_path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\userdata.txt";
+	public readonly static string path_path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor\\path.txt";
+	public readonly static string documents_3deditor_path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Crashday 3D Editor";
 	/// <summary>
 	/// visible vertices in second form mode
 	/// </summary>
@@ -49,10 +53,8 @@ public static class Consts
 	public static string LoadLastFolderPath()
 	{
 		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\path.txt"))
-			File.Create(MyDocuments + "\\Crashday 3D Editor\\path.txt").Dispose();
 
-		StreamReader w = new StreamReader(MyDocuments + "/Crashday 3D Editor/path.txt");
+		StreamReader w = new StreamReader(Consts.path_path);
 		string LastTrackPath = w.ReadLine();
 		w.Close();
 		if (LastTrackPath == "")
@@ -66,17 +68,13 @@ public static class Consts
 	/// </summary>
 	public static void SaveLastFolderPath(string path)
 	{
-		string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-		if (!File.Exists(MyDocuments + "\\Crashday 3D Editor\\path.txt"))
-			File.Create(MyDocuments + "\\Crashday 3D Editor\\path.txt").Dispose();
-
 		if (path == null)
 		{
 			Debug.LogError("path null");
 			return;
 		}
 		Debug.Log(path);
-		StreamWriter w = new StreamWriter(MyDocuments + "/Crashday 3D Editor/path.txt");
+		StreamWriter w = new StreamWriter(Consts.path_path);
 		w.WriteLine(path);
 		w.Close();
 	}
