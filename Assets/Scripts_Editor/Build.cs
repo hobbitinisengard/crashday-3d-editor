@@ -591,18 +591,23 @@ public class Build : MonoBehaviour
 	{
 		if (indexes == null || indexes.Count == 0)
 			return;
+		List<int> indexes_to_remove = new List<int>();
 		foreach (var index in indexes)
 		{
 			Vector3 v = Consts.IndexToPos(index);
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 				continue;
 			v.y = Consts.MAX_H;
-			bool traf = Physics.SphereCast(v, 0.005f, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9);
-			if (traf)
+			var trafs = Physics.SphereCastAll(v, 0.005f, Vector3.down,Consts.RAY_H, 1 << 9);
+			if (trafs.Count() >= 2)
 			{
+				indexes_to_remove.Add(index);
 				//Consts.former_heights[indexes[i]] = hit.point.y;
 			}
 		}
+		foreach (var index_to_remove in indexes_to_remove)
+			indexes.Remove(index_to_remove);
+
 		Consts.UpdateMapColliders(indexes, true);
 	}
 
