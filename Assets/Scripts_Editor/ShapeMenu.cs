@@ -890,7 +890,8 @@ public class ShapeMenu : MonoBehaviour
 			foreach (var v in vertices)
 			{
 				if (!Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 11)
-					&& !Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 12))
+					&& !Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 12)
+				)
 				{
 					markings.Add(Consts.PosToIndex(v), Consts.CreateMarking(white, v));
 				}

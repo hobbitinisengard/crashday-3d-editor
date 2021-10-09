@@ -669,13 +669,9 @@ public class Build : MonoBehaviour
 			// Match RMC up and take care of current_heights table
 			Match_rmc2rmc(rmc_o);
 			Vector3Int pos = Vpos2tpos(rmc_o);
-			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
-			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
-			byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
 			//Delete old prefab and replace it with plain new
 			if (rmc_o.transform.childCount != 0)
 				DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
-			GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
 
 			Vector3Int tileDims = GetRealTileDims(rmc_o);
 			Vector3Int TLpos = GetTLPos(rmc_o);
@@ -687,21 +683,25 @@ public class Build : MonoBehaviour
 				{
 					if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 					{
-						Match_boundaries(x, -z, TLpos, rmc_o);
+						Align_grass_2_RMCBorder(x, -z, TLpos, rmc_o);
 					}
 					else
 					{
-						Hide_Inside(x, -z, TLpos, rmc_o);
+						Align_grass_2_RMC(x, -z, TLpos, rmc_o);
 					}
 				}
 			}
 			Consts.UpdateMapColliders(rmc_o.transform.position, tileDims);
+			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
+			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
+			byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
+			GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
 			GetPrefabMesh(Mirrored, Prefab);
 			Tile_to_RMC_Cast(Prefab, rmc_o, Height);
 			rmc_o.layer = 9;
 		}
 	}
-
+	
 	public static void InverseMesh(Mesh mesh)
 	{
 		Vector3[] verts = mesh.vertices;
@@ -808,11 +808,11 @@ public class Build : MonoBehaviour
 			{
 				if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
 				{
-					Match_boundaries(x, -z, TLpos, current_rmc); // borders
+					Align_grass_2_RMCBorder(x, -z, TLpos, current_rmc); // borders
 				}
 				else
 				{
-					Hide_Inside(x, -z, TLpos, current_rmc);
+					Align_grass_2_RMC(x, -z, TLpos, current_rmc);
 				}
 			}
 		}
@@ -1018,10 +1018,9 @@ public class Build : MonoBehaviour
 			return prefab.GetComponent<MeshFilter>().mesh;
 	}
 	/// <summary>
-	/// Toggles off visibility of terrain chunk laying under tile of bottom-left x,z. 
 	/// Updates current_heights array. Layer of RMC has to be 10.
 	/// </summary>
-	public static void Hide_Inside(int x, int z, Vector3Int TLpos, GameObject rmc)
+	public static void Align_grass_2_RMC(int x, int z, Vector3Int TLpos, GameObject rmc)
 	{
 		rmc.layer = 10;
 		x += TLpos.x;
@@ -1039,7 +1038,7 @@ public class Build : MonoBehaviour
 	/// <summary>
 	/// Matches up height of terrain to height of vertex of current RMC (layer = 10)
 	/// </summary>
-	public static void Match_boundaries(int x, int z, Vector3Int TLpos, GameObject rmc_o)
+	public static void Align_grass_2_RMCBorder(int x, int z, Vector3Int TLpos, GameObject rmc_o)
 	{
 		rmc_o.layer = 10;
 		Vector3Int v = new Vector3Int(x + TLpos.x, Consts.MAX_H, z + TLpos.z);
@@ -1057,17 +1056,31 @@ public class Build : MonoBehaviour
 	{// Matches vertices of RMCs one to another rmc.layer = 10
 		rmc_o.layer = 10;
 		Vector3[] verts = GetMeshVerts(rmc_o);
+
+		//check borders
 		for (int i = 0; i < verts.Length; i++)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
 
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 				continue;
-			// This condition is filled when tiles overlap (mixed mode)
-			if (v.x % 4 != 0 && v.z % 4 != 0)
-				continue;
+
 
 			verts[i].y = Calculate_border_H_At(rmc_o, v.x, v.z, 9);
+
+			// This condition is filled when tiles overlap (mixed mode)
+			if (enableMixing)
+			{
+				var w = v;
+				w.y = Consts.MAX_H;
+				if (Physics.Raycast(w, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9))
+				{
+					if (Mathf.Abs(hit.point.y - v.y) > 0.1f)
+					{
+						verts[i].y = hit.point.y;
+					}
+				}
+			}
 		}
 		UpdateMeshes(rmc_o, verts);
 		rmc_o.layer = 9;
