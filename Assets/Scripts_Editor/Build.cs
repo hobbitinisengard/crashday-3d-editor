@@ -643,12 +643,26 @@ public class Build : MonoBehaviour
 			return 0;
 		}
 	}
-
+	/// <summary>
+	/// Bigger tiles are usually more restrictive
+	/// </summary>
+	/// <param name="rmcs"></param>
+	static void Sort_more_restrictive_to_less_restrictive(ref List<GameObject> rmcs)
+	{
+		rmcs.Sort(delegate (GameObject a, GameObject b)
+		{
+			var points_a = TileManager.TileListInfo[a.name].Size.x + TileManager.TileListInfo[a.name].Size.y;
+			var points_b = TileManager.TileListInfo[b.name].Size.x + TileManager.TileListInfo[b.name].Size.y;
+			return points_b.CompareTo(points_a);
+		});
+	}
 	/// <summary>
 	/// Places given tiles again onto terrain. (This function usually runs after changing terrain)
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
+		if (enableMixing)
+			Sort_more_restrictive_to_less_restrictive(ref rmcs);
 		//1. Updating only vertices of every RMC in list.
 		foreach (GameObject rmc_o in rmcs)
 		{
@@ -1067,20 +1081,6 @@ public class Build : MonoBehaviour
 
 
 			verts[i].y = Calculate_border_H_At(rmc_o, v.x, v.z, 9);
-
-			// This condition is filled when tiles overlap (mixed mode)
-			if (enableMixing)
-			{
-				var w = v;
-				w.y = Consts.MAX_H;
-				if (Physics.Raycast(w, Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9))
-				{
-					if (Mathf.Abs(hit.point.y - v.y) > 0.1f)
-					{
-						verts[i].y = hit.point.y;
-					}
-				}
-			}
 		}
 		UpdateMeshes(rmc_o, verts);
 		rmc_o.layer = 9;
