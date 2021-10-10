@@ -256,19 +256,19 @@ public class Loader : MonoBehaviour
 		yield return null;
 		// when PlaceTile tries to place a tile sticking out of map bounds (because of resizing), it returns null. Nulls have to be removed from to_update
 		to_update.RemoveAll(go => go == null);
-		Stopwatch sw = Stopwatch.StartNew();
 		Stopwatch tw = Stopwatch.StartNew();
-		for (int i = 0; i < to_update.Count; i++)
-		{
-			Build.UpdateTiles(new List<GameObject> { to_update[i] });
-			if (sw.Elapsed.Seconds > 4)
-			{
-				LoadingScreen_progressbar.text = "Placing tiles.. " + (100 * i / to_update.Count).ToString() + " %";
-				sw.Restart();
-				yield return null;
-			}
-		}
-		UnityEngine.Debug.Log("Loading time/s:" + to_update.Count / (float)tw.Elapsed.Seconds);
+		Build.UpdateTiles(to_update);
+		//for (int i = 0; i < to_update.Count; i++)
+		//{
+		//	Build.UpdateTiles(new List<GameObject> { to_update[i] });
+		//	if (sw.Elapsed.Seconds > 4)
+		//	{
+		//		LoadingScreen_progressbar.text = "Placing tiles.. " + (100 * i / to_update.Count).ToString() + " %";
+		//		sw.Restart();
+		//		yield return null;
+		//	}
+		//}
+		UnityEngine.Debug.Log("Loading time [elements/s]:" + to_update.Count / (float)tw.Elapsed.Seconds);
 		Build.current_rmc = null;
 		DisableLoadingScreen();
 		MainCamera.SetActive(true);
