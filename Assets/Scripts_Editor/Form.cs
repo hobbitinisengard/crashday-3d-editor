@@ -118,7 +118,7 @@ public class Form : MonoBehaviour
         {
             AmplifyModeButton.transform.GetChild(0).GetComponent<Text>().color = new Color32(219, 203, 178, 255);
             IntensitySlider.SetActive(true);
-            DistortionSlider.SetActive(true);
+            DistortionSlider.SetActive(false);
         }
     }
     /// <summary>

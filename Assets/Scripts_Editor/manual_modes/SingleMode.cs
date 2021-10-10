@@ -30,9 +30,9 @@ public class SingleMode : MonoBehaviour
 
 	void Update()
 	{
-		if (Form.submode == ManualSubMode.Set)
+		if (Form.mode == ManualMode.Single && !Input.GetKey(KeyCode.LeftControl))
 		{
-			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+			if (Form.submode == ManualSubMode.Set)
 			{
 				if (Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();
@@ -53,10 +53,7 @@ public class SingleMode : MonoBehaviour
 						Make_elevation();
 				}
 			}
-		}
-		else if (Form.submode == ManualSubMode.Avg)
-		{
-			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+			else if (Form.submode == ManualSubMode.Avg)
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();
@@ -73,10 +70,7 @@ public class SingleMode : MonoBehaviour
 						Single_distortion(); //auto-fire
 				}
 			}
-		}
-		else if (Form.submode == ManualSubMode.Amp)
-		{
-			if (!Input.GetKey(KeyCode.LeftControl)) //X ctrl_key_works()
+			else if (Form.submode == ManualSubMode.Amp)
 			{
 				if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
 					UndoBuffer.ApplyOperation();

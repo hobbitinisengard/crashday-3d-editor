@@ -34,7 +34,7 @@ public class ArealMode : MonoBehaviour
 	}
 	void Update()
 	{
-		if (!Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
+		if (Form.mode == ManualMode.Areal && !Input.GetKey(KeyCode.LeftControl)) //if ctrl key wasn't pressed (height pickup)
 		{
 			if (Form.submode == ManualSubMode.Set)
 			{

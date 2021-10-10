@@ -114,8 +114,10 @@ public class ShapeMenu : MonoBehaviour
 		{
 			CheckNumericShortcuts();
 			SelectionMarkingSwitch();
-			if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyUp(KeyCode.R))
+			if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyUp(KeyCode.T))
 				MarkingPatternSwitch();
+			if (Input.GetKeyUp(KeyCode.R))
+				MarkingModeSwitch();
 
 			if (!MouseInputUIBlocker.BlockedByUI)
 			{
@@ -684,7 +686,7 @@ public class ShapeMenu : MonoBehaviour
 			p1 = Vector3Int.RoundToInt(Highlight.pos); //Input.mousePosition;
 			p2 = new Vector3Int(-1, -1, -1);
 		}
-		if (Input.GetMouseButton(0) && (Vector3Int.RoundToInt(Highlight.pos) != p2 || Input.GetKeyUp(KeyCode.R)))
+		if (Input.GetMouseButton(0) && (Vector3Int.RoundToInt(Highlight.pos) != p2 || Input.GetKeyUp(KeyCode.T) || Input.GetKeyUp(KeyCode.R)))
 		{
 			foreach (int index in markings.Keys)
 			{
@@ -697,8 +699,8 @@ public class ShapeMenu : MonoBehaviour
 			}
 			if (Vector3Int.RoundToInt(Highlight.pos) != p2)
 				p2 = Vector3Int.RoundToInt(Highlight.pos);
-
-			if (Input.GetKeyUp(KeyCode.R))
+			
+			if (Input.GetKeyUp(KeyCode.T))
 				MarkingPatternSwitch();
 
 			foreach (int index in markings.Keys)
@@ -890,8 +892,7 @@ public class ShapeMenu : MonoBehaviour
 			foreach (var v in vertices)
 			{
 				if (!Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 11)
-					&& !Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 12)
-				)
+					&& !Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 12))
 				{
 					markings.Add(Consts.PosToIndex(v), Consts.CreateMarking(white, v));
 				}
@@ -1009,6 +1010,16 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 	
+	public void MarkingModeSwitch()
+    {
+		if (Inversion_mode.isOn)
+			Addition_mode.isOn = true;
+		else if (Addition_mode.isOn)
+			Exclusion_mode.isOn = true;
+		else if (Exclusion_mode.isOn)
+			Inversion_mode.isOn = true;
+    }
+
 	private void MarkingPatternSwitch()
     {
 		CurrentPattern = (MarkingPattern)(((int)CurrentPattern + 1) % Enum.GetNames(typeof(MarkingPattern)).Length);
