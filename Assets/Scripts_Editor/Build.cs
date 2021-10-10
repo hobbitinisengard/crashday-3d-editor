@@ -663,6 +663,7 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
+		Sort_more_restrictive_to_less_restrictive(ref rmcs);
 		//1. Updating only vertices of every RMC in list.
 		foreach (GameObject rmc_o in rmcs)
 		{
