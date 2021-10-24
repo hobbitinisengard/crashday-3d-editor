@@ -28,6 +28,8 @@ public class ShapeMenu : MonoBehaviour
 	public Button Integral;
 	public Button Infinity;
 	public Button AmplifyButton;
+	public InputField Bounds_x;
+	public InputField Bounds_y;
 	// modifiers
 	public Toggle KeepShape;
 	public Toggle Connect;
@@ -82,17 +84,17 @@ public class ShapeMenu : MonoBehaviour
 	}
 	void CheckNumericShortcuts()
 	{
-		if (Input.GetKeyDown(KeyCode.Alpha1))
+		if (Input.GetKeyDown(KeyCode.Alpha1) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.jump;
-		else if (Input.GetKeyDown(KeyCode.Alpha2))
+		else if (Input.GetKeyDown(KeyCode.Alpha2) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.linear;
-		else if (Input.GetKeyDown(KeyCode.Alpha3))
+		else if (Input.GetKeyDown(KeyCode.Alpha3) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.jumpend;
-		else if (Input.GetKeyDown(KeyCode.Alpha4))
+		else if (Input.GetKeyDown(KeyCode.Alpha4) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.integral;
-		else if (Input.GetKeyDown(KeyCode.Alpha5))
+		else if (Input.GetKeyDown(KeyCode.Alpha5) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.to_slider;
-		else if (Input.GetKeyDown(KeyCode.Alpha6))
+		else if (Input.GetKeyDown(KeyCode.Alpha6) && !Bounds_x.isFocused && !Bounds_y.isFocused)
 			LastSelected = FormButton.flatter;
 		else if (Input.GetKeyDown(KeyCode.K))
 			LastSelected = FormButton.amplify;

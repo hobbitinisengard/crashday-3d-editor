@@ -139,17 +139,20 @@ public class Build : MonoBehaviour
 	}
 	void Update()
 	{
+		CURRENTELEMENT.text = ".cfl: " + tile_name;
+		CURRENTROTATION.text = "Rot: " + cum_rotation.ToString();
+		CURRENTMIRROR.text = "Inv: " + inversion.ToString();
+
+		if (Input.GetKeyUp(KeyCode.M))
+			SwitchMixingMode();
+		if (Input.GetKeyUp(KeyCode.LeftAlt))
+			ToggleVisibility();
 		if (!MouseInputUIBlocker.BlockedByUI)
 		{
 			// Ctrl + RMB - picks up mixing height in mixing mode so rotation with ctrl is forbidden
 			if (Input.GetMouseButtonDown(1) && !Input.GetKey(KeyCode.LeftControl))
 				cum_rotation = (cum_rotation == 270) ? 0 : cum_rotation + 90;
 
-			CURRENTELEMENT.text = tile_name;
-			CURRENTROTATION.text = cum_rotation.ToString();
-			CURRENTMIRROR.text = inversion.ToString();
-			if (Input.GetKeyUp(KeyCode.M))
-				SwitchMixingMode();
 			if (enableMixing)
 				CtrlWithMousewheelWorks();
 			if (Input.GetKeyDown(KeyCode.Q))
@@ -160,8 +163,6 @@ public class Build : MonoBehaviour
 				CTileSelection(); // Choose the tile to be picked up with C
 			if (Input.GetKeyUp(KeyCode.X) || Input.GetKeyUp(KeyCode.C))
 				ExitTileSelection();
-			if (Input.GetKeyUp(KeyCode.LeftAlt))
-				ToggleVisibility();
 
 			if (enableMixing && !IsEnteringKeypadValue && Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(1))
 			{// Pick up mixing height with RMB + ctrl
@@ -339,23 +340,26 @@ public class Build : MonoBehaviour
 	/// </summary>
 	void ToggleVisibility()
 	{
-		if (!LMBclicked)
+		if (!MouseInputUIBlocker.BlockedByUI)
 		{
-			if (tile_name == "NULL")
+			if (!LMBclicked)
 			{
-				if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+				if (tile_name == "NULL")
 				{
-					PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion);
+					if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+					{
+						PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion);
+					}
+				}
+				else
+				{
+					DelLastPrefab();
+					over_b4 = false;
 				}
 			}
 			else
-			{
-				DelLastPrefab();
-				over_b4 = false;
-			}
+				LMBclicked = false;
 		}
-		else
-			LMBclicked = false;
 
 		if (tile_name == "NULL")
 		{
@@ -386,7 +390,7 @@ public class Build : MonoBehaviour
 		{
 			BuildButtonText.color = new Color32(255, 161, 54, 255);
 		}
-		if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+		if (!MouseInputUIBlocker.BlockedByUI && !Input.GetKey(KeyCode.Space) && Highlight.over)
 		{
 			DelLastPrefab();
 			PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);

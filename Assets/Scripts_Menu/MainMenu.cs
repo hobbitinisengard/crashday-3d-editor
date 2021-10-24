@@ -76,11 +76,14 @@ public class MainMenu : MonoBehaviour
 			GameObject manage_entry_template = ManageTilesets_ScrollView.content.transform.GetChild(0).gameObject;
 			string[] mod_ids = TileManager.CustomTileSections.Keys.ToArray();
 
-			foreach (var mod_id in mod_ids)
+			for (int i = 0; i < mod_ids.Length; i++)
 			{
 				GameObject NewEntry = Instantiate(manage_entry_template, manage_entry_template.transform.parent);
-				SwitchAppearance(NewEntry, mod_id, TileManager.CustomTileSections[mod_id].Enabled);
-				NewEntry.name = mod_id;
+				SwitchAppearance(NewEntry, mod_ids[i], TileManager.CustomTileSections[mod_ids[i]].Enabled);
+				NewEntry.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+					NewEntry.GetComponent<RectTransform>().anchoredPosition.x,
+					i * -(NewEntry.GetComponent<RectTransform>().rect.height + 5) - 5);
+				NewEntry.name = mod_ids[i];
 				NewEntry.SetActive(true);
 			}
 		}
@@ -116,6 +119,7 @@ public class MainMenu : MonoBehaviour
 	public void RemoveTileset(GameObject Id_GO)
 	{
 		string mod_id = Id_GO.GetComponent<Text>().text;
+		GameObject Entry = ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject;
 
 		// Remove this tileset and its custom tiles from the database 
 		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
@@ -131,8 +135,15 @@ public class MainMenu : MonoBehaviour
 		// Remove folder in moddata
 		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
 
-		// Remove entry in tileset menu
-		DestroyImmediate(ManageTilesets_ScrollView.content.transform.Find(mod_id).gameObject);
+		// Update tileset menu
+		for (int i = Entry.transform.GetSiblingIndex() + 1;
+			i < ManageTilesets_ScrollView.content.transform.childCount; i++)
+        {
+			GameObject ientry = ManageTilesets_ScrollView.content.transform.GetChild(i).gameObject;
+			ientry.GetComponent<RectTransform>().anchoredPosition = new Vector2(ientry.GetComponent<RectTransform>().anchoredPosition.x,
+				ientry.GetComponent<RectTransform>().anchoredPosition.y + ientry.GetComponent<RectTransform>().rect.height + 5);
+		}
+		DestroyImmediate(Entry);
 
 		// Disable the menu if we only have the invisible template remaining
 		if (ManageTilesets_ScrollView.content.childCount == 1)
@@ -213,7 +224,20 @@ public class MainMenu : MonoBehaviour
 	public void ToggleMirrored()
 	{
 		Consts.LoadMirrored = MirroredToggle.isOn;
+		if (!MirroredToggle.isOn)
+        {
+			MirroredToggle.transform.gameObject.SetActive(false);
+			MirroredToggle.transform.gameObject.SetActive(true);
+        }
 	}
+	public void ToggleResize()
+    {
+		if (!ResizeToggle.isOn)
+        {
+			ResizeToggle.transform.gameObject.SetActive(false);
+			ResizeToggle.transform.gameObject.SetActive(true);
+        }
+    }
 	public void RemoveEntryAndContentFolder()
 	{
 		string contentpath = IO.GetCrashdayPath() + "\\data\\content\\";

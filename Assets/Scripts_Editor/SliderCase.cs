@@ -104,6 +104,6 @@ public class SliderCase : MonoBehaviour
 		Transform Content = Tileset.transform.GetChild(0).transform.GetChild(0);
 		TileDescription.GetComponent<RectTransform>().anchoredPosition = new Vector2(
 			TileDescription.GetComponent<RectTransform>().anchoredPosition.x,
-			Tileset.GetComponent<RectTransform>().anchoredPosition.y - Mathf.Ceil((float)Content.childCount / 6f) * 64f - 40f);
+			TilesetContainer.GetComponent<RectTransform>().anchoredPosition.y - Mathf.Ceil((float)Content.childCount / 6f) * 64f - 40f);
 	}
 }

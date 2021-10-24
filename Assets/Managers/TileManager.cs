@@ -367,7 +367,7 @@ public static class TileManager
 			case "$ID trkdata/editor/fields.cat arenaentry.cfl.TrackPiece":
 				return "Side Entry Road";
 			case "$ID trkdata/editor/fields.cat arenaentryc.cfl.TrackPiece":
-				return "Side Entry Roofer Road";
+				return "Side Entry Roofed Road";
 			case "$ID trkdata/editor/fields.cat arenafloor.cfl.TrackPiece":
 				return "Tarmac Floor";
 			case "$ID trkdata/editor/fields.cat arenapillar.cfl.TrackPiece":
