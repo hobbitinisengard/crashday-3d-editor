@@ -609,8 +609,8 @@ public class Build : MonoBehaviour
 				//Consts.former_heights[indexes[i]] = hit.point.y;
 			}
 		}
-		foreach (var index_to_remove in indexes_to_remove)
-			indexes.Remove(index_to_remove);
+		//foreach (var index_to_remove in indexes_to_remove)
+		//	indexes.Remove(index_to_remove);
 
 		Consts.UpdateMapColliders(indexes, true);
 	}
@@ -657,8 +657,8 @@ public class Build : MonoBehaviour
 		{
 			float a_vert_count = a.GetComponent<MeshFilter>().mesh.vertices.Length;
 			float b_vert_count = b.GetComponent<MeshFilter>().mesh.vertices.Length;
-			float density_a = a_vert_count / TileManager.TileListInfo[a.name].Size.x + TileManager.TileListInfo[a.name].Size.y;
-			float density_b = b_vert_count / TileManager.TileListInfo[b.name].Size.x + TileManager.TileListInfo[b.name].Size.y;
+			float density_a = a_vert_count / (TileManager.TileListInfo[a.name].Size.x + TileManager.TileListInfo[a.name].Size.y);
+			float density_b = b_vert_count / (TileManager.TileListInfo[b.name].Size.x + TileManager.TileListInfo[b.name].Size.y);
 			return density_a.CompareTo(density_b);
 		});
 	}
@@ -985,7 +985,7 @@ public class Build : MonoBehaviour
 		Vector3[] verts = mesh.vertices;
 		float pzero = GetPzero(prefab.name);
 		// Raycast tiles(H) \ rmc
-		
+
 		for (int i = 0; i < verts.Length; i++)
 		{
 			RaycastHit hit;
@@ -994,7 +994,8 @@ public class Build : MonoBehaviour
 			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
-			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10)){
+			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10))
+			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 			}
 			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
@@ -1003,7 +1004,7 @@ public class Build : MonoBehaviour
 			}
 			else
 			{
-				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 9 | 1 << 8))
+				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
 				else // out of map boundaries: height of closest edge
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));

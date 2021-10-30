@@ -346,7 +346,11 @@ public class ShapeMenu : MonoBehaviour
 				Set_rotated_BL_and_TR();
 			List<DuVec3> extremes = new List<DuVec3>();
 			if (Connect.isOn)
+			{
 				extremes = GetOpposingVerticesForConnect(BL, TR);
+				foreach (DuVec3 duvec in extremes)
+					Debug.Log(duvec.P1.ToString() + " " duvec.P2.ToString());
+			}
 			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
 			{ // equal heights along Z axis ||||
 				int steps = (int)Mathf.Abs(BL.x - TR.x);
@@ -366,7 +370,7 @@ public class ShapeMenu : MonoBehaviour
 								slider_realheight = extremes[ext_index].P2.y;
 								BL.y = extremes[ext_index].P1.y;
 							}
-							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
+							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff);
 						}
 						step += 1;
 					}
@@ -392,7 +396,7 @@ public class ShapeMenu : MonoBehaviour
 								slider_realheight = extremes[ext_index].P2.y;
 								BL.y = extremes[ext_index].P1.y;
 							}
-							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff, ref extremes);
+							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff);
 						}
 						step += 1;
 					}
@@ -427,7 +431,7 @@ public class ShapeMenu : MonoBehaviour
 		{
 			List<DuVec3> Extremes = new List<DuVec3>();
 			if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
-			{ // equal heights along Z axis ||||
+			{ Debug.Log("extremes spreading along Z axis ||||");
 				for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
 				{
 					Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
@@ -450,7 +454,7 @@ public class ShapeMenu : MonoBehaviour
 			}
 			else
 			{
-				//equal heights along X axis _---
+				Debug.Log("extremes spreading along X axis _---");
 				//string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
 				for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
 				{
@@ -611,7 +615,7 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-	void SetMarkingPos(int x, int z, int step, int steps, float slider_realheight, float heightdiff, ref List<DuVec3> extremes)
+	void SetMarkingPos(int x, int z, int step, int steps, float slider_realheight, float heightdiff)
 	{
 		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
 		if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
@@ -927,7 +931,7 @@ public class ShapeMenu : MonoBehaviour
 						bool sensitive_for_this_tile = false;
 						foreach (var vertex_of_hit_tile in vertices_of_hit_tile)
 						{
-							if (hit_tile.transform.TransformPoint(vertex_of_hit_tile) == pos)
+							if (Vector3Int.RoundToInt(hit_tile.transform.TransformPoint(vertex_of_hit_tile)) == Vector3Int.RoundToInt(pos))
 							{
 								sensitive_for_this_tile = true;
 								break;

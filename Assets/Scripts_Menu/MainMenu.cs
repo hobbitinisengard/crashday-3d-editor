@@ -168,6 +168,8 @@ public class MainMenu : MonoBehaviour
 			// Load the full tileset
 			TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", mod_id, true);
 			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id);
+
+			TileManager.CustomTileSections[mod_id].Enabled = true;
 		}
 		else
 		{
@@ -178,6 +180,11 @@ public class MainMenu : MonoBehaviour
 			string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
 			foreach (var name in to_remove_names)
 				TileManager.TileListInfo.Remove(name);
+
+			// Reload default tiles, as they could have been modified by the mod.
+			TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
+			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
+
 			TileManager.CustomTileSections[mod_id].Enabled = false;
 		}
 
