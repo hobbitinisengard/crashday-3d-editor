@@ -349,7 +349,7 @@ public class ShapeMenu : MonoBehaviour
 			{
 				extremes = GetOpposingVerticesForConnect(BL, TR);
 				foreach (DuVec3 duvec in extremes)
-					Debug.Log(duvec.P1.ToString() + " " duvec.P2.ToString());
+					Debug.Log(duvec.P1.ToString() + " " + duvec.P2.ToString());
 			}
 			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
 			{ // equal heights along Z axis ||||

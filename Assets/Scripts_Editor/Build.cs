@@ -208,7 +208,7 @@ public class Build : MonoBehaviour
 						last_trawa = Highlight.TL;
 						LMBclicked = false;
 					}
-					else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && AllowLMB)
+					else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && !Input.GetKey(KeyCode.C) && AllowLMB)
 					{//Place currently showed tile on terrain
 						LMBclicked = true;
 						Save_tile_properties(tile_name, inversion, cum_rotation,
@@ -560,11 +560,11 @@ public class Build : MonoBehaviour
 		int orig_layer = rmc_o.layer;
 		rmc_o.layer = 10;
 		List<GameObject> to_return = new List<GameObject>();
-		Vector3 extents = rmc_o.GetComponent<MeshFilter>().mesh.bounds.extents;
-		extents.y = 1; // bounding box for boxcast must have non-zero height
+		Vector3Int tile_dims = GetRealTileDims(rmc_o);
+		tile_dims.y = 1; // bounding box for boxcast must have non-zero height
 		Vector3 v = rmc_o.transform.position;
 		v.y = Consts.MAX_H;
-		RaycastHit[] hits = Physics.BoxCastAll(v, extents, Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
+		RaycastHit[] hits = Physics.BoxCastAll(v, tile_dims * 2, Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 		foreach (RaycastHit hit in hits)
 			to_return.Add(hit.transform.gameObject);
 		rmc_o.layer = orig_layer;
@@ -755,8 +755,8 @@ public class Build : MonoBehaviour
 	{
 		// Placing tile with LMB cannot be accepted if X is pressed or there's no place 4 tile 
 		AllowLMB = false;
-		// Don't allow placing tile in delete mode
-		if (Input.GetKey(KeyCode.X))
+		// Don't allow placing tile in delete or pickup mode
+		if (Input.GetKey(KeyCode.X) || Input.GetKey(KeyCode.C))
 			return null;
 		if (name == "NULL")
 			return null;

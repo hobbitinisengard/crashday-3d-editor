@@ -318,7 +318,7 @@ public static class Consts
 	public static void UpdateMapColliders(Vector3 rmc_pos, Vector3Int tileDims, bool recover_terrain = false)
 	{
 		rmc_pos.y = Consts.MAX_H;
-		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(4 * tileDims.x, 1, 4 * tileDims.z),
+		RaycastHit[] hits = Physics.BoxCastAll(rmc_pos, new Vector3(2 * tileDims.x, 1, 2 * tileDims.z),
 				Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 8);
 		List<GameObject> mcs = new List<GameObject>();
 		foreach (RaycastHit hit in hits)
