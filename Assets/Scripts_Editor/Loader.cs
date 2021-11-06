@@ -173,6 +173,7 @@ public class Loader : MonoBehaviour
 	{
 		Consts.former_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
 		Consts.current_heights = Enumerable.Repeat(0f, (4 * Height + 1) * (4 * Width + 1)).ToArray();
+		Build.Border_Vault.InitializeBorderInfo(Height, Width);
 	}
 
 	private void InitializeTilePlacementArray(int height, int width)

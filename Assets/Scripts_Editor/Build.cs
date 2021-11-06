@@ -4,8 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+public class Border
+{
+	private byte _tiles_occupying = 0;
+	public byte tiles_occupying
+	{
+		get { return _tiles_occupying; }
+		set { _tiles_occupying = value; }
+	}
+}
+public enum QuarterType { Unrestricted, H_restricted, V_restricted, Both_restricted }
 //Handles BUILD mode.
-
 public class Build : MonoBehaviour
 {
 	// "real mesh collider" - RMC - plane with vertices set in positions where tile can have its terrain vertices changed
@@ -21,6 +30,7 @@ public class Build : MonoBehaviour
 	public Material partiallytransparent;
 	public Material transparent;
 	public Material reddish;
+	public static Border_vault Border_Vault;
 	bool LMBclicked = false;
 	bool AllowLMB = false;
 	/// <summary>obj_rmc = current RMC</summary>
@@ -41,6 +51,7 @@ public class Build : MonoBehaviour
 	public static bool over_b4 = Highlight.over;
 	private bool IsEnteringKeypadValue;
 	private static GameObject outlined_element;
+
 
 	private void OnDisable()
 	{
@@ -132,6 +143,7 @@ public class Build : MonoBehaviour
 		Show_underlying_grass_tiles(outlined_element);
 		List<GameObject> to_restore = Get_surrounding_tiles(outlined_element);
 		DestroyImmediate(outlined_element);
+		Border_Vault.Remove_borders_of(outlined_element);
 		outlined_element = null;
 		Consts.TilePlacementArray[pos.z, pos.x].Name = null;
 		RecoverTerrain(Consts.TilePlacementArray[pos.z, pos.x].t_verts);
@@ -211,7 +223,7 @@ public class Build : MonoBehaviour
 					else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && !Input.GetKey(KeyCode.C) && AllowLMB)
 					{//Place currently showed tile on terrain
 						LMBclicked = true;
-						Save_tile_properties(tile_name, inversion, cum_rotation,
+						Save_tile_properties(current_rmc, tile_name, inversion, cum_rotation,
 								new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), enableMixing ? MixingHeight : (byte)0);
 					}
 					if (Input.GetMouseButtonDown(1) && Highlight.over && !LMBclicked)
@@ -256,7 +268,7 @@ public class Build : MonoBehaviour
 			IsEnteringKeypadValue = false;
 			MixingInfoText.text = "";
 			MixingInfoText.gameObject.SetActive(false);
-			
+
 			if (!Input.GetKey(KeyCode.Space) && Highlight.over)
 			{
 				if (tile_name == "NULL")
@@ -271,7 +283,7 @@ public class Build : MonoBehaviour
 			}
 			StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		}
-		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4, 
+		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4,
 			KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
 		for (int i = 0; i < keyCodes.Length; i++)
 		{
@@ -487,16 +499,18 @@ public class Build : MonoBehaviour
 		else
 			return extents;
 	}
-	static void Save_tile_properties(string nazwa, bool inwersja, int rotacja, Vector3Int arraypos, byte Height = 0)
+	static void Save_tile_properties(GameObject rmc, string name, bool mirror, int rotation, Vector3Int arraypos, byte Height = 0)
 	{
-		Consts.TilePlacementArray[arraypos.z, arraypos.x].Set(nazwa, rotacja, inwersja, Height);
+		Consts.TilePlacementArray[arraypos.z, arraypos.x].Set(name, rotation, mirror, Height);
 
-		if (TileManager.TileListInfo[nazwa].IsCheckpoint
+		if (TileManager.TileListInfo[name].IsCheckpoint
 			&& !Consts.TRACK.Checkpoints.Contains((ushort)(arraypos.x + (Consts.TRACK.Height - 1 - arraypos.z) * Consts.TRACK.Width)))
 		{
 			Consts.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Consts.TRACK.Height - 1 - arraypos.z) * Consts.TRACK.Width));
 			Consts.TRACK.CheckpointsNumber++;
 		}
+
+		
 	}
 	public static HashSet<int> GetRmcIndices(GameObject rmc)
 	{
@@ -602,7 +616,7 @@ public class Build : MonoBehaviour
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 				continue;
 			v.y = Consts.MAX_H;
-			var trafs = Physics.SphereCastAll(v, 0.005f, Vector3.down,Consts.RAY_H, 1 << 9);
+			var trafs = Physics.SphereCastAll(v, 0.005f, Vector3.down, Consts.RAY_H, 1 << 9);
 			if (trafs.Count() >= 2)
 			{
 				indexes_to_remove.Add(index);
@@ -648,44 +662,24 @@ public class Build : MonoBehaviour
 		}
 	}
 	/// <summary>
-	/// Bigger tiles are usually more restrictive
-	/// </summary>
-	/// <param name="rmcs"></param>
-	static void Sort_more_restrictive_to_less_restrictive(ref List<GameObject> rmcs)
-	{
-		rmcs.Sort(delegate (GameObject a, GameObject b)
-		{
-			float a_vert_count = a.GetComponent<MeshFilter>().mesh.vertices.Length;
-			float b_vert_count = b.GetComponent<MeshFilter>().mesh.vertices.Length;
-			float density_a = a_vert_count / (TileManager.TileListInfo[a.name].Size.x + TileManager.TileListInfo[a.name].Size.y);
-			float density_b = b_vert_count / (TileManager.TileListInfo[b.name].Size.x + TileManager.TileListInfo[b.name].Size.y);
-			return density_a.CompareTo(density_b);
-		});
-	}
-	/// <summary>
 	/// Places given tiles again onto terrain. (This function usually runs after changing terrain)
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
-		Sort_more_restrictive_to_less_restrictive(ref rmcs);
 		//1. Updating only vertices of every RMC in list.
 		foreach (GameObject rmc_o in rmcs)
 		{
 			rmc_o.layer = 9;
 			//Update RMC
-			Vector3[] verts = GetMeshVerts(rmc_o);
-			for (int i = 0; i < verts.Length; i++)
-			{
-				Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
-				verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
-			}
-			UpdateMeshes(rmc_o, verts);
+			Calculate_All_RMC_points(current_rmc);
+
 		}
 		//2. Matching edge of every rmc up if under or above given vertex already is another vertex of another tile
 		foreach (GameObject rmc_o in rmcs)
 		{
 			// Match RMC up and take care of current_heights table
-			Match_rmc2rmc(rmc_o);
+			Calculate_All_RMC_points(current_rmc);
+			//Match_rmc2rmc(rmc_o);
 			Vector3Int pos = Vpos2tpos(rmc_o);
 			//Delete old prefab and replace it with plain new
 			if (rmc_o.transform.childCount != 0)
@@ -719,7 +713,7 @@ public class Build : MonoBehaviour
 			rmc_o.layer = 9;
 		}
 	}
-	
+
 	public static void InverseMesh(Mesh mesh)
 	{
 		Vector3[] verts = mesh.vertices;
@@ -747,7 +741,131 @@ public class Build : MonoBehaviour
 		Prefab.transform.rotation = Quaternion.Euler(new Vector3(0, rotation, 0));
 		return Prefab;
 	}
+	/// <summary>
+	/// Returns restriction info of quarter of given tile according to its RMCname
+	/// </summary>
+	static QuarterType Get_quartertype(Vector3 tile_dimensions, Vector3 arrow, String RMCname)
+	{
+		bool H_is_constrained;
+		bool V_is_constrained;
 
+		if (tile_dimensions.x == 1)
+		{
+			V_is_constrained = RMCname.Contains("V1");
+		}
+		else
+		{
+			if (arrow.x > 0)
+				V_is_constrained = RMCname.Contains("V2");
+			else
+				V_is_constrained = RMCname.Contains("V1");
+		}
+
+		if (tile_dimensions.z == 1)
+		{
+			H_is_constrained = RMCname.Contains("H1");
+		}
+		else
+		{
+			if (arrow.z > 0)
+				H_is_constrained = RMCname.Contains("H1");
+			else
+				H_is_constrained = RMCname.Contains("H2");
+		}
+
+
+		if (H_is_constrained && V_is_constrained)
+		{
+			return QuarterType.Both_restricted;
+		}
+		if (H_is_constrained && !V_is_constrained)
+		{
+			return QuarterType.H_restricted;
+		}
+		if (!H_is_constrained && V_is_constrained)
+		{
+			return QuarterType.H_restricted;
+		}
+
+		return QuarterType.Unrestricted;
+	}
+	static bool Calculate_All_RMC_points(GameObject rmc)
+	{
+		// suppose MeshVerts returns nxm unconstrained mesh
+		Vector3[] verts = GetMeshVerts(rmc);
+		// RMCname already takes into consideration rmc rotation 
+		String RMCname = rmc.GetComponent<BorderInfo>().info;
+
+		Vector3 tile_dimensions = rmc.GetComponent<MeshFilter>().mesh.bounds.size / 5f;
+
+		for (int index = 0; index < verts.Length; index++)
+		{
+			Vector3Int v = Vector3Int.RoundToInt(rmc.transform.TransformPoint(verts[index]));
+
+			QuarterType qt = QuarterType.Unrestricted;
+
+			// is vertex on border, check against Border vault - maybe other tile already restricts this border
+			bool On_horizontal_border = v.x % 4 == 0;
+			bool On_vertical_border = v.z % 4 == 0;
+			if (On_horizontal_border && On_vertical_border)
+			{
+				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+				continue;
+			}
+			else if (On_horizontal_border)
+			{
+				if (Border_Vault.Is_restricted(v))
+					qt = QuarterType.H_restricted;
+			}
+			else if (On_vertical_border)
+			{
+				if (Border_Vault.Is_restricted(v))
+					qt = QuarterType.V_restricted;
+			}
+			else
+			{
+				qt = Get_quartertype(tile_dimensions, verts[index], RMCname);
+			}
+
+			float h1, h2;
+			switch (qt)
+			{
+				case QuarterType.Unrestricted:
+					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+					break;
+				case QuarterType.V_restricted:
+					h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
+					h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
+					verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
+					break;
+				case QuarterType.H_restricted:
+					h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
+					h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
+					verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+					break;
+				case QuarterType.Both_restricted:
+					verts[index].y = Razor_both_restricted_formula(v);
+					break;
+			}
+			if (float.IsNaN(verts[index].y))
+			{
+				return false;
+			}
+		}
+		UpdateMeshes(current_rmc, verts);
+		return true;
+	}
+	static float Razor_both_restricted_formula(Vector3 v)
+	{
+		float h1 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x - v.x % 4, v.y, v.z - v.z % 4))]; // BL
+		float h2 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x - v.x % 4, v.y, v.z + v.z % 4))]; // TL
+		float h3 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x + v.x % 4, v.y, v.z - v.z % 4))]; // BR
+		float h4 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x + v.x % 4, v.y, v.z + v.z % 4))]; // BR
+		float n = v.x % 4;
+		float m = v.z % 4;
+		float calculated_h = h1 + n / 4 * (h3 - h1) + m / 4 * ((h2 + n / 4 * (h4 - h2)) - (h1 + n / 4 * (h3 - h1)));
+		return calculated_h;
+	}
 	/// <summary>
 	/// Instantiates rmc with no correct placing and no prefab. Rest of the work is delegated to UpdateTiles function
 	/// </summary>
@@ -793,29 +911,16 @@ public class Build : MonoBehaviour
 
 		AllowLMB = true;
 		// Instantiate RMC
-		current_rmc = GetRMC(name, cum_rotation, mirrored, rmcPlacement);
+		current_rmc = GetRMC_and_Set_Restriction_info(name, cum_rotation, mirrored, rmcPlacement);
 		current_rmc.name = name;
 		//Update RMC
-		Vector3[] verts = GetMeshVerts(current_rmc);
-		for (int index = 0; index < verts.Length; index++)
+		if (!Calculate_All_RMC_points(current_rmc))
 		{
-			Vector3Int v = Vector3Int.RoundToInt(current_rmc.transform.TransformPoint(verts[index]));
-			try
-			{
-				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-				if (float.IsNaN(verts[index].y))
-				{
-					Destroy(current_rmc);
-					current_rmc = null;
-					return null;
-				}
-			}
-			catch
-			{ // rmc out of bounds
-				verts[index].y = Consts.current_heights[0];
-			}
+			Destroy(current_rmc);
+			return null;
 		}
-		UpdateMeshes(current_rmc, verts);
+
+		Border_Vault.Add_Borders_of(current_rmc);
 
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
@@ -847,7 +952,7 @@ public class Build : MonoBehaviour
 		}
 		else
 		{
-			Save_tile_properties(name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4 - 1), Height);
+			Save_tile_properties(current_rmc, name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4 - 1), Height);
 			return current_rmc;
 		}
 	}
@@ -871,7 +976,7 @@ public class Build : MonoBehaviour
 	}
 
 
-	private GameObject GetRMC(string tilename, int rotation, bool is_mirrored, Vector3 rmcPlacement)
+	private GameObject GetRMC_and_Set_Restriction_info(string tilename, int rotation, bool is_mirrored, Vector3 rmcPlacement)
 	{// ((unity loads models with -x axis))
 		string RMCname = TileManager.TileListInfo[tilename].RMCname;
 		Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
@@ -945,6 +1050,7 @@ public class Build : MonoBehaviour
 		}
 		//Debug.Log(RMCname + " " + rotation + " " + is_mirrored);
 		var rmc = Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
+		BorderInfo.CreateComponent(rmc, RMCname);
 		rmc.GetComponent<MeshRenderer>().material = transparent;
 		return rmc;
 	}
@@ -965,9 +1071,9 @@ public class Build : MonoBehaviour
 		RMCname = NormalizeRMCname(RMCname);
 		// V1H1H2 => string(V1) string(H1) string(H2)
 		var restr = RMCname.Substring(3).SplitBy(2).OrderBy(s => s).ToArray();
-		string outname = RMCname.Substring(0,3) + String.Join("", restr);
+		string outname = RMCname.Substring(0, 3) + String.Join("", restr);
 		GameObject rmc = Resources.Load<GameObject>("rmcs/" + outname);
-		if(rmc == null)
+		if (rmc == null)
 			rmc = Resources.Load<GameObject>("rmcs/" + RMCname.Substring(0, 3));
 		return rmc;
 	}
@@ -1010,7 +1116,7 @@ public class Build : MonoBehaviour
 					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
 			}
 		}
-		
+
 		mesh.vertices = verts;
 		mesh.RecalculateBounds();
 		mesh.RecalculateNormals();
@@ -1018,7 +1124,7 @@ public class Build : MonoBehaviour
 		prefab.SetActive(true);
 		prefab.transform.position = new Vector3(prefab.transform.position.x, Height / 5f, prefab.transform.position.z);
 		rmc.layer = 9;
-		
+
 	}
 	/// <summary>
 	///Returns mesh "main" of tile or if tile doesn't have it, mesh of its meshfilter
@@ -1068,7 +1174,7 @@ public class Build : MonoBehaviour
 		if (!Consts.IsWithinMapBounds(v))
 			return;
 		int index = Consts.PosToIndex(v);
-		Consts.current_heights[index] = Calculate_border_H_At(rmc_o, v.x, v.z, 10);
+		Consts.current_heights[index] = Calculate_border_H_At(v.x, v.z);
 		rmc_o.layer = 9;
 	}
 	public static void Match_rmc2rmc(GameObject rmc_o)
@@ -1085,78 +1191,37 @@ public class Build : MonoBehaviour
 				continue;
 
 
-			verts[i].y = Calculate_border_H_At(rmc_o, v.x, v.z, 9);
+			verts[i].y = Calculate_border_H_At(v.x, v.z);
 		}
 		UpdateMeshes(rmc_o, verts);
 		rmc_o.layer = 9;
 	}
-	static float Calculate_border_H_At(GameObject rmc_o, int gx, int gz, int layer)
+	/// <summary>
+	/// This function updates only those vertices that are laying on borders
+	/// </summary>
+	static float Calculate_border_H_At(int gx, int gz)
 	{
-		// If horizontal true; if vertical = false
-		bool horizontal = false;
+		// given border here is restricted
+		bool Vertical_check = gx % 4 == 0;
+		bool Horizontal_check = gz % 4 == 0;
+		if(!(Vertical_check ^ Horizontal_check))
+			return Consts.current_heights[Consts.PosToIndex(gx, gz)];
 
-		Vector3Int v = new Vector3Int(gx, Consts.MAX_H, gz);
-		if (Conecast(v, Vector3.down, out RaycastHit hit, layer))
-		{
-			Vector3 dims = GetRealTileDims(rmc_o);
-			Vector3 center = rmc_o.transform.position;
-			Vector3Int localv = Vector3Int.RoundToInt(center - v);
-			if (Mathf.Abs(localv.z) == 2 * dims.z)
-			{//given border is horizontal (along x axis)
-				horizontal = true;
-			}
-			else if (Mathf.Abs(localv.x) == 2 * dims.x)
-			{ // given border is vertical
-				horizontal = false;
-			}
-			else
-			{
-				//Debug.LogError(localv);
-			}
-			Vector3 w = v;
-			if (horizontal)
-			{
-				if ((v.x + 1) % 4 == 0)
-					w.x -= 1.8f;
-				else
-					w.x += 1.2f;
-			}
-			else
-			{
-				if ((v.z + 1) % 4 == 0)
-					w.z -= 1.8f;
-				else
-					w.z += 1.2f;
-			}
-			if (Conecast(w, Vector3.down, out RaycastHit hit2, layer))
-			{
-				if (hit.triangleIndex == hit2.triangleIndex)
-				{
-					// given border here is restricted
-
-					if (horizontal)
-					{//given border is horizontal (along x axis)
-						float h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
-						float h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
-						float height = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
-						return height;
-					}
-					else
-					{ // given border is vertical
-						float h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
-						float h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
-						float height = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
-
-						return height;
-					}
-				}
-			}
-			else
-			{
-				//Debug.LogError(v + " " + w);
-			}
+		if (Horizontal_check)
+		{//given border is horizontal (along x axis)
+			float h1 = Consts.current_heights[Consts.PosToIndex(gx - (gx % 4), gz)];
+			float h2 = Consts.current_heights[Consts.PosToIndex(gx + (4 - (gx % 4)), gz)];
+			float height = Mathf.Lerp(h1, h2, gx % 4f / 4f);
+			return height;
 		}
-		return Consts.current_heights[Consts.PosToIndex(gx, gz)];
+		else
+		{ // given border is vertical
+			float h1 = Consts.current_heights[Consts.PosToIndex(gx, gz - (gz % 4))];
+			float h2 = Consts.current_heights[Consts.PosToIndex(gx, gz + (4 - (gz % 4)))];
+			float height = Mathf.Lerp(h1, h2, gz % 4f / 4f);
+
+			return height;
+		}
 	}
 	public static bool Conecast(Vector3 global_pos, Vector3 Direction, out RaycastHit hit, int layer)
 	{
