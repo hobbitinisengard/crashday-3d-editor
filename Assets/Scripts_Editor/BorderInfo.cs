@@ -1,8 +1,5 @@
-﻿using UnityEngine;
-public class Restriction_info
-{
-
-}
+﻿using System.Collections.Generic;
+using UnityEngine;
 /// <summary>
 /// Contains info about restricted borders of tile in its current rotation
 /// </summary>

@@ -4,13 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+public enum BorderType { Vertical, Horizontal};
 public class Border
 {
+	public BorderType border_type;
+
 	private byte _tiles_occupying = 0;
+	
 	public byte tiles_occupying
 	{
 		get { return _tiles_occupying; }
 		set { _tiles_occupying = value; }
+	}
+	public Border(BorderType bt)
+	{
+		border_type = bt;
 	}
 }
 public enum QuarterType { Unrestricted, H_restricted, V_restricted, Both_restricted }
@@ -30,7 +38,7 @@ public class Build : MonoBehaviour
 	public Material partiallytransparent;
 	public Material transparent;
 	public Material reddish;
-	public static Border_vault Border_Vault;
+	public static Border_vault Border_Vault = new Border_vault();
 	bool LMBclicked = false;
 	bool AllowLMB = false;
 	/// <summary>obj_rmc = current RMC</summary>
@@ -417,6 +425,7 @@ public class Build : MonoBehaviour
 				return;
 			Show_underlying_grass_tiles(current_rmc);
 			List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
+			Border_Vault.Remove_borders_of(current_rmc);
 			DestroyImmediate(current_rmc);
 			var t_verts = Consts.TilePlacementArray[pos.z, pos.x].t_verts;
 			if (t_verts != null)
@@ -516,7 +525,7 @@ public class Build : MonoBehaviour
 	{
 		HashSet<int> to_return = new HashSet<int>();
 		Vector3Int TL = GetTLPos(rmc);
-		Vector3Int tileDims = GetRealTileDims(current_rmc);
+		Vector3Int tileDims = GetRealTileDims(rmc);
 		for (int z = 0; z <= 4 * tileDims.z; z++)
 		{
 			for (int x = 0; x <= 4 * tileDims.x; x++)
@@ -590,10 +599,10 @@ public class Build : MonoBehaviour
 	public static Vector3Int GetTLPos(GameObject rmc_o)
 	{
 		Vector3Int to_return = new Vector3Int();
-		Vector3 el_pos = rmc_o.transform.position;
+		Vector3 center = rmc_o.transform.position;
 		Vector3 dim = GetRealTileDims(rmc_o);
-		to_return.x = Mathf.RoundToInt(el_pos.x - 2 - 2 * (dim.x - 1));
-		to_return.z = Mathf.RoundToInt(el_pos.z + 2 + 2 * (dim.z - 1));
+		to_return.x = Mathf.RoundToInt(center.x - 2 - 2 * (dim.x - 1));
+		to_return.z = Mathf.RoundToInt(center.z + 2 + 2 * (dim.z - 1));
 
 		if (to_return.z % 4 != 0 || to_return.z % 4 != 0)
 		{
@@ -671,14 +680,14 @@ public class Build : MonoBehaviour
 		{
 			rmc_o.layer = 9;
 			//Update RMC
-			Calculate_All_RMC_points(current_rmc);
-
+			Calculate_All_RMC_points(rmc_o);
+			Debug.Log(rmc_o.name);
 		}
 		//2. Matching edge of every rmc up if under or above given vertex already is another vertex of another tile
 		foreach (GameObject rmc_o in rmcs)
 		{
 			// Match RMC up and take care of current_heights table
-			Calculate_All_RMC_points(current_rmc);
+			Calculate_All_RMC_points(rmc_o);
 			//Match_rmc2rmc(rmc_o);
 			Vector3Int pos = Vpos2tpos(rmc_o);
 			//Delete old prefab and replace it with plain new
@@ -852,7 +861,7 @@ public class Build : MonoBehaviour
 				return false;
 			}
 		}
-		UpdateMeshes(current_rmc, verts);
+		UpdateMeshes(rmc, verts);
 		return true;
 	}
 	static float Razor_both_restricted_formula(Vector3 v)
@@ -1049,6 +1058,7 @@ public class Build : MonoBehaviour
 			}
 		}
 		//Debug.Log(RMCname + " " + rotation + " " + is_mirrored);
+		RMCname = NormalizeRMCname(RMCname);
 		var rmc = Instantiate(Get_RMC_Containing(RMCname), rmcPlacement, rotate_q);
 		BorderInfo.CreateComponent(rmc, RMCname);
 		rmc.GetComponent<MeshRenderer>().material = transparent;
@@ -1068,13 +1078,13 @@ public class Build : MonoBehaviour
 	}
 	GameObject Get_RMC_Containing(string RMCname)
 	{
-		RMCname = NormalizeRMCname(RMCname);
 		// V1H1H2 => string(V1) string(H1) string(H2)
-		var restr = RMCname.Substring(3).SplitBy(2).OrderBy(s => s).ToArray();
-		string outname = RMCname.Substring(0, 3) + String.Join("", restr);
+		//	var restr = RMCname.Substring(3).SplitBy(2).OrderBy(s => s).ToArray();
+		//string outname = RMCname.Substring(0, 3) + String.Join("", restr);
+		string outname = RMCname.Substring(0, 3);
 		GameObject rmc = Resources.Load<GameObject>("rmcs/" + outname);
-		if (rmc == null)
-			rmc = Resources.Load<GameObject>("rmcs/" + RMCname.Substring(0, 3));
+		//if (rmc == null)
+		//	rmc = Resources.Load<GameObject>("rmcs/" + RMCname.Substring(0, 3));
 		return rmc;
 	}
 	static void GetPrefabMesh(bool mirrored, GameObject prefab)

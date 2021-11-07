@@ -908,45 +908,11 @@ public class ShapeMenu : MonoBehaviour
 
 		void CreateNewSetOfMarkingsFromTile()
 		{
-			Vector3[] vertices = tile.GetComponent<MeshFilter>().mesh.vertices;
-			foreach (var v in vertices)
-			{
-				Vector3 pos = tile.transform.TransformPoint(v);
+			List<Vector3> sensitive_indices = Build.Border_Vault.Get_sensitive_vertices(tile);
 
-				if (!Physics.Raycast(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 11)
-					&& !Physics.Raycast(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 12))
-				{
-					RaycastHit[] hits = Physics.RaycastAll(new Vector3(pos.x, Consts.MAX_H, pos.z), Vector3.down, Consts.RAY_H, 1 << 9);
+			foreach(var pos in sensitive_indices)
+				markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
 
-					// Don't create marking if the corresponding vertex is insensitive due to the restrictions of any surrounding tile
-					List<GameObject> surroundings = Build.Get_surrounding_tiles(new HashSet<int> { Consts.PosToIndex(pos) });
-					bool sensitive = true;
-					foreach (var hit in hits)
-					{
-						GameObject hit_tile = hit.transform.gameObject;
-						if (hit_tile == tile)
-							continue;
-
-						Vector3[] vertices_of_hit_tile = hit_tile.transform.GetComponent<MeshFilter>().mesh.vertices;
-						bool sensitive_for_this_tile = false;
-						foreach (var vertex_of_hit_tile in vertices_of_hit_tile)
-						{
-							if (Vector3Int.RoundToInt(hit_tile.transform.TransformPoint(vertex_of_hit_tile)) == Vector3Int.RoundToInt(pos))
-							{
-								sensitive_for_this_tile = true;
-								break;
-							}
-						}
-						if (!sensitive_for_this_tile)
-						{
-							sensitive = false;
-							break;
-						}
-					}
-					if (sensitive)
-						markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
-				}
-			}
 			selected_tiles.Add(tile);
 		}
 
