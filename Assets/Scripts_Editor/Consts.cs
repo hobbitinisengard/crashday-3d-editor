@@ -354,4 +354,12 @@ public static class Consts
 		}
 		return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
 	}
+
+	internal static bool Lies_on_border(Vector3Int v)
+	{
+		if (v.x % 4 == 0 || v.z % 4 == 0)
+			return true;
+		else
+			return false;
+	}
 }

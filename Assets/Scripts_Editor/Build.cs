@@ -26,75 +26,6 @@ public class Border
 /// H_restricted = vertical border restircted
 /// </summary>
 public enum QuarterType { Unrestricted, Hx_restricted, Vx_restricted, Both_restricted }
-public class Quarter
-{
-	public QuarterType qt = QuarterType.Unrestricted;
-	public Vector3Int pos = new Vector3Int();
-
-	public Quarter(Vector3 pos)
-	{
-		this.pos = Vector3Int.RoundToInt(pos);
-		this.qt = Build.Border_Vault.Get_quarter(Vector3Int.RoundToInt(pos));
-	}
-
-	internal static Quarter[] Generate_Quarters(GameObject rmc)
-	{
-		Vector3Int dims = Build.GetRealTileDims(rmc);
-		Quarter[] tile_quarters = new Quarter[dims.x * dims.z];
-		if (dims.x == 1)
-		{ // 1x1
-			if (dims.z == 1)
-			{
-				tile_quarters[0] = new Quarter(rmc.transform.position);
-			}
-			else
-			{//1x2
-				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.forward);
-				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.back);
-			}
-		}
-		else
-		{//2x1
-			if (dims.z == 1)
-			{
-				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.left);
-				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.right);
-			}
-			else
-			{//2x2
-				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.left + 2 * Vector3.forward);
-				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.left + 2 * Vector3.back);
-				tile_quarters[2] = new Quarter(rmc.transform.position + 2 * Vector3.right + 2 * Vector3.forward);
-				tile_quarters[3] = new Quarter(rmc.transform.position + 2 * Vector3.right + 2 * Vector3.back);
-			}
-		}
-		return tile_quarters;
-	}
-
-	internal static List<Vector3> Generate_sensitive_pattern(Quarter q)
-	{
-		HashSet<Vector3> sensitive = new HashSet<Vector3>();
-		for(int z = -2; z<= 2;)
-		{
-			for(int x = -2; x<= 2;)
-			{
-				sensitive.Add(new Vector3(q.pos.x + x,
-					Consts.current_heights[Consts.PosToIndex(q.pos.x + x, q.pos.z + z)],
-					q.pos.z + z));
-				if (q.qt == QuarterType.Unrestricted || q.qt == QuarterType.Hx_restricted)
-					x++;
-				else
-					x += 4;
-				
-			}
-			if (q.qt == QuarterType.Unrestricted || q.qt == QuarterType.Vx_restricted)
-				z++;
-			else
-				z += 4;
-		}
-		return sensitive.Distinct().ToList();
-	}
-}
 //Handles BUILD mode.
 public class Build : MonoBehaviour
 {
@@ -748,17 +679,9 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
-		//1. Updating only vertices of every RMC in list.
 		foreach (GameObject rmc_o in rmcs)
 		{
 			rmc_o.layer = 9;
-			//Update RMC
-			Calculate_All_RMC_points(rmc_o);
-			Debug.Log(rmc_o.name);
-		}
-		//2. Matching edge of every rmc up if under or above given vertex already is another vertex of another tile
-		foreach (GameObject rmc_o in rmcs)
-		{
 			// Match RMC up and take care of current_heights table
 			Calculate_All_RMC_points(rmc_o);
 			//Match_rmc2rmc(rmc_o);
@@ -768,23 +691,9 @@ public class Build : MonoBehaviour
 				DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
 
 			Vector3Int tileDims = GetRealTileDims(rmc_o);
-			Vector3Int TLpos = GetTLPos(rmc_o);
 
 			Hide_underlying_grass(rmc_o.transform.position);
-			for (int z = 0; z <= 4 * tileDims.z; z++)
-			{
-				for (int x = 0; x <= 4 * tileDims.x; x++)
-				{
-					if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
-					{
-						Align_grass_2_RMCBorder(x, -z, TLpos, rmc_o);
-					}
-					else
-					{
-						Align_grass_2_RMC(x, -z, TLpos, rmc_o);
-					}
-				}
-			}
+			
 			Consts.UpdateMapColliders(rmc_o.transform.position, tileDims);
 			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
@@ -839,12 +748,14 @@ public class Build : MonoBehaviour
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc.transform.TransformPoint(verts[index]));
 
+			if (!Consts.IsWithinMapBounds(v))
+				continue;
 			// find a quarter that given vertex belongs to and get information about restriction pattern
-			QuarterType qt = tile_quarters.Aggregate(
-				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem).qt;
+			Quarter quarter = tile_quarters.Aggregate(
+				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem);
 
 			float h1, h2;
-			switch (qt)
+			switch (quarter.qt)
 			{
 				case QuarterType.Unrestricted:
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
@@ -852,15 +763,24 @@ public class Build : MonoBehaviour
 				case QuarterType.Vx_restricted:
 					h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
 					h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
-					verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
+					if(!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+						verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
+					else
+						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 					break;
 				case QuarterType.Hx_restricted:
 					h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
 					h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
-					verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+					if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+						verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+					else
+						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 					break;
 				case QuarterType.Both_restricted:
 					verts[index].y = Razor_both_restricted_formula(v);
+					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 					break;
 			}
 			if (float.IsNaN(verts[index].y))
@@ -871,12 +791,12 @@ public class Build : MonoBehaviour
 		UpdateMeshes(rmc, verts);
 		return true;
 	}
-	static float Razor_both_restricted_formula(Vector3 v)
+	static float Razor_both_restricted_formula(Vector3Int v)
 	{
-		float h1 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x - v.x % 4, v.y, v.z - v.z % 4))]; // BL
-		float h2 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x - v.x % 4, v.y, v.z + v.z % 4))]; // TL
-		float h3 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x + v.x % 4, v.y, v.z - v.z % 4))]; // BR
-		float h4 = Consts.current_heights[Consts.PosToIndex(new Vector3(v.x + v.x % 4, v.y, v.z + v.z % 4))]; // BR
+		float h1 = Consts.current_heights[Consts.PosToIndex(new Vector3(4 * (v.x / 4), v.y, 4 * (v.z / 4)))]; // BL
+		float h2 = Consts.current_heights[Consts.PosToIndex(new Vector3(4 * (v.x / 4), v.y, 4 + 4 * (v.z / 4)))]; // TL
+		float h3 = Consts.current_heights[Consts.PosToIndex(new Vector3(4 + 4 * (v.x / 4), v.y, 4 * (v.z / 4)))]; // BR
+		float h4 = Consts.current_heights[Consts.PosToIndex(new Vector3(4 + 4 * (v.x / 4), v.y, 4 + 4 * (v.z / 4)))]; // TR
 		float n = v.x % 4;
 		float m = v.z % 4;
 		float calculated_h = h1 + n / 4 * (h3 - h1) + m / 4 * ((h2 + n / 4 * (h4 - h2)) - (h1 + n / 4 * (h3 - h1)));
@@ -941,20 +861,7 @@ public class Build : MonoBehaviour
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
 		Hide_underlying_grass(current_rmc.transform.position);
-		for (int z = 0; z <= 4 * tileDims.z; z++)
-		{
-			for (int x = 0; x <= 4 * tileDims.x; x++)
-			{
-				if (x == 0 || z == 0 || x == 4 * tileDims.x || z == 4 * tileDims.z)
-				{
-					Align_grass_2_RMCBorder(x, -z, TLpos, current_rmc); // borders
-				}
-				else
-				{
-					Align_grass_2_RMC(x, -z, TLpos, current_rmc);
-				}
-			}
-		}
+		
 		if (!Loader.Isloading)
 		{
 			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform, cum_rotation);
@@ -1142,103 +1049,6 @@ public class Build : MonoBehaviour
 		prefab.transform.position = new Vector3(prefab.transform.position.x, Height / 5f, prefab.transform.position.z);
 		rmc.layer = 9;
 
-	}
-	/// <summary>
-	///Returns mesh "main" of tile or if tile doesn't have it, mesh of its meshfilter
-	/// </summary>
-	public static Mesh GetMainMesh(ref GameObject prefab)
-	{
-		if (prefab.transform.childCount != 0)
-		{
-			for (int i = 0; i < prefab.transform.childCount; i++)
-				if (prefab.transform.GetChild(i).name == "main")
-					return prefab.transform.GetChild(i).GetComponent<MeshFilter>().mesh;
-
-			return null; // <-- hopefully Never going to end up here
-		}
-		else
-			return prefab.GetComponent<MeshFilter>().mesh;
-	}
-	/// <summary>
-	/// Updates current_heights array. Layer of RMC has to be 10.
-	/// </summary>
-	public static void Align_grass_2_RMC(int x, int z, Vector3Int TLpos, GameObject rmc)
-	{
-		rmc.layer = 10;
-		x += TLpos.x;
-		z = TLpos.z + z; //x,y are global
-		if (!Consts.IsWithinMapBounds(x, z))
-			return;
-		int index = Consts.PosToIndex(x, z);
-		Vector3 v = new Vector3(x, Consts.MIN_H - 1, z);
-		if (Physics.Raycast(v, Vector3.up, out RaycastHit hit, Consts.RAY_H, 1 << 10))
-		{
-			Consts.current_heights[index] = hit.point.y;
-		}
-		rmc.layer = 9;
-	}
-	/// <summary>
-	/// Matches up height of terrain to height of vertex of current RMC (layer = 10)
-	/// </summary>
-	public static void Align_grass_2_RMCBorder(int x, int z, Vector3Int TLpos, GameObject rmc_o)
-	{
-		rmc_o.layer = 10;
-		Vector3Int v = new Vector3Int(x + TLpos.x, Consts.MAX_H, z + TLpos.z);
-
-		if (x % 4 == 0 && z % 4 == 0)
-			return;
-
-		if (!Consts.IsWithinMapBounds(v))
-			return;
-		int index = Consts.PosToIndex(v);
-		Consts.current_heights[index] = Calculate_border_H_At(v.x, v.z);
-		rmc_o.layer = 9;
-	}
-	public static void Match_rmc2rmc(GameObject rmc_o)
-	{// Matches vertices of RMCs one to another rmc.layer = 10
-		rmc_o.layer = 10;
-		Vector3[] verts = GetMeshVerts(rmc_o);
-
-		//check borders
-		for (int i = 0; i < verts.Length; i++)
-		{
-			Vector3Int v = Vector3Int.RoundToInt(rmc_o.transform.TransformPoint(verts[i]));
-
-			if (v.x % 4 == 0 && v.z % 4 == 0)
-				continue;
-
-
-			verts[i].y = Calculate_border_H_At(v.x, v.z);
-		}
-		UpdateMeshes(rmc_o, verts);
-		rmc_o.layer = 9;
-	}
-	/// <summary>
-	/// This function updates only those vertices that are laying on borders
-	/// </summary>
-	static float Calculate_border_H_At(int gx, int gz)
-	{
-		// given border here is restricted
-		bool Vertical_check = gx % 4 == 0;
-		bool Horizontal_check = gz % 4 == 0;
-		if (!(Vertical_check ^ Horizontal_check))
-			return Consts.current_heights[Consts.PosToIndex(gx, gz)];
-
-		if (Horizontal_check)
-		{//given border is horizontal (along x axis)
-			float h1 = Consts.current_heights[Consts.PosToIndex(gx - (gx % 4), gz)];
-			float h2 = Consts.current_heights[Consts.PosToIndex(gx + (4 - (gx % 4)), gz)];
-			float height = Mathf.Lerp(h1, h2, gx % 4f / 4f);
-			return height;
-		}
-		else
-		{ // given border is vertical
-			float h1 = Consts.current_heights[Consts.PosToIndex(gx, gz - (gz % 4))];
-			float h2 = Consts.current_heights[Consts.PosToIndex(gx, gz + (4 - (gz % 4)))];
-			float height = Mathf.Lerp(h1, h2, gz % 4f / 4f);
-
-			return height;
-		}
 	}
 	public static bool Conecast(Vector3 global_pos, Vector3 Direction, out RaycastHit hit, int layer)
 	{

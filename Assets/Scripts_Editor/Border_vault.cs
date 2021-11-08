@@ -9,6 +9,7 @@ public class Border_vault
 	private Dictionary<int, Border> Vault = new Dictionary<int, Border>();
 	public void InitializeBorderInfo(int Height, int Width)
 	{
+		Vault.Clear();
 		for (int z = 0; z <= 4 * Height; z += 4)
 			for (int x = 2; x <= 4 * Width; x += 4)
 				Vault.Add(Consts.PosToIndex(x, z), new Border(BorderType.Horizontal));
@@ -22,33 +23,37 @@ public class Border_vault
 	{
 		var Keys = Get_border_keys(rmc, true);
 		foreach (var Key in Keys)
-			Vault[Key].tiles_constraining++;
+		{
+			try
+			{
+				Vault[Key].tiles_constraining++;
+			}
+			catch
+			{
+
+			}
+			
+		}
+			
 	}
 	public QuarterType Get_quarter(Vector3Int quarter_center)
 	{
-		bool vertical_constrained = false;
-		bool horizontal_constrained = false;
-
+		// borders; true if constrained else false
+		bool left_Hx = Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.left)].tiles_constraining > 0;
+		bool up_Vx = Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.forward)].tiles_constraining > 0;
+		bool right_Hx = Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.right)].tiles_constraining > 0;
+		bool down_Vx = Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.back)].tiles_constraining > 0;
 		//check left and right border (H1)
-		if (Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.right)].tiles_constraining > 0
-			||
-			Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.left)].tiles_constraining > 0)
-			vertical_constrained = true;
-		//check up and down border (V1)
-		if (Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.forward)].tiles_constraining > 0
-			||
-			Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.back)].tiles_constraining > 0)
-			horizontal_constrained = true;
 
-	 if (vertical_constrained && horizontal_constrained)
+	 if (left_Hx && up_Vx)
 		{
 			return QuarterType.Both_restricted;
 		}
-		if (vertical_constrained && !horizontal_constrained)
+		if (left_Hx && !up_Vx)
 		{
 			return QuarterType.Hx_restricted;
 		}
-		if (!vertical_constrained && horizontal_constrained)
+		if (!left_Hx && up_Vx)
 		{
 			return QuarterType.Vx_restricted;
 		}
@@ -90,7 +95,7 @@ public class Border_vault
 			}
 		}
 		// for z
-		for (int i = 1; i <= dims.x; i++)
+		for (int i = 1; i <= dims.z; i++)
 		{
 			if (only_restricted && !rmcName.Contains("H" + i.ToString()))
 				continue;
