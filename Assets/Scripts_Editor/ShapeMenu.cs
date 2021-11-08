@@ -911,7 +911,8 @@ public class ShapeMenu : MonoBehaviour
 			List<Vector3> sensitive_indices = Build.Border_Vault.Get_sensitive_vertices(tile);
 
 			foreach(var pos in sensitive_indices)
-				markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
+				if(!markings.ContainsKey(Consts.PosToIndex(pos)))
+					markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
 
 			selected_tiles.Add(tile);
 		}

@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-public enum BorderType { Vertical, Horizontal};
+public enum BorderType { Vertical, Horizontal };
+
 public class Border
 {
 	public BorderType border_type;
 
 	private byte _tiles_occupying = 0;
-	
-	public byte tiles_occupying
+
+	public byte tiles_constraining
 	{
 		get { return _tiles_occupying; }
 		set { _tiles_occupying = value; }
@@ -21,7 +22,79 @@ public class Border
 		border_type = bt;
 	}
 }
-public enum QuarterType { Unrestricted, H_restricted, V_restricted, Both_restricted }
+/// <summary>
+/// H_restricted = vertical border restircted
+/// </summary>
+public enum QuarterType { Unrestricted, Hx_restricted, Vx_restricted, Both_restricted }
+public class Quarter
+{
+	public QuarterType qt = QuarterType.Unrestricted;
+	public Vector3Int pos = new Vector3Int();
+
+	public Quarter(Vector3 pos)
+	{
+		this.pos = Vector3Int.RoundToInt(pos);
+		this.qt = Build.Border_Vault.Get_quarter(Vector3Int.RoundToInt(pos));
+	}
+
+	internal static Quarter[] Generate_Quarters(GameObject rmc)
+	{
+		Vector3Int dims = Build.GetRealTileDims(rmc);
+		Quarter[] tile_quarters = new Quarter[dims.x * dims.z];
+		if (dims.x == 1)
+		{ // 1x1
+			if (dims.z == 1)
+			{
+				tile_quarters[0] = new Quarter(rmc.transform.position);
+			}
+			else
+			{//1x2
+				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.forward);
+				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.back);
+			}
+		}
+		else
+		{//2x1
+			if (dims.z == 1)
+			{
+				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.left);
+				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.right);
+			}
+			else
+			{//2x2
+				tile_quarters[0] = new Quarter(rmc.transform.position + 2 * Vector3.left + 2 * Vector3.forward);
+				tile_quarters[1] = new Quarter(rmc.transform.position + 2 * Vector3.left + 2 * Vector3.back);
+				tile_quarters[2] = new Quarter(rmc.transform.position + 2 * Vector3.right + 2 * Vector3.forward);
+				tile_quarters[3] = new Quarter(rmc.transform.position + 2 * Vector3.right + 2 * Vector3.back);
+			}
+		}
+		return tile_quarters;
+	}
+
+	internal static List<Vector3> Generate_sensitive_pattern(Quarter q)
+	{
+		HashSet<Vector3> sensitive = new HashSet<Vector3>();
+		for(int z = -2; z<= 2;)
+		{
+			for(int x = -2; x<= 2;)
+			{
+				sensitive.Add(new Vector3(q.pos.x + x,
+					Consts.current_heights[Consts.PosToIndex(q.pos.x + x, q.pos.z + z)],
+					q.pos.z + z));
+				if (q.qt == QuarterType.Unrestricted || q.qt == QuarterType.Hx_restricted)
+					x++;
+				else
+					x += 4;
+				
+			}
+			if (q.qt == QuarterType.Unrestricted || q.qt == QuarterType.Vx_restricted)
+				z++;
+			else
+				z += 4;
+		}
+		return sensitive.Distinct().ToList();
+	}
+}
 //Handles BUILD mode.
 public class Build : MonoBehaviour
 {
@@ -150,8 +223,8 @@ public class Build : MonoBehaviour
 
 		Show_underlying_grass_tiles(outlined_element);
 		List<GameObject> to_restore = Get_surrounding_tiles(outlined_element);
-		DestroyImmediate(outlined_element);
 		Border_Vault.Remove_borders_of(outlined_element);
+		DestroyImmediate(outlined_element);
 		outlined_element = null;
 		Consts.TilePlacementArray[pos.z, pos.x].Name = null;
 		RecoverTerrain(Consts.TilePlacementArray[pos.z, pos.x].t_verts);
@@ -519,7 +592,7 @@ public class Build : MonoBehaviour
 			Consts.TRACK.CheckpointsNumber++;
 		}
 
-		
+
 	}
 	public static HashSet<int> GetRmcIndices(GameObject rmc)
 	{
@@ -751,53 +824,8 @@ public class Build : MonoBehaviour
 		return Prefab;
 	}
 	/// <summary>
-	/// Returns restriction info of quarter of given tile according to its RMCname
+	/// You need to add borders to vault before calling this
 	/// </summary>
-	static QuarterType Get_quartertype(Vector3 tile_dimensions, Vector3 arrow, String RMCname)
-	{
-		bool H_is_constrained;
-		bool V_is_constrained;
-
-		if (tile_dimensions.x == 1)
-		{
-			V_is_constrained = RMCname.Contains("V1");
-		}
-		else
-		{
-			if (arrow.x > 0)
-				V_is_constrained = RMCname.Contains("V2");
-			else
-				V_is_constrained = RMCname.Contains("V1");
-		}
-
-		if (tile_dimensions.z == 1)
-		{
-			H_is_constrained = RMCname.Contains("H1");
-		}
-		else
-		{
-			if (arrow.z > 0)
-				H_is_constrained = RMCname.Contains("H1");
-			else
-				H_is_constrained = RMCname.Contains("H2");
-		}
-
-
-		if (H_is_constrained && V_is_constrained)
-		{
-			return QuarterType.Both_restricted;
-		}
-		if (H_is_constrained && !V_is_constrained)
-		{
-			return QuarterType.H_restricted;
-		}
-		if (!H_is_constrained && V_is_constrained)
-		{
-			return QuarterType.H_restricted;
-		}
-
-		return QuarterType.Unrestricted;
-	}
 	static bool Calculate_All_RMC_points(GameObject rmc)
 	{
 		// suppose MeshVerts returns nxm unconstrained mesh
@@ -805,36 +833,15 @@ public class Build : MonoBehaviour
 		// RMCname already takes into consideration rmc rotation 
 		String RMCname = rmc.GetComponent<BorderInfo>().info;
 
-		Vector3 tile_dimensions = rmc.GetComponent<MeshFilter>().mesh.bounds.size / 5f;
+		Quarter[] tile_quarters = Quarter.Generate_Quarters(rmc);
 
 		for (int index = 0; index < verts.Length; index++)
 		{
 			Vector3Int v = Vector3Int.RoundToInt(rmc.transform.TransformPoint(verts[index]));
 
-			QuarterType qt = QuarterType.Unrestricted;
-
-			// is vertex on border, check against Border vault - maybe other tile already restricts this border
-			bool On_horizontal_border = v.x % 4 == 0;
-			bool On_vertical_border = v.z % 4 == 0;
-			if (On_horizontal_border && On_vertical_border)
-			{
-				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-				continue;
-			}
-			else if (On_horizontal_border)
-			{
-				if (Border_Vault.Is_restricted(v))
-					qt = QuarterType.H_restricted;
-			}
-			else if (On_vertical_border)
-			{
-				if (Border_Vault.Is_restricted(v))
-					qt = QuarterType.V_restricted;
-			}
-			else
-			{
-				qt = Get_quartertype(tile_dimensions, verts[index], RMCname);
-			}
+			// find a quarter that given vertex belongs to and get information about restriction pattern
+			QuarterType qt = tile_quarters.Aggregate(
+				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem).qt;
 
 			float h1, h2;
 			switch (qt)
@@ -842,12 +849,12 @@ public class Build : MonoBehaviour
 				case QuarterType.Unrestricted:
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 					break;
-				case QuarterType.V_restricted:
+				case QuarterType.Vx_restricted:
 					h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
 					h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
 					verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
 					break;
-				case QuarterType.H_restricted:
+				case QuarterType.Hx_restricted:
 					h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
 					h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
 					verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
@@ -917,19 +924,19 @@ public class Build : MonoBehaviour
 			current_rmc = null;
 			return null;
 		}
-
+		
 		AllowLMB = true;
 		// Instantiate RMC
 		current_rmc = GetRMC_and_Set_Restriction_info(name, cum_rotation, mirrored, rmcPlacement);
 		current_rmc.name = name;
+		Border_Vault.Add_borders_of(current_rmc);
 		//Update RMC
 		if (!Calculate_All_RMC_points(current_rmc))
 		{
+			Border_Vault.Remove_borders_of(current_rmc);
 			Destroy(current_rmc);
 			return null;
 		}
-
-		Border_Vault.Add_Borders_of(current_rmc);
 
 		Vector3Int pos = Vpos2tpos(current_rmc);
 		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
@@ -1214,7 +1221,7 @@ public class Build : MonoBehaviour
 		// given border here is restricted
 		bool Vertical_check = gx % 4 == 0;
 		bool Horizontal_check = gz % 4 == 0;
-		if(!(Vertical_check ^ Horizontal_check))
+		if (!(Vertical_check ^ Horizontal_check))
 			return Consts.current_heights[Consts.PosToIndex(gx, gz)];
 
 		if (Horizontal_check)

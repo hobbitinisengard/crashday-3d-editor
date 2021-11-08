@@ -6,11 +6,11 @@ using UnityEngine;
 public class Border_vault
 {
 	//	terrain index corresponding to the middle of the border is the key
-	private static Dictionary<int, Border> Vault = new Dictionary<int, Border>();
+	private Dictionary<int, Border> Vault = new Dictionary<int, Border>();
 	public void InitializeBorderInfo(int Height, int Width)
 	{
-		for (int z = 0; z <= 4*Height; z+=4)
-			for (int x = 2; x <= 4*Width; x+=4)
+		for (int z = 0; z <= 4 * Height; z += 4)
+			for (int x = 2; x <= 4 * Width; x += 4)
 				Vault.Add(Consts.PosToIndex(x, z), new Border(BorderType.Horizontal));
 
 		for (int z = 2; z <= 4 * Height; z += 4)
@@ -18,87 +18,93 @@ public class Border_vault
 				Vault.Add(Consts.PosToIndex(x, z), new Border(BorderType.Vertical));
 
 	}
-	/// <param name="vert_pos">Has to lie on a border</param>
-	public bool Is_restricted(Vector3Int vert_pos)
+	public void Add_borders_of(GameObject rmc)
 	{
-		Border border = Get_Border(vert_pos);
-		return border.tiles_occupying > 0;
+		var Keys = Get_border_keys(rmc, true);
+		foreach (var Key in Keys)
+			Vault[Key].tiles_constraining++;
 	}
-	Border Get_Border(Vector3Int vert_pos)
+	public QuarterType Get_quarter(Vector3Int quarter_center)
 	{
-		// calculate type of border
-		bool On_vertical_border = vert_pos.x % 4 == 0;
-		bool On_horizontal_border = vert_pos.z % 4 == 0;
+		bool vertical_constrained = false;
+		bool horizontal_constrained = false;
 
-		// normalize pos so it is centered on border
-		if (On_vertical_border)
-			vert_pos.z = 2 + 4*(vert_pos.z / 4);
-		else // On_horizontal_border
-			vert_pos.x = 2 + 4*(vert_pos.x / 4);
-		try
-		{
-			return Vault[Consts.PosToIndex(vert_pos)];
-		}
-		catch
-		{
-			return null;
-		}
-	}
-	public void Add_Borders_of(GameObject rmc)
-	{
-		var indices = Get_Vault_Keys(rmc);
-		foreach(var b in indices)
-			Vault[b].tiles_occupying++;
-	}
+		//check left and right border (H1)
+		if (Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.right)].tiles_constraining > 0
+			||
+			Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.left)].tiles_constraining > 0)
+			vertical_constrained = true;
+		//check up and down border (V1)
+		if (Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.forward)].tiles_constraining > 0
+			||
+			Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.back)].tiles_constraining > 0)
+			horizontal_constrained = true;
 
+	 if (vertical_constrained && horizontal_constrained)
+		{
+			return QuarterType.Both_restricted;
+		}
+		if (vertical_constrained && !horizontal_constrained)
+		{
+			return QuarterType.Hx_restricted;
+		}
+		if (!vertical_constrained && horizontal_constrained)
+		{
+			return QuarterType.Vx_restricted;
+		}
+
+		return QuarterType.Unrestricted;
+	}
 	public void Remove_borders_of(GameObject rmc)
 	{
-		var Borders = Get_Vault_Keys(rmc);
-		foreach (var b in Borders)
-			Vault[b].tiles_occupying--;
+		var Keys = Get_border_keys(rmc, true);
+		foreach (var Key in Keys)
+			Vault[Key].tiles_constraining--;
 	}
-	List<int> Get_Vault_Keys(GameObject rmc)
+	/// <summary>
+	/// Returns ALL or ONLY RESTRICTED borders of tile
+	/// </summary>
+	List<int> Get_border_keys(GameObject rmc, bool only_restricted = false)
 	{
 		List<int> borders = new List<int>();
-		String rmcName = rmc.GetComponent<BorderInfo>().info;
+		string rmcName = rmc.GetComponent<BorderInfo>().info;
 		Vector3 TL = Build.GetTLPos(rmc);
 		Vector3 dims = Build.GetRealTileDims(rmc);
-		var restr = rmcName.Substring(3).SplitBy(2).ToArray();
-		// r is for instance V1
-		foreach(var r in restr)
+
+		// for x
+		for (int i = 1; i <= dims.x; i++)
 		{
+			if (only_restricted && !rmcName.Contains("V" + i.ToString()))
+				continue;
 			Vector3 initialPos;
-			if (r[0] == 'V')
-			{
-				if (r == "V1")
-				{
-					initialPos = TL + 2 * Vector3.right;
-				}
-				else
-				{
-					initialPos = TL + 6 * Vector3.right;
-				}
+			if (i == 1)
+				initialPos = TL + 2 * Vector3.right;
+			else // i = 2
+				initialPos = TL + 6 * Vector3.right;
 
-				for (int i = 0; i < dims.z; i++)
-					borders.Add(Consts.PosToIndex(initialPos + i * 4 * Vector3.back));
-			}
-			else if(r[0] == 'H')
+			for (int z = 0; z <= dims.z; z++)
 			{
-				if (r == "H1")
-				{
-					initialPos = TL + 2 * Vector3.back;
-				}
-				else
-				{
-					initialPos = TL + 6 * Vector3.back;
-				}
-
-				for (int i = 0; i < dims.x; i++)
-					borders.Add(Consts.PosToIndex(initialPos + i * 4 * Vector3.right));
+				Vector3 pos = initialPos + z * 4 * Vector3.back;
+				pos = Consts.RotatePointAroundPivot(pos, rmc.transform.position, rmc.transform.rotation.eulerAngles);
+				borders.Add(Consts.PosToIndex(pos));
 			}
+		}
+		// for z
+		for (int i = 1; i <= dims.x; i++)
+		{
+			if (only_restricted && !rmcName.Contains("H" + i.ToString()))
+				continue;
+			Vector3 initialPos;
+			if (i == 1)
+				initialPos = TL + 2 * Vector3.back;
 			else
+				initialPos = TL + 6 * Vector3.back;
+
+			for (int x = 0; x <= dims.x; x++)
 			{
-				throw new Exception(rmcName + " is not a valid rmcname");
+				Vector3 pos = initialPos + x * 4 * Vector3.right;
+				pos = Consts.RotatePointAroundPivot(pos, rmc.transform.position, rmc.transform.rotation.eulerAngles);
+				borders.Add(Consts.PosToIndex(pos));
 			}
 		}
 		return borders;
@@ -106,46 +112,43 @@ public class Border_vault
 
 	internal List<Vector3> Get_sensitive_vertices(GameObject tile)
 	{
-		var Border_Keys = Get_Vault_Keys(tile);
-		List<Vector3> all_vertex_pts = new List<Vector3>();
+		var quarters = Quarter.Generate_Quarters(tile);
+		List<Vector3> sensitive_vertices = new List<Vector3>();
 
-		foreach(int Key in Border_Keys)
+		foreach(var q in quarters)
 		{
-			List<Vector3> border_vertex_points = Get_border_points(Key);
-			foreach (var index in border_vertex_points)
-				all_vertex_pts.Add(index);
+			sensitive_vertices.AddRange(Quarter.Generate_sensitive_pattern(q));
 		}
-		return all_vertex_pts;
+		return sensitive_vertices;
 	}
 	List<Vector3> Get_border_points(int key)
 	{
 		Vector3 pos = Consts.IndexToPos(key);
-		List<Vector3> indices = new List<Vector3>();
+		List<Vector3> vertices = new List<Vector3>();
 		BorderType border_type = Vault[Consts.PosToIndex(pos)].border_type;
-		bool unrestricted = Vault[Consts.PosToIndex(pos)].tiles_occupying == 0;
+		bool unrestricted = Vault[Consts.PosToIndex(pos)].tiles_constraining == 0;
 		if (border_type == BorderType.Horizontal)
 		{
 			for (int i = -2; i <= 2;)
 			{
-				indices.Add(pos + i * Vector3.right);
+				vertices.Add(pos + i * Vector3.right);
 				if (unrestricted)
 					i++;
 				else
 					i += 4;
 			}
-			
 		}
 		else
 		{
 			for (int i = -2; i <= 2;)
 			{
-				indices.Add(pos + i * Vector3.forward);
+				vertices.Add(pos + i * Vector3.forward);
 				if (unrestricted)
 					i++;
 				else
 					i += 4;
 			}
 		}
-		return indices;
+		return vertices;
 	}
 }
