@@ -22,13 +22,13 @@ public class ProfileCreator : MonoBehaviour
 
 	private void OnEnable()
 	{
-		FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
+		FormPanel.GetComponent<Form>().HeightSliderAndPreviewToggle.SetActive(false);
 	}
 	private void OnDisable()
 	{
 		RemovePreview();
 		state = ProfileState.idle;
-		FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+		FormPanel.GetComponent<Form>().HeightSliderAndPreviewToggle.SetActive(true);
 	}
 	private void SwitchTextStatus(string text)
 	{

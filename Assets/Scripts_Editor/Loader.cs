@@ -63,9 +63,9 @@ public class Loader : MonoBehaviour
 		}
 		else
 		{ // generate track
-			Consts.TRACK = new TrackSavable((ushort)SliderWidth.val, (ushort)SliderHeight.val);
+			Consts.TRACK = new TrackSavable((ushort)TrackSize.value[0], (ushort)TrackSize.value[1]);
 			InitializeHeightArrays(Consts.TRACK.Height, Consts.TRACK.Width);
-			InitializeTilePlacementArray(SliderHeight.val, SliderWidth.val);
+			InitializeTilePlacementArray(TrackSize.value[1], TrackSize.value[0]);
 			Consts.Trackname = "Untitled";
 		}
 

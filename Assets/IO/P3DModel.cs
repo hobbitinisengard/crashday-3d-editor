@@ -154,8 +154,12 @@ public class P3DModel
 			Debug.LogError("Failed to load. Loading default texture. Path: " + path);
 			tex = DDSDecoder.LoadTextureDXT(File.ReadAllBytes(IO.GetCrashdayPath() + "/data/content/textures/colwhite.dds"), TextureFormat.DXT1);
 		}
-		tex.mipMapBias = -0.5f;
-		tex.Apply(true);
+		try
+		{
+			tex.mipMapBias = -0.5f;
+			tex.Apply(true);
+        }
+        catch { return default(Material); }
 
 		bool tr = P3DRenderInfo[id].TextureFile.Contains("transp");
 		bool gls = P3DRenderInfo[id].TextureFile.Contains("gls") || P3DRenderInfo[id].TextureFile.Contains("glass");

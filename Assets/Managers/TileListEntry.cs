@@ -29,7 +29,7 @@ public class TileListEntry
 	}
 
 	/// <summary>
-	/// cfl constructor
+	/// cat constructor
 	/// </summary>
 	public TileListEntry(string tilesetName, string description)
 	{
@@ -38,7 +38,7 @@ public class TileListEntry
 	}
 
 	/// <summary>
-	/// cat constructor
+	/// cfl constructor
 	/// </summary>
 	/// <param name="size"></param>
 	/// <param name="Restrictions"></param>
@@ -68,6 +68,12 @@ public class TileListEntry
 		Icon = icon;
 		Custom_tileset_id = custom_tileset_id;
 		RMCname = Size.x.ToString() + "x" + Size.y.ToString() + Restrictions;
+	}
+
+	public void Set(string tilesetName, string description)
+    {
+		TilesetName = tilesetName;
+		Description = description;
 	}
 
 	public string Show()

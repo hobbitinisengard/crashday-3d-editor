@@ -12,6 +12,7 @@ public class SliderCase : MonoBehaviour
 	public GameObject HelpPanel;
 	private string Current_tileset = Consts.CHKPOINTS_STR;
 	private string[] Tilesets;
+	private static bool hide = false;
 
 	public void InitializeSlider(string[] tilesets)
 	{
@@ -26,20 +27,27 @@ public class SliderCase : MonoBehaviour
 		// Don't allow when in deleting or selecting mode
 		if (Input.GetKey(KeyCode.X) || Input.GetKey(KeyCode.C) || HelpPanel.activeSelf)
 			return;
+		if (Input.GetKeyUp(KeyCode.G))
+			hide = !hide;
 		if (Input.GetAxis("Mouse ScrollWheel") != 0)
-		{
-			HideTileDescription();
-			HideCase();
+			SwitchTileset();
+		if (hide && Current_tileset == Consts.DefaultTilesetName)
+			SwitchTileset();
+	}
 
-			if (Input.GetAxis("Mouse ScrollWheel") > 0)
-				Current_tileset = GetNextTabName();
-			else
-				Current_tileset = GetPreviousTabName();
+	private void SwitchTileset()
+    {
+		HideTileDescription();
+		HideCase();
 
-			ShowCase();
-			MoveTileDescription();
-			title.text = Current_tileset;
-		}
+		if (Input.GetAxis("Mouse ScrollWheel") < 0)
+			Current_tileset = GetPreviousTabName();
+		else
+			Current_tileset = GetNextTabName();
+
+		ShowCase();
+		MoveTileDescription();
+		title.text = Current_tileset;
 	}
 
 	public void SwitchToTileset(string tileset_name)

@@ -36,6 +36,7 @@ public class Form : MonoBehaviour
     // Profile mode menu
     public GameObject ProfileMenu;
 
+    public GameObject HeightSliderAndPreviewToggle;
     public Slider HeightSlider;
     public Slider FormSlider;
     public static ManualMode mode;

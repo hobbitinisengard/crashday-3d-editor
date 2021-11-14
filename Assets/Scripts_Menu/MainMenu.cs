@@ -103,11 +103,12 @@ public class MainMenu : MonoBehaviour
 		// Remove folder in moddata
 		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
 
+		// Reload default tiles, as they could have been modified by the mod.
+		TileManager.UpdateSpecificTiles(mod_id);
+
 		// Unpack and load updated tileset
 		PackageManager.LoadCPK(Directory.GetFiles(TileManager.CdWorkshopPath + mod_id).First(), mod_id);
-		TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", mod_id, enabled);
-		if (enabled)
-			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id);
+		TileManager.LoadCustomTiles(mod_id, enabled);
 
 		// Update tile sections in the menu
 		List<string> sections = TileManager.CustomTileSections[mod_id].TileSections;
@@ -125,7 +126,7 @@ public class MainMenu : MonoBehaviour
 		string[] to_remove_names = TileManager.TileListInfo.Where(tile => tile.Value.Custom_tileset_id == mod_id).Select(t => t.Key).ToArray();
 		foreach (var name in to_remove_names)
 			TileManager.TileListInfo.Remove(name);
-		TileManager.CustomTileSections.Remove(mod_id); ;
+		TileManager.CustomTileSections.Remove(mod_id);
 
 		// Remove entry in tilesets.txt
 		string[] lines_to_keep = File.ReadAllLines(Consts.tilesets_path)
@@ -134,6 +135,9 @@ public class MainMenu : MonoBehaviour
 
 		// Remove folder in moddata
 		Directory.Delete(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\", true);
+
+		// Reload default tiles, as they could have been modified by the mod.
+		TileManager.UpdateSpecificTiles(mod_id);
 
 		// Update tileset menu
 		for (int i = Entry.transform.GetSiblingIndex() + 1;
@@ -166,9 +170,7 @@ public class MainMenu : MonoBehaviour
 			mod_ids[Array.IndexOf(mod_ids, "#" + mod_id)] = mod_id;
 
 			// Load the full tileset
-			TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", mod_id, true);
-			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id);
-
+			TileManager.LoadCustomTiles(mod_id, true);
 			TileManager.CustomTileSections[mod_id].Enabled = true;
 		}
 		else
@@ -182,9 +184,7 @@ public class MainMenu : MonoBehaviour
 				TileManager.TileListInfo.Remove(name);
 
 			// Reload default tiles, as they could have been modified by the mod.
-			TileManager.ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
-			TileManager.ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
-
+			TileManager.UpdateSpecificTiles(mod_id);
 			TileManager.CustomTileSections[mod_id].Enabled = false;
 		}
 

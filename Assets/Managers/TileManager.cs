@@ -23,7 +23,11 @@ public static class TileManager
 	/// <summary>
     /// Custom tileset IDs and their tile sections for tileset manager menu
     /// </summary>
-	public static Dictionary<string, TilesetListEntry> CustomTileSections = new Dictionary<string, TilesetListEntry>();
+	public static Dictionary<string, TilesetListEntry> CustomTileSections;
+	/// <summary>
+	/// Keys - tile names; values - ID(s) of mod(s) overriding these tiles. 
+	/// </summary>
+	public static Dictionary<string, List<string>> DefaultTiles;
 	public static List<MaterialListEntry> Materials;
 
 	public static bool Loaded;
@@ -42,28 +46,23 @@ public static class TileManager
 	{
 		if (Loaded) return;
 
-		TileListInfo = new Dictionary<string, TileListEntry>(270);
+		CustomTileSections = new Dictionary<string, TilesetListEntry>();
 		Materials = new List<MaterialListEntry>(30);
+		DefaultTiles = new Dictionary<string, List<string>>(270);
 
-		// unpack default cpks
 		PackageManager.LoadDefaultCPKs();
-
-		// default cat and cfl files
-		ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\");
-		ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\");
-
-		// unpack every bin (zip) tileset if it's id exists in WorkshopModIds to unpacked crashday content folder
-		string[] WorkshopModIds = File.ReadAllLines(Consts.tilesets_path);
-
+		LoadDefaultTiles();
+ 
+		string[] WorkshopModIds = File.ReadAllLines(Consts.tilesets_path).Distinct().ToArray();
 		if (WorkshopModIds.Length == 1 && WorkshopModIds[0] == "")
 			return;
 
-		// unpack and load custom tilesets
+		// Unpack and load custom tilesets
 		foreach (string Id in WorkshopModIds)
 		{
 			// A single "#" character before the tileset ID marks it as disabled, so we only need its tile sections.
 			bool enabled = true;
-			string newId = Id;
+			string newId = Id.Trim();
 			if (Id.StartsWith("#"))
 			{
 				newId = Id.Remove(0, 1);
@@ -72,90 +71,110 @@ public static class TileManager
 			if (Directory.Exists(CdWorkshopPath + newId + "\\")) // Check if the ID is correct
 			{
 				PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + newId).First(), newId);
-				ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + newId + "\\content\\editor\\", newId, enabled);
-				if (enabled)
-					ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + newId + "\\content\\tiles\\", newId);
+				LoadCustomTiles(newId, enabled);
 			}
 		}
-		// load flatters
+	}
+
+	/// <summary>
+	/// Loads default tiles from the data folder.
+	/// </summary>
+	public static void LoadDefaultTiles(string filter = null)
+	{
+		List<string> cfls = ReadCflFiles(IO.GetCrashdayPath() + "\\data\\content\\tiles\\", null, filter);
+		if (filter == null)
+			// Loading default tiles for the first time
+			foreach (string cfl in cfls)
+				DefaultTiles.Add(cfl, new List<string>());
+
+		ReadCatFiles(IO.GetCrashdayPath() + "\\data\\content\\editor\\", ref cfls, null, true, filter);
+		foreach (string cfl in cfls)
+		{
+			// This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
+			if (TileListInfo[cfl].IsCheckpoint)
+				TileListInfo[cfl].TilesetName = Consts.CHKPOINTS_STR;
+			else
+				TileListInfo[cfl].TilesetName = Consts.DefaultTilesetName;
+		}
 		LoadFlatterInfo();
 	}
+
 	/// <summary>
-	/// Handles tile positioning on GUI as well as tilesets. Has to be run before ReadCflFiles
+	/// Loads custom tiles from the moddata folder.
 	/// </summary>
-	public static void ReadCatFiles(string path, string mod_id = null, bool enabled = true)
+	public static void LoadCustomTiles(string mod_id, bool enabled = true, string filter = null)
 	{
-		// if no editor folder is present, return
-		if (!Directory.GetParent(path).Exists)
-			return;
-
-		if (mod_id != null)
+		List<string> cfls = new List<string>();
+		if (enabled)
 		{
-			if (CustomTileSections.ContainsKey(mod_id))
-				CustomTileSections[mod_id] = new TilesetListEntry { TileSections = new List<string>(), Enabled = enabled };
-			else
-				CustomTileSections.Add(mod_id, new TilesetListEntry { TileSections = new List<string>(), Enabled = enabled });
+			cfls = ReadCflFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\tiles\\", mod_id, filter);
+			if (filter == null)
+				foreach (string cfl in cfls)
+					if (DefaultTiles.ContainsKey(cfl))
+						DefaultTiles[cfl].Add(mod_id);
 		}
-
-		string[] Catfiles = Directory.GetFiles(path, "*.cat"); // get paths
-		for (int i = 0; i < Catfiles.Length; i++)
-			Catfiles[i] = File.ReadAllText(Catfiles[i]); // get text
-
-		foreach (var bulk in Catfiles)
-		{
-			// delete tabs and split by newline characters
-			string[] file = bulk.Replace("\t", "").Split(new string[] { "\r\n" }, System.StringSplitOptions.None);
-
-			for (int j = 0; j < file.Length; j++)
-				file[j] = IO.RemoveComment(file[j]);
-			// editor doesn't support dynamic objects
-			if (file[0] == "DYNAMICS")
-				continue;
+		ReadCatFiles(IO.GetCrashdayPath() + "\\moddata\\" + mod_id + "\\content\\editor\\", ref cfls, mod_id, enabled, filter);
+		if (enabled)
+			foreach (string cfl in cfls)
 			{
-				int j = 4; //start reading .cat file from 4th line
-				while (j < file.Length)
-				{
-					string setName = TranslateTilesetName(file[j]);
-					//cfl file has unnecessary blank lines at the bottom. => End reading.
-					if (setName == "")
-						break;
-
-					int InCategory = int.Parse(file[j + 1]);
-
-					if (mod_id != null)
-					{
-						CustomTileSections[mod_id].TileSections.Add(setName);
-						if (!enabled)
-						{
-							j += InCategory + 5;
-							continue;
-						}
-					}
-					for (int k = j; k < j + InCategory; k++)
-					{
-						string[] cat = Regex.Split(file[k + 3], " ");
-						// example: RwToArenaFloor.p3d => rwtoarenafloor
-						string name = cat[0].Remove(cat[0].IndexOf(".cfl")).ToLower();
-						string description = TranslateTileDescription(string.Join(" ", new ArraySegment<string>(cat, 1, cat.Length - 1).Where(x => !int.TryParse(x, out int i))));
-						if (!TileListInfo.ContainsKey(name))
-							TileListInfo.Add(name, new TileListEntry(setName, description));
-					}
-					j += InCategory + 5;
-				}
+				// This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
+				if (TileListInfo[cfl].IsCheckpoint)
+					TileListInfo[cfl].TilesetName = Consts.CHKPOINTS_STR;
+				else
+					TileListInfo[cfl].TilesetName = Consts.DefaultTilesetName;
 			}
-		}
+		LoadFlatterInfo();
 	}
+
 	/// <summary>
-	/// Loads all Cfl files using directory
+	/// Reloads tiles previously overridden by the specified mod.
+	/// </summary>
+	public static void UpdateSpecificTiles(string mod_being_disabled)
+    {
+		foreach (List<string> mods in DefaultTiles.Values)
+			if (mods.Count() == 1 && mods[0] == mod_being_disabled)
+			{
+				LoadDefaultTiles(mod_being_disabled);
+				break;
+			}
+		List<string> mods_to_reload = new List<string>();
+		foreach (List<string> mods in DefaultTiles.Values)
+		{
+			Debug.Log(mods.Count());
+			if (mods.Count() > 1 && mods[mods.Count() - 1] == mod_being_disabled) // another mod overrides this tile
+				mods_to_reload.Add(mods[mods.Count() - 2]);
+		}
+		mods_to_reload = mods_to_reload.Distinct().ToList();
+		foreach (string mod in mods_to_reload)
+			LoadCustomTiles(mod, true, mod_being_disabled);
+
+		foreach (string tile in DefaultTiles.Keys)
+		{
+			List<string> mods = DefaultTiles[tile];
+			if (mods.Contains(mod_being_disabled))
+				mods.Remove(mod_being_disabled);
+		}
+    }
+
+	/// <summary>
+	/// Loads all Cfl files using directory. Has to be run before ReadCatFiles.
 	/// </summary>
 	/// <param name="Dir"></param>
-	public static void ReadCflFiles(string Dir, string mod_id = null)
+	private static List<string> ReadCflFiles(string Dir, string mod_id = null, string mod_to_filter_by = null)
 	{
-		string[] cfls = System.IO.Directory.GetFiles(Dir, "*.cfl");
+		List<string> names = new List<string>();
+		string[] cfls = Directory.GetFiles(Dir, "*.cfl");
 		foreach (var File in cfls)
 		{
-			string[] cfl = System.IO.File.ReadAllLines(File);
 			string name = Path.GetFileNameWithoutExtension(File);
+			if (mod_to_filter_by != null && DefaultTiles.ContainsKey(name))
+			{
+				List<string> mods = DefaultTiles[name];
+				if (mods.Count() != 0 && mods[mods.Count - 1] != mod_to_filter_by)
+					continue;
+			}
+			string[] cfl = System.IO.File.ReadAllLines(File);
+
 			for (int j = 0; j < cfl.Length; j++)
 				cfl[j] = IO.RemoveComment(cfl[j]);
 
@@ -164,7 +183,7 @@ public static class TileManager
 			string modelName = cfl[2].Remove(cfl[2].LastIndexOf('.')).ToLower();
 
 			// field is just block of grass. It's listed in cfl file but isn't showed. Mica used this tile as CP (weird right?) so I had to take this into consideration
-			if ((modelName == "field" && mod_id == null) || modelName == "border1" || modelName == "border2")
+			if (modelName == "field" && mod_id == null || modelName == "border1" || modelName == "border2")
 				continue;
 			string[] size_str = Regex.Split(cfl[3], " ");
 			Vector2Int size = new Vector2Int(int.Parse(size_str[0]), int.Parse(size_str[1]));
@@ -248,19 +267,86 @@ public static class TileManager
 					};
 					Materials.Add(m);
 				}
-
 				ModelMaterials.Add(m.Material);
 			}
 
-			if (!TileListInfo.ContainsKey(name))
-			{ // This tile doesn't exist in editor folder -> no category specified -> set tilesetkey to 0. ("default" tab)
-				TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id));
-				TileListInfo[name].TilesetName = Consts.DefaultTilesetName;
-			}
-			else
+			if (TileListInfo.ContainsKey(name))
 				TileListInfo[name].Set(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id);
-			if (IsCheckpoint)
-				TileListInfo[name].TilesetName = Consts.CHKPOINTS_STR;
+			else
+				TileListInfo.Add(name, new TileListEntry(size, Restrictions, IsCheckpoint, model, ModelMaterials, texture, VegData.ToArray(), mod_id));
+
+			names.Add(name);
+		}
+		return names;
+	}
+
+	/// <summary>
+	/// Handles tile positioning on GUI as well as tilesets.
+	/// </summary>
+	private static void ReadCatFiles(string path, ref List<string> cfls_to_hide, string mod_id = null, bool enabled = true, string mod_to_filter_by = null)
+	{
+		// if no editor folder is present, return
+		if (!Directory.GetParent(path).Exists)
+			return;
+
+		if (mod_id != null)
+		{
+			CustomTileSections[mod_id] = new TilesetListEntry { TileSections = new List<string>(), Enabled = enabled };
+		}
+
+		string[] Catfiles = Directory.GetFiles(path, "*.cat"); // get paths
+		for (int i = 0; i < Catfiles.Length; i++)
+			Catfiles[i] = File.ReadAllText(Catfiles[i]); // get text
+
+		foreach (var bulk in Catfiles)
+		{
+			// delete tabs and split by newline characters
+			string[] file = bulk.Replace("\t", "").Split(new string[] { "\r\n" }, System.StringSplitOptions.None);
+
+			for (int k = 0; k < file.Length; k++)
+				file[k] = IO.RemoveComment(file[k]);
+			// editor doesn't support dynamic objects
+			if (file[0] == "DYNAMICS")
+				continue;
+
+			int j = 4; //start reading .cat file from 4th line
+			while (j < file.Length)
+			{
+				string setName = TranslateTilesetName(file[j]);
+				//cfl file has unnecessary blank lines at the bottom. => End reading.
+				if (setName == "")
+					break;
+
+				int InCategory = int.Parse(file[j + 1]);
+
+				if (mod_id != null)
+				{
+					CustomTileSections[mod_id].TileSections.Add(setName);
+					if (!enabled)
+					{
+						j += InCategory + 5;
+						continue;
+					}
+				}
+				for (int k = j; k < j + InCategory; k++)
+				{
+					string[] cat = Regex.Split(file[k + 3], " ");
+					// example: RwToArenaFloor.p3d => rwtoarenafloor
+					string name = cat[0].Remove(cat[0].IndexOf(".cfl")).ToLower();
+					if (mod_to_filter_by != null && DefaultTiles.ContainsKey(name))
+					{
+						List<string> mods = DefaultTiles[name];
+						if (mods.Count() != 0 && mods[mods.Count - 1] != mod_to_filter_by)
+							continue;
+					}
+					string description = TranslateTileDescription(string.Join(" ", new ArraySegment<string>(cat, 1, cat.Length - 1).Where(x => !int.TryParse(x, out int i))));
+					if (TileListInfo.ContainsKey(name))
+						TileListInfo[name].Set(setName, description);
+					if (cfls_to_hide.Contains(name))
+						cfls_to_hide.Remove(name);
+				}
+				j += InCategory + 5;
+			}
 		}
 	}
 
