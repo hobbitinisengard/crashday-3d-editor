@@ -908,12 +908,18 @@ public class ShapeMenu : MonoBehaviour
 
 		void CreateNewSetOfMarkingsFromTile()
 		{
-			List<Vector3> sensitive_indices = Build.Border_Vault.Get_sensitive_vertices(tile);
-
-			foreach(var pos in sensitive_indices)
-				if(!markings.ContainsKey(Consts.PosToIndex(pos)))
+			List<Vector3> sensitive_vertices;
+			if (tile.layer == 8)
+			{
+				sensitive_vertices = Build.Get_grass_vertices(tile);
+			}
+			else
+			{
+				sensitive_vertices = Build.Border_Vault.Get_sensitive_vertices(tile);
+			}
+			foreach (var pos in sensitive_vertices)
+				if (!markings.ContainsKey(Consts.PosToIndex(pos)))
 					markings.Add(Consts.PosToIndex(pos), Consts.CreateMarking(white, pos));
-
 			selected_tiles.Add(tile);
 		}
 

@@ -22,10 +22,8 @@ public class Border
 		border_type = bt;
 	}
 }
-/// <summary>
-/// H_restricted = vertical border restircted
-/// </summary>
-public enum QuarterType { Unrestricted, Hx_restricted, Vx_restricted, Both_restricted }
+
+
 //Handles BUILD mode.
 public class Build : MonoBehaviour
 {
@@ -539,6 +537,16 @@ public class Build : MonoBehaviour
 		}
 		return to_return;
 	}
+	public static List<Vector3> Get_grass_vertices(GameObject grass)
+	{
+		List<Vector3> to_return = new List<Vector3>();
+		Vector3[] verts = grass.GetComponent<MeshFilter>().mesh.vertices;
+		foreach (var pos in verts)
+		{
+			to_return.Add(grass.transform.TransformPoint(pos));
+		}
+		return to_return;
+	}
 	public static List<GameObject> Get_surrounding_tiles(HashSet<int> indexes)
 	{
 		List<GameObject> to_return = new List<GameObject>();
@@ -739,8 +747,6 @@ public class Build : MonoBehaviour
 	{
 		// suppose MeshVerts returns nxm unconstrained mesh
 		Vector3[] verts = GetMeshVerts(rmc);
-		// RMCname already takes into consideration rmc rotation 
-		String RMCname = rmc.GetComponent<BorderInfo>().info;
 
 		Quarter[] tile_quarters = Quarter.Generate_Quarters(rmc);
 
@@ -755,34 +761,37 @@ public class Build : MonoBehaviour
 				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem);
 
 			float h1, h2;
-			switch (quarter.qt)
+
+			if (quarter.qt.Unrestricted())
 			{
-				case QuarterType.Unrestricted:
-					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-					break;
-				case QuarterType.Vx_restricted:
-					h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
-					h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
-					if(!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
-						verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
-					else
-						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
-					break;
-				case QuarterType.Hx_restricted:
-					h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
-					h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
-					if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
-						verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
-					else
-						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
-					break;
-				case QuarterType.Both_restricted:
-					verts[index].y = Razor_both_restricted_formula(v);
-					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
-					break;
+				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 			}
+			else if (quarter.qt.Fully_restricted())
+			{
+				verts[index].y = Razor_both_restricted_formula(v);
+				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+			}
+			else if(quarter.qt.Horizontal_restricted())
+			{
+				h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
+				h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
+				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+					verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
+				else
+					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+			}
+			else if(quarter.qt.Vertical_restricted())
+			{
+				h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
+				h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
+				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+					verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+				else
+					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+			}
+
 			if (float.IsNaN(verts[index].y))
 			{
 				return false;
@@ -1070,7 +1079,7 @@ public class Build : MonoBehaviour
 		}
 		return true;
 	}
-	static Vector3[] GetMeshVerts(GameObject rmc_o)
+	public static Vector3[] GetMeshVerts(GameObject rmc_o)
 	{
 		return rmc_o.GetComponent<MeshFilter>().mesh.vertices;
 	}
