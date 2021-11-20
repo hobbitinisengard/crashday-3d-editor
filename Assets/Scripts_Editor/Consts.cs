@@ -368,7 +368,7 @@ public static class Consts
 		else
 			return false;
 	}
-	internal static bool Lies_on_restricted_border(Vector3Int v, BorderType border, Quarter q)
+	internal static bool Lies_on_restricted_border(Vector3 v, BorderType border, Quarter q)
 	{
 		switch (border)
 		{
@@ -411,7 +411,7 @@ public static class Consts
 		}
 		return false;
 	}
-	internal static bool Lies_on_both_borders(Vector3Int v)
+	internal static bool Lies_on_both_borders(Vector3 v)
 	{
 		return v.x % 4 == 0 && v.z % 4 == 0;
 	}

@@ -111,7 +111,10 @@ public class Border_vault
 
 		for (int index = 0; index < verts.Length; index++)
 		{
-			Vector3Int v = Vector3Int.RoundToInt(rmc.transform.TransformPoint(verts[index]));
+			Vector3 v = rmc.transform.TransformPoint(verts[index]);
+			v.x = Mathf.Round(v.x);
+			v.y = Consts.current_heights[Consts.PosToIndex(v)];
+			v.z = Mathf.Round(v.z);
 
 			if (!Consts.IsWithinMapBounds(v))
 				continue;
