@@ -687,29 +687,32 @@ public class Build : MonoBehaviour
 	/// </summary>
 	public static void UpdateTiles(List<GameObject> rmcs)
 	{
-		foreach (GameObject rmc_o in rmcs)
+		for(int i=0; Loader.Isloading ? i < 1 : i < 2; i++)
 		{
-			rmc_o.layer = 9;
-			// Match RMC up and take care of current_heights table
-			Calculate_All_RMC_points(rmc_o);
-			//Match_rmc2rmc(rmc_o);
-			Vector3Int pos = Vpos2tpos(rmc_o);
-			//Delete old prefab and replace it with plain new
-			if (rmc_o.transform.childCount != 0)
-				DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
+			foreach (GameObject rmc_o in rmcs)
+			{
+				rmc_o.layer = 9;
+				// Match RMC up and take care of current_heights table
+				Calculate_All_RMC_points(rmc_o);
+				//Match_rmc2rmc(rmc_o);
+				Vector3Int pos = Vpos2tpos(rmc_o);
+				//Delete old prefab and replace it with plain new
+				if (rmc_o.transform.childCount != 0)
+					DestroyImmediate(rmc_o.transform.GetChild(0).gameObject);
 
-			Vector3Int tileDims = GetRealTileDims(rmc_o);
+				Vector3Int tileDims = GetRealTileDims(rmc_o);
 
-			Hide_underlying_grass(rmc_o.transform.position);
-			
-			Consts.UpdateMapColliders(rmc_o.transform.position, tileDims);
-			bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
-			int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
-			byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
-			GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
-			GetPrefabMesh(Mirrored, Prefab);
-			Tile_to_RMC_Cast(Prefab, rmc_o, Height);
-			rmc_o.layer = 9;
+				Hide_underlying_grass(rmc_o.transform.position);
+
+				Consts.UpdateMapColliders(rmc_o.transform.position, tileDims);
+				bool Mirrored = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
+				int Rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
+				byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
+				GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
+				GetPrefabMesh(Mirrored, Prefab);
+				Tile_to_RMC_Cast(Prefab, rmc_o, Height);
+				rmc_o.layer = 9;
+			}
 		}
 	}
 
@@ -760,35 +763,44 @@ public class Build : MonoBehaviour
 			Quarter quarter = tile_quarters.Aggregate(
 				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem);
 
-			float h1, h2;
-
 			if (quarter.qt.Unrestricted())
 			{
 				verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 			}
-			else if (quarter.qt.Fully_restricted())
+			else if (quarter.qt.Both_restricted())
 			{
-				verts[index].y = Razor_both_restricted_formula(v);
-				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+				if (quarter.qt.All_restricted())
+				{
+					verts[index].y = Razor_both_restricted_formula(v);
+					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+				}
+				else
+				{
+					if (Consts.Lies_on_restricted_border(v,BorderType.Horizontal, quarter))
+						verts[index].y = Calculate_horizontal_height(v);
+					else if(Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+						verts[index].y = Calculate_vertical_height(v);
+					else
+						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+				}
 			}
 			else if(quarter.qt.Horizontal_restricted())
 			{
-				h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
-				h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
 				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
-					verts[index].y = Mathf.Lerp(h1, h2, v.x % 4f / 4f);
+				{
+					verts[index].y = Calculate_horizontal_height(v);
+				}
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 			}
 			else if(quarter.qt.Vertical_restricted())
 			{
-				h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
-				h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
 				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
-					verts[index].y = Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+					verts[index].y = Calculate_vertical_height(v);
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+
 				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 			}
 
@@ -799,6 +811,18 @@ public class Build : MonoBehaviour
 		}
 		UpdateMeshes(rmc, verts);
 		return true;
+	}
+	static float Calculate_vertical_height(Vector3Int v)
+	{
+		float h1 = Consts.current_heights[Consts.PosToIndex(v.x, v.z - (v.z % 4))];
+		float h2 = Consts.current_heights[Consts.PosToIndex(v.x, v.z + (4 - (v.z % 4)))];
+		return Mathf.Lerp(h1, h2, v.z % 4f / 4f);
+	}
+	static float Calculate_horizontal_height(Vector3Int v)
+	{
+		float h1 = Consts.current_heights[Consts.PosToIndex(v.x - (v.x % 4), v.z)];
+		float h2 = Consts.current_heights[Consts.PosToIndex(v.x + (4 - (v.x % 4)), v.z)];
+		return Mathf.Lerp(h1, h2, v.x % 4f / 4f);
 	}
 	static float Razor_both_restricted_formula(Vector3Int v)
 	{

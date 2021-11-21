@@ -342,7 +342,7 @@ public class ArealMode : MonoBehaviour
 				Destroy(indicator);
 				index = 0;
 				RaycastHit[] hits = Physics.BoxCastAll(new Vector3(0.5f * (a.x + b.x), Consts.MAX_H, 0.5f * (a.z + b.z)),
-						new Vector3(0.5f * Mathf.Abs(a.x - b.x), 1f, 0.5f * (Mathf.Abs(a.z - b.z))),
+						new Vector3(0.5f * Mathf.Abs(a.x - b.x) + RadiusSlider.value, 1f, 0.5f * Mathf.Abs(a.z - b.z) + RadiusSlider.value),
 						Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9); //Search for tiles
 				Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
 				UndoBuffer.ApplyOperation();

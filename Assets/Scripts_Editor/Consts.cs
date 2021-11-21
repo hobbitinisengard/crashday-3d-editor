@@ -411,8 +411,13 @@ public static class Consts
 		}
 		return false;
 	}
-	internal static bool Lies_on_both_borders(Vector3 v)
+	internal static bool Lies_on_any_restricted_borders(Vector3 v, Quarter q)
 	{
-		return v.x % 4 == 0 && v.z % 4 == 0;
+		foreach(var border in new List<BorderType>(2) { BorderType.Vertical, BorderType.Horizontal })
+		{
+			if (Lies_on_restricted_border(v, border, q))
+				return true;
+		}
+		return false;
 	}
 }

@@ -15,18 +15,42 @@ public class QuarterType
 		this.Hx_left_restricted = Left;
 		this.Hx_right_restricted = Right;
 	}
+	/// <summary>
+	/// All borders unrestricted
+	/// </summary>
+	/// <returns></returns>
 	public bool Unrestricted()
 	{
 		return !Vx_up_restricted && !Vx_down_restricted && !Hx_left_restricted && !Hx_right_restricted;
 	}
-	public bool Fully_restricted()
+	/// <summary>
+	/// Either of vertical borders and either of horizontal borders restricted
+	/// </summary>
+	/// <returns></returns>
+	public bool Both_restricted()
 	{
 		return (Vx_up_restricted || Vx_down_restricted) && (Hx_left_restricted || Hx_right_restricted);
 	}
+	/// <summary>
+	/// All of the borders restricted
+	/// </summary>
+	/// <returns></returns>
+	public bool All_restricted()
+	{
+		return Vx_up_restricted && Vx_down_restricted && Hx_left_restricted & Hx_right_restricted;
+	}
+	/// <summary>
+	/// One of the horizontal borders restricted
+	/// </summary>
+	/// <returns></returns>
 	public bool Horizontal_restricted()
 	{
 		return Vx_down_restricted || Vx_up_restricted;
 	}
+	/// <summary>
+	/// One of the vertical borders restricted
+	/// </summary>
+	/// <returns></returns>
 	public bool Vertical_restricted()
 	{
 		return Hx_left_restricted || Hx_right_restricted;

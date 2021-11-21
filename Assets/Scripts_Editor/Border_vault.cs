@@ -133,9 +133,9 @@ public class Border_vault
 			{
 				sensitive_vertices.Add(v);
 			}
-			else if (quarter.qt.Fully_restricted())
+			else if (quarter.qt.Both_restricted())
 			{
-				if(Consts.Lies_on_both_borders(v))
+				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
 					sensitive_vertices.Add(v);
 			}
 			else if (quarter.qt.Horizontal_restricted())
