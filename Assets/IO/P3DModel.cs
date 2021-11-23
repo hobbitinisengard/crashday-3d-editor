@@ -128,8 +128,10 @@ public class P3DModel
 		// if mod, search for custom texture. If not found, it means texture we're searching for is default
 		if (mod_id != null)
 		{
-			string[] texturePath = Directory.GetFiles(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/", textureName + ".*").Where(s => s.EndsWith(".dds") || s.EndsWith(".tga")).ToArray();
-
+			string[] texturePath = new string[0];
+			if (Directory.Exists(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/"))
+				texturePath = Directory.GetFiles(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/", textureName + ".*").Where(s => s.EndsWith(".dds") || s.EndsWith(".tga")).ToArray();
+			
 			if (texturePath.Length > 0)
 				path = IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/" + textureName + texturePath[0].Substring(texturePath[0].Length - 4);
 		}

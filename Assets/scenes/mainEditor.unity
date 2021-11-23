@@ -976,6 +976,8 @@ GameObject:
   - component: {fileID: 165042075}
   - component: {fileID: 165042079}
   - component: {fileID: 165042078}
+  - component: {fileID: 165042077}
+  - component: {fileID: 165042076}
   m_Layer: 5
   m_Name: TilesetTemplate
   m_TagString: Untagged
@@ -999,11 +1001,53 @@ RectTransform:
   m_Father: {fileID: 737123668}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.133}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: -0.10003662, y: 0}
   m_SizeDelta: {x: 388.00012, y: 0}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &165042076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165042074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.3602941, g: 0.3602941, b: 0.3602941, a: 0.003921569}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+--- !u!114 &165042077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165042074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1200242548, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShowMaskGraphic: 1
 --- !u!222 &165042078
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10865,7 +10909,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 951966836}
-  - component: {fileID: 951966837}
   m_Layer: 5
   m_Name: TileSetContainer
   m_TagString: Untagged
@@ -10892,18 +10935,6 @@ RectTransform:
   m_AnchoredPosition: {x: -1.4458618, y: -190}
   m_SizeDelta: {x: 388.83575, y: -190}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &951966837
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 951966835}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2b966175ff561a489a3e347b10dfd05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &962308824
 GameObject:
   m_ObjectHideFlags: 0
@@ -13644,7 +13675,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -109.997986}
-  m_SizeDelta: {x: 0, y: 26}
+  m_SizeDelta: {x: 0, y: 75}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1257447584
 MonoBehaviour:
@@ -16646,8 +16677,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 1.8696289}
-  m_SizeDelta: {x: 9, y: -3.7395}
+  m_AnchoredPosition: {x: 0, y: -0.00006055832}
+  m_SizeDelta: {x: 9, y: -0.00012111664}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1607148692
 MonoBehaviour:
@@ -20498,7 +20529,7 @@ MonoBehaviour:
     m_Left: 0
     m_Right: 0
     m_Top: 0
-    m_Bottom: 20
+    m_Bottom: 0
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0

@@ -68,7 +68,8 @@ public static class TileManager
 				newId = Id.Remove(0, 1);
 				enabled = false;
 			}
-			if (Directory.Exists(CdWorkshopPath + newId + "\\")) // Check if the ID is correct
+			if (newId.Length != 0 && Directory.Exists(CdWorkshopPath + newId + "\\")
+				&& Directory.GetFiles(CdWorkshopPath + newId + "\\").Length != 0) // Check if the ID is correct
 			{
 				PackageManager.LoadCPK(Directory.GetFiles(CdWorkshopPath + newId).First(), newId);
 				LoadCustomTiles(newId, enabled);
@@ -140,7 +141,6 @@ public static class TileManager
 		List<string> mods_to_reload = new List<string>();
 		foreach (List<string> mods in DefaultTiles.Values)
 		{
-			Debug.Log(mods.Count());
 			if (mods.Count() > 1 && mods[mods.Count() - 1] == mod_being_disabled) // another mod overrides this tile
 				mods_to_reload.Add(mods[mods.Count() - 2]);
 		}
@@ -285,14 +285,14 @@ public static class TileManager
 	/// </summary>
 	private static void ReadCatFiles(string path, ref List<string> cfls_to_hide, string mod_id = null, bool enabled = true, string mod_to_filter_by = null)
 	{
-		// if no editor folder is present, return
-		if (!Directory.GetParent(path).Exists)
-			return;
-
 		if (mod_id != null)
 		{
 			CustomTileSections[mod_id] = new TilesetListEntry { TileSections = new List<string>(), Enabled = enabled };
 		}
+
+		// if no editor folder is present, return
+		if (!Directory.GetParent(path).Exists)
+			return;
 
 		string[] Catfiles = Directory.GetFiles(path, "*.cat"); // get paths
 		for (int i = 0; i < Catfiles.Length; i++)
@@ -341,7 +341,11 @@ public static class TileManager
 					}
 					string description = TranslateTileDescription(string.Join(" ", new ArraySegment<string>(cat, 1, cat.Length - 1).Where(x => !int.TryParse(x, out int i))));
 					if (TileListInfo.ContainsKey(name))
+					{
 						TileListInfo[name].Set(setName, description);
+						if (TileListInfo[name].IsCheckpoint)
+							TileListInfo[name].TilesetName = Consts.CHKPOINTS_STR;
+					}
 					if (cfls_to_hide.Contains(name))
 						cfls_to_hide.Remove(name);
 				}
