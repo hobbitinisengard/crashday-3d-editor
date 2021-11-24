@@ -431,54 +431,25 @@ public class ShapeMenu : MonoBehaviour
 		{
 			List<DuVec3> Extremes = new List<DuVec3>();
 			if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
-			{ Debug.Log("extremes spreading along Z axis ||||");
+			{ // extremes spreading along Z axis
 				for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
 				{
-					Vector3 P1 = new Vector3(float.MaxValue, 0, 0);
-					Vector3 P2 = new Vector3(float.MinValue, 0, 0);
-					foreach (var mrk in markings.Values)
-					{
-						if (mrk.name == "on" && mrk.transform.position.z == z)
-						{
-							if (mrk.transform.position.x < P1.x)
-								P1 = mrk.transform.position;
-							if (mrk.transform.position.x > P2.x)
-								P2 = mrk.transform.position;
-						}
-					}
-					if (P1.x == LD.x)
-						Extremes.Add(new DuVec3(P1, P2));
-					else
-						Extremes.Add(new DuVec3(P2, P1));
+					Vector3 P1 = new Vector3(LD.x, Consts.current_heights[Consts.PosToIndex((int)LD.x, z)], z);
+					Vector3 P2 = new Vector3(PG.x, Consts.current_heights[Consts.PosToIndex(PG.x, z)], z);
+					Extremes.Add(new DuVec3(P1, P2));
 				}
 			}
 			else
-			{
-				Debug.Log("extremes spreading along X axis _---");
-				//string going = (LD.x < PG.x && LD.z < PG.z) ? "forward" : "back";
+			{ // extremes spreading along X axis
 				for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
 				{
-					Vector3 P1 = new Vector3(0, 0, float.MaxValue);
-					Vector3 P2 = new Vector3(0, 0, float.MinValue);
-					foreach (var mrk in markings.Values)
-					{
-						if (mrk.name == "on" && mrk.transform.position.x == x)
-						{
-							if (mrk.transform.position.z < P1.z)
-								P1 = mrk.transform.position;
-							if (mrk.transform.position.z > P2.z)
-								P2 = mrk.transform.position;
-						}
-					}
-					if (P1.z == LD.z)
-						Extremes.Add(new DuVec3(P1, P2));
-					else
-						Extremes.Add(new DuVec3(P2, P1));
+					Vector3 P1 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, (int)LD.z)], LD.z);
+					Vector3 P2 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, PG.z)], PG.z);
+					Extremes.Add(new DuVec3(P1, P2));
 				}
 			}
 			return Extremes;
 		}
-		
 	}
 	void Amplify()
 	{
