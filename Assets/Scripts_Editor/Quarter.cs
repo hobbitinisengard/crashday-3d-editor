@@ -47,6 +47,10 @@ public class QuarterType
 	{
 		return Vx_down_restricted || Vx_up_restricted;
 	}
+	public bool All_horizontal_restricted()
+	{
+		return Vx_down_restricted && Vx_up_restricted;
+	}
 	/// <summary>
 	/// One of the vertical borders restricted
 	/// </summary>
@@ -54,6 +58,10 @@ public class QuarterType
 	public bool Vertical_restricted()
 	{
 		return Hx_left_restricted || Hx_right_restricted;
+	}
+	public bool All_vertical_restricted()
+	{
+		return Hx_left_restricted && Hx_right_restricted;
 	}
 }
 public class Quarter

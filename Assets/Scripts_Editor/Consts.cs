@@ -112,6 +112,9 @@ public static class Consts
 		Vector3 to_return = new Vector3(x, Consts.current_heights[index], (index - x) / (4 * Consts.TRACK.Width + 1));
 		return to_return;
 	}
+
+
+
 	public static int PosToIndex(int x, int z)
 	{
 		return Mathf.RoundToInt(x + 4 * z * Consts.TRACK.Width + z);
@@ -122,6 +125,15 @@ public static class Consts
 		return index;
 	}
 
+	internal static bool Lies_on_vertical_border(Vector3 v)
+	{
+		return v.x % 4 == 0;
+	}
+
+	internal static bool Lies_on_horizontal_border(Vector3 v)
+	{
+		return v.z % 4 == 0;
+	}
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
 	{
 		GameObject znacznik = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -145,6 +157,8 @@ public static class Consts
 		znacznik.layer = 11;
 		return znacznik;
 	}
+
+
 	/// <summary>
 	/// Searches for znacznik in given pos. If found znacznik isn't marked, f. marks it and returns it.
 	/// </summary>
@@ -367,6 +381,10 @@ public static class Consts
 			return true;
 		else
 			return false;
+	}
+	internal static bool Lies_on_both_borders(Vector3 v)
+	{
+		return v.x % 4 == 0 && v.z % 4 == 0;
 	}
 	internal static bool Lies_on_restricted_border(Vector3 v, BorderType border, Quarter q)
 	{

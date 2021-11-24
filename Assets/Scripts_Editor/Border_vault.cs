@@ -124,10 +124,11 @@ public class Border_vault
 				continue;
 			}
 
+
 			// find a quarter that given vertex belongs to and get information about restriction pattern
 			Quarter quarter = tile_quarters.Aggregate(
 				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem);
-			
+
 
 			if (quarter.qt.Unrestricted())
 			{
@@ -135,17 +136,31 @@ public class Border_vault
 			}
 			else if (quarter.qt.Both_restricted())
 			{
-				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
+				if (quarter.qt.All_restricted()) {
+					if(Consts.Lies_on_both_borders(v))
+						sensitive_vertices.Add(v);
+				}
+				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
 					sensitive_vertices.Add(v);
 			}
 			else if (quarter.qt.Horizontal_restricted())
 			{
-				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
+				if (quarter.qt.All_horizontal_restricted())
+				{
+					if (Consts.Lies_on_vertical_border(v))
+						sensitive_vertices.Add(v);
+				}
+				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 					sensitive_vertices.Add(v);
 			}
 			else if (quarter.qt.Vertical_restricted())
 			{
-				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+				if (quarter.qt.All_vertical_restricted())
+				{
+					if (Consts.Lies_on_horizontal_border(v))
+						sensitive_vertices.Add(v);
+				}
+				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
 					sensitive_vertices.Add(v);
 			}
 		}
