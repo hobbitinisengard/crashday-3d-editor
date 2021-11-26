@@ -158,6 +158,12 @@ public static class Consts
 		return znacznik;
 	}
 
+	internal static int Overlapping_tiles_number_here(Vector3 v)
+	{
+		RaycastHit[] hits = Physics.SphereCastAll(new Vector3(v.x, Consts.MAX_H, v.z), .4f, Vector3.down, Consts.RAY_H, 1 << 9);
+		return hits.Length;
+	}
+
 
 	/// <summary>
 	/// Searches for znacznik in given pos. If found znacznik isn't marked, f. marks it and returns it.

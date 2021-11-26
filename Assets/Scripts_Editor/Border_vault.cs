@@ -139,6 +139,8 @@ public class Border_vault
 				if (quarter.qt.All_restricted()) {
 					if(Consts.Lies_on_both_borders(v))
 						sensitive_vertices.Add(v);
+					else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && Consts.Overlapping_tiles_number_here(v) == 1)
+						sensitive_vertices.Add(v);
 				}
 				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
 					sensitive_vertices.Add(v);
@@ -149,6 +151,8 @@ public class Border_vault
 				{
 					if (Consts.Lies_on_vertical_border(v))
 						sensitive_vertices.Add(v);
+					else if(quarter.original_grid.Contains(Consts.PosToIndex(v)) && Consts.Overlapping_tiles_number_here(v) == 1)
+						sensitive_vertices.Add(v);
 				}
 				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 					sensitive_vertices.Add(v);
@@ -158,6 +162,8 @@ public class Border_vault
 				if (quarter.qt.All_vertical_restricted())
 				{
 					if (Consts.Lies_on_horizontal_border(v))
+						sensitive_vertices.Add(v);
+					else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && Consts.Overlapping_tiles_number_here(v) == 1)
 						sensitive_vertices.Add(v);
 				}
 				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
