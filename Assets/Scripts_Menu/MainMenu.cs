@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -163,37 +162,8 @@ public class MainMenu : MonoBehaviour
 		if (Consts.TRACK.Width + newwidth < 3 || Consts.TRACK.Height + newheight < 3 || 
 		 (Consts.TRACK.Width + newwidth) * (Consts.TRACK.Height + newheight) > Consts.MAX_ELEMENTS)
 			return;
-		TrackSavable ResizedMap = new TrackSavable(Consts.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
+		Consts.TRACK = new TrackSavable(Consts.TRACK, int.Parse(ResizeMenu_Right.text), int.Parse(ResizeMenu_Left.text),
 			int.Parse(ResizeMenu_Up.text), int.Parse(ResizeMenu_Down.text));
-
-		var style = Consts.TRACK.Style;
-		var permission = Consts.TRACK.Permission;
-		Consts.TRACK = ResizedMap;
-		Consts.TRACK.Style = style;
-		Consts.TRACK.Permission = permission;
-
-		List<ushort> dof_to_remove = new List<ushort>();
-		for (int i = Consts.TRACK.DynamicObjectsNumber - 1; i >= 0; i--)
-		{
-			DynamicObjectSavable dos = Consts.TRACK.DynamicObjects[i];
-			dos.Position = new Vector3(dos.Position.x + int.Parse(ResizeMenu_Left.text) * 20, dos.Position.y, dos.Position.z + int.Parse(ResizeMenu_Up.text) * -20);
-			if (dos.Position.x < 0 || dos.Position.z > 0 || dos.Position.x > Consts.TRACK.Width * 20 || dos.Position.z < Consts.TRACK.Width * -20)
-			{
-				if (Consts.TRACK.DynamicObjects.Where(x => x.ObjectId == dos.ObjectId).Count() == 1)
-					dof_to_remove.Add(dos.ObjectId);
-
-				Consts.TRACK.DynamicObjects.RemoveAt(i);
-				Consts.TRACK.DynamicObjectsNumber--;
-			}
-		}
-		dof_to_remove = dof_to_remove.OrderByDescending(x => x).ToList();
-		foreach (ushort i in dof_to_remove)
-		{
-			Consts.TRACK.DynamicObjectFiles.RemoveAt(i);
-			Consts.TRACK.DynamicObjectFilesNumber--;
-			foreach (DynamicObjectSavable dos in Consts.TRACK.DynamicObjects.Where(DO => DO.ObjectId > i))
-				dos.ObjectId--;
-		}
 
 		Loader.Isloading = true;
 		

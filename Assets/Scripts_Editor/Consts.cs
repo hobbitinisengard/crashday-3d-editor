@@ -114,11 +114,12 @@ public static class Consts
 	}
 	public static int PosToIndex(int x, int z)
 	{
-		return Mathf.RoundToInt(x + 4 * z * Consts.TRACK.Width + z);
+		return x + 4 * z * Consts.TRACK.Width + z;
 	}
 	public static int PosToIndex(Vector3 v)
 	{
-		return Mathf.RoundToInt(v.x + 4 * v.z * Consts.TRACK.Width + v.z);
+		Vector3Int V = Vector3Int.RoundToInt(v);
+		return V.x + 4 * V.z * Consts.TRACK.Width + V.z;
 	}
 
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)

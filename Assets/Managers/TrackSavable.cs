@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
+using UnityEngine;
 
 [System.Serializable]
 public class TrackSavable
@@ -152,44 +154,64 @@ public class TrackSavable
 			{
 				// place trackpiece to translated location. If exceeding old dims, place grass
 				if (y - plusUp >= 0 && y - plusUp < old.Height && x - plusL >= 0 && x - plusL < old.Width)
-					TrackTiles[y].Add(new TrackTileSavable(old.TrackTiles[y - plusUp][x - plusL])); 
-				else
-					TrackTiles[y].Add(new TrackTileSavable(0, 0, 0, 0));
-
-				// update fieldID (ignore quarters and grass)
-				if (TrackTiles[y][x].FieldId != 0 && TrackTiles[y][x].FieldId < 65400)
 				{
-					string tilename = old.FieldFiles[TrackTiles[y][x].FieldId];
-
-					bool found = false;
-					for (ushort i = 0; i < FieldFiles.Count; i++)
+					TrackTiles[y].Add(new TrackTileSavable(old.TrackTiles[y - plusUp][x - plusL]));
+					// update fieldID (ignore quarters)
+					if (TrackTiles[y][x].FieldId < 65400)
 					{
-						if (tilename == FieldFiles[i])
+						string tilename = old.FieldFiles[TrackTiles[y][x].FieldId];
+
+						bool found = false;
+						for (ushort i = 0; i < FieldFiles.Count; i++)
 						{
-							TrackTiles[y][x].FieldId = i;
-							found = true;
-							break;
+							if (tilename == FieldFiles[i])
+							{
+								TrackTiles[y][x].FieldId = i;
+								found = true;
+								break;
+							}
+						}
+						if (!found)
+						{
+							FieldFiles.Add(tilename);
+							TrackTiles[y][x].FieldId = FieldFilesNumber;
+							FieldFilesNumber++;
 						}
 					}
-					if (!found)
-					{
-						FieldFiles.Add(tilename);
-						TrackTiles[y][x].FieldId = FieldFilesNumber;
-						FieldFilesNumber++;
-					}
 				}
+				else
+					TrackTiles[y].Add(new TrackTileSavable(0, 0, 0, 0));
 			}
 		}
 
-		DynamicObjectFilesNumber = old.DynamicObjectFilesNumber;
-		DynamicObjectFiles = new List<string>(DynamicObjectFilesNumber);
-		foreach (var dof in old.DynamicObjectFiles)
-			DynamicObjectFiles.Add(dof);
+		DynamicObjectsNumber = 0;
+		DynamicObjectFilesNumber = 0;
+		DynamicObjects = new List<DynamicObjectSavable>();
+		DynamicObjectFiles = new List<string>();
 
-		DynamicObjectsNumber = old.DynamicObjectsNumber;
-		DynamicObjects = new List<DynamicObjectSavable>(DynamicObjectsNumber);
-		foreach (var d in old.DynamicObjects)
-			DynamicObjects.Add(d);
+		foreach (DynamicObjectSavable olddos in old.DynamicObjects)
+		{
+			if (olddos.Position.x >= -plusL * 20 && olddos.Position.z <= plusUp * 20
+				&& olddos.Position.x <= 20 * (Width - plusL) && olddos.Position.z >= 20 * (plusUp - Height))
+			{
+				DynamicObjectSavable dos = new DynamicObjectSavable(olddos);
+				DynamicObjects.Add(dos);
+				dos.Position = new Vector3(olddos.Position.x + plusL * 20, olddos.Position.y, olddos.Position.z - plusUp * 20);
+				DynamicObjectsNumber++;
+				Debug.Log(olddos.Position == dos.Position);
+
+				string dof = old.DynamicObjectFiles[olddos.ObjectId];
+
+				if (!DynamicObjectFiles.Contains(dof))
+				{
+					DynamicObjectFiles.Add(dof);
+					dos.ObjectId = DynamicObjectFilesNumber;
+					DynamicObjectFilesNumber++;
+				}
+				else
+					dos.ObjectId = (ushort)DynamicObjectFiles.IndexOf(dof);
+			}
+		}
 
 		Permission = old.Permission;
 		GroundBumpyness = old.GroundBumpyness;

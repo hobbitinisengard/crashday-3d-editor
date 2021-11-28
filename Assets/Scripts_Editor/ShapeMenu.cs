@@ -667,8 +667,7 @@ public class ShapeMenu : MonoBehaviour
 		{
 			foreach (int index in markings.Keys)
 			{
-				Vector3 pos = Consts.IndexToPos(index);
-				if (IsWithinMarkingBounds(Consts.IndexToPos(index)))
+				if (IsWithinMarkingBounds(Vector3Int.RoundToInt(Consts.IndexToPos(index))))
 				{
 					markings[index].name = BeforeMarking[index];
 					markings[index].GetComponent<MeshRenderer>().sharedMaterial = BeforeMarking[index] == "on" ? red : white;
@@ -682,8 +681,7 @@ public class ShapeMenu : MonoBehaviour
 
 			foreach (int index in markings.Keys)
 			{
-				Vector3 pos = Consts.IndexToPos(index);
-				if (IsWithinMarkingBounds(Consts.IndexToPos(index)))
+				if (IsWithinMarkingBounds(Vector3Int.RoundToInt(Consts.IndexToPos(index))))
 				{
 					if (markings[index].name == "Cube" && (Addition_mode.isOn || Inversion_mode.isOn))
 					{
@@ -733,15 +731,13 @@ public class ShapeMenu : MonoBehaviour
 	//		Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
 	//	}
 	//}
-	public bool IsWithinMarkingBounds(Vector3 posf) //GameObject znacznik)
+	public bool IsWithinMarkingBounds(Vector3Int pos) //GameObject znacznik)
 	{
 		if (selectionState != SelectionState.LMB_DOWN)
 			return false;
 		//Camera camera = Camera.main;
 		//Bounds viewportBounds = Utils.GetViewportBounds(camera, p1, Input.mousePosition);
 		//return viewportBounds.Contains(camera.WorldToViewportPoint(gameObject.transform.position));
-		Vector3Int pos = Vector3Int.RoundToInt(posf);
-
 		if (CurrentPattern == MarkingPattern.rect)
 		{
 			int x_min, x_max, z_min, z_max;

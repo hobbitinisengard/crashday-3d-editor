@@ -11,4 +11,14 @@ public class DynamicObjectSavable
     public Vector3 Position;
 	[XmlAttribute("rotation")]
     public float Rotation;
+
+    public DynamicObjectSavable()
+    { }
+
+    public DynamicObjectSavable(DynamicObjectSavable old)
+    {
+        ObjectId = old.ObjectId;
+        Position = old.Position;
+        Rotation = old.Rotation;
+    }
 }
