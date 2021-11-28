@@ -2,6 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+public static class Extensions
+{
+	public static HashSet<T> ToHashSet<T>(
+					this IEnumerable<T> source,
+					IEqualityComparer<T> comparer = null)
+	{
+		return new HashSet<T>(source, comparer);
+	}
+}
 public class QuarterType
 {
 	public bool Vx_up_restricted = false;
@@ -15,6 +24,19 @@ public class QuarterType
 		this.Hx_left_restricted = Left;
 		this.Hx_right_restricted = Right;
 	}
+	/// <summary>
+	/// logical AND
+	/// </summary>
+	public static QuarterType operator &(QuarterType a, QuarterType b)
+	{
+		QuarterType q = new QuarterType(false, false, false, false);
+		q.Hx_left_restricted = a.Hx_left_restricted && b.Hx_left_restricted;
+		q.Hx_right_restricted = a.Hx_right_restricted && b.Hx_right_restricted;
+		q.Vx_down_restricted = a.Vx_down_restricted && b.Vx_down_restricted;
+		q.Vx_up_restricted = a.Vx_up_restricted && b.Vx_up_restricted;
+		return q;
+	}
+
 	/// <summary>
 	/// All borders unrestricted
 	/// </summary>
@@ -83,9 +105,8 @@ public class Quarter
 
 		this.pos = Vector3Int.RoundToInt(rmc.transform.TransformPoint(move_to_center));
 		this.original_grid = Generate_grid(move_to_center, VH, rmc);
-		this.qt = Build.Border_Vault.Get_quarter(Vector3Int.RoundToInt(pos));
+		this.qt = Build.Border_Vault.Get_quarterType(Vector3Int.RoundToInt(pos));
 	}
-
 	internal static Quarter[] Generate_Quarters(GameObject rmc)
 	{
 		// get unrotated dims
@@ -122,6 +143,68 @@ public class Quarter
 		}
 		return tile_quarters;
 	}
+	internal static Quarter[] Generate_All_Quarters(GameObject feed_tile)
+	{
+		// get unrotated dims
+		Vector3 tile_pos = feed_tile.transform.position;
+		tile_pos.y = Consts.RAY_H;
+		RaycastHit[] raycastHits = Physics.SphereCastAll(tile_pos, .4f, Vector3.down, Consts.RAY_H, 1 << 9);
+		List<Quarter> container = new List<Quarter>();
+		foreach (var raycasthit in raycastHits)
+		{
+			GameObject tile = raycasthit.transform.gameObject;
+			Vector3Int dims = new Vector3Int(TileManager.TileListInfo[tile.name].Size.x, 0, TileManager.TileListInfo[tile.name].Size.y);
+			Quarter[] tile_quarters = new Quarter[dims.x * dims.z];
+
+			// create template and apply it to a tile
+			if (dims.x == 1)
+			{ // 1x1
+				if (dims.z == 1)
+				{
+					tile_quarters[0] = new Quarter(Vector3.zero, ('1', '1'), tile);
+				}
+				else
+				{//1x2
+					tile_quarters[0] = new Quarter(2 * Vector3.forward, ('1', '1'), tile);
+					tile_quarters[1] = new Quarter(2 * Vector3.back, ('1', '2'), tile);
+				}
+			}
+			else
+			{//2x1
+				if (dims.z == 1)
+				{
+					tile_quarters[0] = new Quarter(2 * Vector3.left, ('1', '1'), tile);
+					tile_quarters[1] = new Quarter(2 * Vector3.right, ('2', '1'), tile);
+				}
+				else
+				{//2x2
+					tile_quarters[0] = new Quarter(2 * Vector3.left + 2 * Vector3.forward, ('1', '1'), tile);
+					tile_quarters[1] = new Quarter(2 * Vector3.right + 2 * Vector3.forward, ('2', '1'), tile);
+					tile_quarters[2] = new Quarter(2 * Vector3.right + 2 * Vector3.back, ('2', '2'), tile);
+					tile_quarters[3] = new Quarter(2 * Vector3.left + 2 * Vector3.back, ('1', '2'), tile);
+				}
+			}
+			container.AddRange(tile_quarters);
+		}
+
+		for(int i=0; i<container.Count-1; i++)
+		{
+			for (int j = i+1; j < container.Count; j++)
+			{
+				if (container[i].pos.x == -1)
+					continue;
+				if (container[i].pos == container[j].pos)
+				{ // perform q AND w; then remove w
+					container[i].qt &= container[j].qt;
+					container[i].original_grid = container[i].original_grid.Join(container[j].original_grid, v1 => v1, v2 => v2, (v1, v2) => v1).ToHashSet();
+					container[j].pos.x = -1;
+				}
+			}
+		}
+		container.RemoveAll(q => q.pos.x == -1);
+		return container.ToArray();
+	}
+
 	/// <summary>
 	/// generates a collection of vertices set in global space, according to original restriction pattern of given tile
 	/// </summary>
