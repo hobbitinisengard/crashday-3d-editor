@@ -786,7 +786,7 @@ public class Build : MonoBehaviour
 			}
 			else if(quarter.qt.Horizontal_restricted())
 			{
-				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 				{
 					verts[index].y = Calculate_horizontal_height(v);
 				}
