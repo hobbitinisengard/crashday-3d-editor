@@ -786,7 +786,7 @@ public class Build : MonoBehaviour
 			}
 			else if(quarter.qt.Horizontal_restricted())
 			{
-				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
 				{
 					verts[index].y = Calculate_horizontal_height(v);
 				}
@@ -796,7 +796,7 @@ public class Build : MonoBehaviour
 			}
 			else if(quarter.qt.Vertical_restricted())
 			{
-				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_border(v))
+				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
 					verts[index].y = Calculate_vertical_height(v);
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
