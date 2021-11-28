@@ -34,7 +34,7 @@ public class Border_vault
 			}
 		}
 	}
-	public QuarterType Get_quarterType(Vector3Int quarter_center)
+	public QuarterType Get_quarter(Vector3Int quarter_center)
 	{
 		// borders; true if constrained else false
 		bool left_Hx = Vault[Consts.PosToIndex(quarter_center + 2 * Vector3.left)].tiles_constraining > 0;
@@ -118,18 +118,16 @@ public class Border_vault
 
 			if (!Consts.IsWithinMapBounds(v))
 				continue;
-			
 			if (v.x % 4 == 0 && v.z % 4 == 0)
 			{
 				sensitive_vertices.Add(v);
 				continue;
 			}
+
 			// find a quarter that given vertex belongs to and get information about restriction pattern
 			Quarter quarter = tile_quarters.Aggregate(
 				(minItem, nextItem) => Consts.Distance(minItem.pos, v) < Consts.Distance(nextItem.pos, v) ? minItem : nextItem);
-
-			if (!quarter.original_grid.Contains(Consts.PosToIndex(v)))
-				continue;
+			
 
 			if (quarter.qt.Unrestricted())
 			{
@@ -137,55 +135,20 @@ public class Border_vault
 			}
 			else if (quarter.qt.Both_restricted())
 			{
-				if (quarter.qt.All_restricted())
-				{
-					if (Consts.Lies_on_both_borders(v))
-						sensitive_vertices.Add(v);
-				}
-				else if (!Consts.Lies_on_any_restricted_borders(v, quarter))
+				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
 					sensitive_vertices.Add(v);
 			}
 			else if (quarter.qt.Horizontal_restricted())
 			{
-				if (quarter.qt.All_horizontal_restricted())
-				{
-					if (Consts.Lies_on_vertical_border(v))
-						sensitive_vertices.Add(v);
-				}
-				else if (!Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
+				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 					sensitive_vertices.Add(v);
 			}
 			else if (quarter.qt.Vertical_restricted())
 			{
-				if (quarter.qt.All_vertical_restricted())
-				{
-					if (Consts.Lies_on_horizontal_border(v))
-						sensitive_vertices.Add(v);
-				}
-				else if (!Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
 					sensitive_vertices.Add(v);
 			}
 		}
 		return sensitive_vertices;
-	}
-
-	private QuarterType[] Get_adjacent_quarters(Vector3 v)
-	{
-		QuarterType[] qt = new QuarterType[2];
-		if (v.x % 4 == 0)
-		{
-			qt[0] = Build.Border_Vault.Get_quarterType(new Vector3Int((int)v.x + 2, 0, (int)v.z - (int)v.z % 4 + 2));
-			qt[1] = Build.Border_Vault.Get_quarterType(new Vector3Int((int)v.x - 2, 0, (int)v.z - (int)v.z % 4 + 2));
-		}
-		else if(v.z % 4 == 0)
-		{
-			qt[0] = Build.Border_Vault.Get_quarterType(new Vector3Int((int)v.x - (int)v.x % 4 + 2, 0, (int)v.z + 2));
-			qt[1] = Build.Border_Vault.Get_quarterType(new Vector3Int((int)v.x - (int)v.x % 4 + 2, 0, (int)v.z - 2));
-		}
-		else
-		{
-			Debug.LogError("wrong position");
-		}
-		return qt;
 	}
 }

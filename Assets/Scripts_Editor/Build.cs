@@ -769,7 +769,7 @@ public class Build : MonoBehaviour
 			}
 			else if (quarter.qt.Both_restricted())
 			{
-				if (quarter.qt.All_restricted())
+				if (quarter.qt.All_restricted() && quarter.original_grid.Count == 4)
 				{
 					verts[index].y = Razor_both_restricted_formula(v);
 					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;

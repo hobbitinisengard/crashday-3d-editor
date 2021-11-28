@@ -36,7 +36,6 @@ public class QuarterType
 		q.Vx_up_restricted = a.Vx_up_restricted && b.Vx_up_restricted;
 		return q;
 	}
-
 	/// <summary>
 	/// All borders unrestricted
 	/// </summary>
@@ -69,10 +68,6 @@ public class QuarterType
 	{
 		return Vx_down_restricted || Vx_up_restricted;
 	}
-	public bool All_horizontal_restricted()
-	{
-		return Vx_down_restricted && Vx_up_restricted;
-	}
 	/// <summary>
 	/// One of the vertical borders restricted
 	/// </summary>
@@ -80,10 +75,6 @@ public class QuarterType
 	public bool Vertical_restricted()
 	{
 		return Hx_left_restricted || Hx_right_restricted;
-	}
-	public bool All_vertical_restricted()
-	{
-		return Hx_left_restricted && Hx_right_restricted;
 	}
 }
 public class Quarter
@@ -105,43 +96,7 @@ public class Quarter
 
 		this.pos = Vector3Int.RoundToInt(rmc.transform.TransformPoint(move_to_center));
 		this.original_grid = Generate_grid(move_to_center, VH, rmc);
-		this.qt = Build.Border_Vault.Get_quarterType(Vector3Int.RoundToInt(pos));
-	}
-	internal static Quarter[] Generate_Quarters(GameObject rmc)
-	{
-		// get unrotated dims
-		Vector3Int dims = new Vector3Int(TileManager.TileListInfo[rmc.name].Size.x, 0, TileManager.TileListInfo[rmc.name].Size.y);
-		Quarter[] tile_quarters = new Quarter[dims.x * dims.z];
-
-		// create template and apply it to a tile
-		if (dims.x == 1)
-		{ // 1x1
-			if (dims.z == 1)
-			{
-				tile_quarters[0] = new Quarter(Vector3.zero, ('1', '1'), rmc);
-			}
-			else
-			{//1x2
-				tile_quarters[0] = new Quarter(2 * Vector3.forward, ('1', '1'), rmc);
-				tile_quarters[1] = new Quarter(2 * Vector3.back, ('1', '2'), rmc);
-			}
-		}
-		else
-		{//2x1
-			if (dims.z == 1)
-			{
-				tile_quarters[0] = new Quarter(2 * Vector3.left, ('1', '1'), rmc);
-				tile_quarters[1] = new Quarter(2 * Vector3.right, ('2', '1'), rmc);
-			}
-			else
-			{//2x2
-				tile_quarters[0] = new Quarter(2 * Vector3.left + 2 * Vector3.forward, ('1', '1'), rmc);
-				tile_quarters[1] = new Quarter(2 * Vector3.right + 2 * Vector3.forward, ('2', '1'), rmc);
-				tile_quarters[2] = new Quarter(2 * Vector3.right + 2 * Vector3.back, ('2', '2'), rmc);
-				tile_quarters[3] = new Quarter(2 * Vector3.left + 2 * Vector3.back, ('1', '2'), rmc);
-			}
-		}
-		return tile_quarters;
+		this.qt = Build.Border_Vault.Get_quarter(Vector3Int.RoundToInt(pos));
 	}
 	internal static Quarter[] Generate_All_Quarters(GameObject feed_tile)
 	{
@@ -187,9 +142,9 @@ public class Quarter
 			container.AddRange(tile_quarters);
 		}
 
-		for(int i=0; i<container.Count-1; i++)
+		for (int i = 0; i < container.Count - 1; i++)
 		{
-			for (int j = i+1; j < container.Count; j++)
+			for (int j = i + 1; j < container.Count; j++)
 			{
 				if (container[i].pos.x == -1)
 					continue;
@@ -204,7 +159,42 @@ public class Quarter
 		container.RemoveAll(q => q.pos.x == -1);
 		return container.ToArray();
 	}
+	internal static Quarter[] Generate_Quarters(GameObject rmc)
+	{
+		// get unrotated dims
+		Vector3Int dims = new Vector3Int(TileManager.TileListInfo[rmc.name].Size.x, 0, TileManager.TileListInfo[rmc.name].Size.y);
+		Quarter[] tile_quarters = new Quarter[dims.x * dims.z];
 
+		// create template and apply it to a tile
+		if (dims.x == 1)
+		{ // 1x1
+			if (dims.z == 1)
+			{
+				tile_quarters[0] = new Quarter(Vector3.zero, ('1', '1'), rmc);
+			}
+			else
+			{//1x2
+				tile_quarters[0] = new Quarter(2 * Vector3.forward, ('1', '1'), rmc);
+				tile_quarters[1] = new Quarter(2 * Vector3.back, ('1', '2'), rmc);
+			}
+		}
+		else
+		{//2x1
+			if (dims.z == 1)
+			{
+				tile_quarters[0] = new Quarter(2 * Vector3.left, ('1', '1'), rmc);
+				tile_quarters[1] = new Quarter(2 * Vector3.right, ('2', '1'), rmc);
+			}
+			else
+			{//2x2
+				tile_quarters[0] = new Quarter(2 * Vector3.left + 2 * Vector3.forward, ('1', '1'), rmc);
+				tile_quarters[1] = new Quarter(2 * Vector3.right + 2 * Vector3.forward, ('2', '1'), rmc);
+				tile_quarters[2] = new Quarter(2 * Vector3.right + 2 * Vector3.back, ('2', '2'), rmc);
+				tile_quarters[3] = new Quarter(2 * Vector3.left + 2 * Vector3.back, ('1', '2'), rmc);
+			}
+		}
+		return tile_quarters;
+	}
 	/// <summary>
 	/// generates a collection of vertices set in global space, according to original restriction pattern of given tile
 	/// </summary>
