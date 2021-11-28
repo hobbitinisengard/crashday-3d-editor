@@ -102,7 +102,7 @@ public class Quarter
 	{
 		// get unrotated dims
 		Vector3 tile_pos = feed_tile.transform.position;
-		tile_pos.y = Consts.RAY_H;
+		tile_pos.y = Consts.MAX_H;
 		RaycastHit[] raycastHits = Physics.SphereCastAll(tile_pos, .4f, Vector3.down, Consts.RAY_H, 1 << 9);
 		List<Quarter> container = new List<Quarter>();
 		foreach (var raycasthit in raycastHits)
@@ -157,6 +157,8 @@ public class Quarter
 			}
 		}
 		container.RemoveAll(q => q.pos.x == -1);
+		if (container.Count == 0)
+			Debug.LogError("0");
 		return container.ToArray();
 	}
 	internal static Quarter[] Generate_Quarters(GameObject rmc)
