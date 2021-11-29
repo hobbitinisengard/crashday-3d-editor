@@ -118,8 +118,8 @@ public static class Consts
 	}
 	public static int PosToIndex(Vector3 v)
 	{
-		Vector3Int V = Vector3Int.RoundToInt(v);
-		return V.x + 4 * V.z * Consts.TRACK.Width + V.z;
+		int index = Mathf.RoundToInt(v.x + 4 * v.z * Consts.TRACK.Width + v.z);
+		return index;
 	}
 
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)
@@ -354,5 +354,70 @@ public static class Consts
 			return text;
 		}
 		return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+	}
+	/// <summary>
+	/// returns true if on one border. 
+	/// returns false if on position where borders intersect or not on border
+	/// </summary>
+	/// <param name="v"></param>
+	/// <returns></returns>
+	internal static bool Lies_on_border(Vector3Int v)
+	{
+		if (v.x % 4 == 0 ^ v.z % 4 == 0)
+			return true;
+		else
+			return false;
+	}
+	internal static bool Lies_on_restricted_border(Vector3 v, BorderType border, Quarter q)
+	{
+		switch (border)
+		{
+			case BorderType.Horizontal:
+				// check if lies on top/bottom border
+				if (v.x % 4 != 0 && v.z % 4 == 0)
+				{
+					if (v.z > q.pos.z)
+					{ // check top border
+							// if top border is restricted, v lies on restricted border
+						return q.qt.Vx_up_restricted;
+					}
+					else
+					{ // check bottom border
+						return q.qt.Vx_down_restricted;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			case BorderType.Vertical:
+				// check if lies on left/right border
+				if (v.z % 4 != 0 && v.x % 4 == 0)
+				{
+					if (v.x > q.pos.x)
+					{ // check right border
+							// if right border is restricted, v lies on restricted border
+						return q.qt.Hx_right_restricted;
+					}
+					else
+					{ // check bottom border
+						return q.qt.Hx_left_restricted;
+					}
+				}
+				else
+				{
+					return false;
+				}
+		}
+		return false;
+	}
+	internal static bool Lies_on_any_restricted_borders(Vector3 v, Quarter q)
+	{
+		foreach(var border in new List<BorderType>(2) { BorderType.Vertical, BorderType.Horizontal })
+		{
+			if (Lies_on_restricted_border(v, border, q))
+				return true;
+		}
+		return false;
 	}
 }
