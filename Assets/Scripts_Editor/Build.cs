@@ -769,22 +769,33 @@ public class Build : MonoBehaviour
 			}
 			else if (quarter.qt.Both_restricted())
 			{
-				if (quarter.qt.All_restricted() && quarter.original_grid.Count == 4)
+				if (Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 				{
-					verts[index].y = Razor_both_restricted_formula(v);
-					Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
+					verts[index].y = Calculate_horizontal_height(v);
+				}
+				else if (Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+				{
+					verts[index].y = Calculate_vertical_height(v);
+				}
+				else if (quarter.original_grid.Contains(Consts.PosToIndex(v)))
+				{
+					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 				}
 				else
 				{
-					if (Consts.Lies_on_restricted_border(v,BorderType.Horizontal, quarter))
+					if (quarter.original_grid.Contains(Consts.PosToIndex(new Vector3(v.x / 4 * 4, v.y, v.z))))
+					{
 						verts[index].y = Calculate_horizontal_height(v);
-					else if(Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
+					}
+					else if (quarter.original_grid.Contains(Consts.PosToIndex(new Vector3(v.x, v.y, v.z / 4 * 4))))
+					{
 						verts[index].y = Calculate_vertical_height(v);
+					}
 					else
-						verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
+						verts[index].y = Razor_both_restricted_formula(v);
 				}
 			}
-			else if(quarter.qt.Horizontal_restricted())
+			else if (quarter.qt.Horizontal_restricted())
 			{
 				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Horizontal, quarter))
 				{
@@ -792,17 +803,16 @@ public class Build : MonoBehaviour
 				}
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 			}
-			else if(quarter.qt.Vertical_restricted())
+			else if (quarter.qt.Vertical_restricted())
 			{
 				if (!quarter.original_grid.Contains(Consts.PosToIndex(v)) || Consts.Lies_on_restricted_border(v, BorderType.Vertical, quarter))
 					verts[index].y = Calculate_vertical_height(v);
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
-
-				Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 			}
+
+			Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 
 			if (float.IsNaN(verts[index].y))
 			{

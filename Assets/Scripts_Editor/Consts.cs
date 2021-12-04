@@ -109,8 +109,7 @@ public static class Consts
 	public static Vector3 IndexToPos(int index)
 	{
 		int x = index % (4 * Consts.TRACK.Width + 1);
-		Vector3 to_return = new Vector3(x, Consts.current_heights[index], (index - x) / (4 * Consts.TRACK.Width + 1));
-		return to_return;
+		return new Vector3(x, Consts.current_heights[index], (index - x) / (4 * Consts.TRACK.Width + 1));
 	}
 	public static int PosToIndex(int x, int z)
 	{
@@ -118,8 +117,8 @@ public static class Consts
 	}
 	public static int PosToIndex(Vector3 v)
 	{
-		int index = Mathf.RoundToInt(v.x + 4 * v.z * Consts.TRACK.Width + v.z);
-		return index;
+		Vector3Int V = Vector3Int.RoundToInt(v);
+		return V.x + 4 * V.z * Consts.TRACK.Width + V.z;
 	}
 
 	public static GameObject CreateMarking(Material material, Vector3? pos = null, bool hasCollider = true)

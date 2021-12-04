@@ -11,6 +11,7 @@ public class CopyPaste : MonoBehaviour
 {
 	public GameObject FormPanel;
 	public GameObject FormMenu;
+	public GameObject MarkerBounds;
 	public Button CopyButton;
 	public Button EnterCopyPasteMenu;
 	public Button PastingModeSwitch;
@@ -166,6 +167,7 @@ public class CopyPaste : MonoBehaviour
 		{
 			GetComponent<ShapeMenu>().StateSwitch(SelectionState.NOSELECTION);
 			FormMenu.SetActive(false);
+			MarkerBounds.SetActive(false);
 			PastingModeSwitch.gameObject.SetActive(true);
 			EnterCopyPasteMenu.interactable = true;
 			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("TAB/LMB/RMB/Q/I/ESC/DEL");
@@ -173,6 +175,7 @@ public class CopyPaste : MonoBehaviour
 		else
 		{
 			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+			MarkerBounds.SetActive(true);
 			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Shape forming");
 			if (cs == CopyState.empty)
 			{

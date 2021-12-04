@@ -43,7 +43,7 @@ public class HeightSlider : MonoBehaviour
     /// <summary>Displays transparent cuboid for 2 secs.</summary>
     public void SliderPreview(float v)
     {
-        if (PreviewToggle.isOn)
+        if (PreviewToggle.isOn && !CopyPaste.IsEnabled())
         {
             float y = Consts.SliderValue2RealHeight(v);
             GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);

@@ -187,7 +187,7 @@ public class SingleMode : MonoBehaviour
 			// Get initial position and set znacznik there
 			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				index = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				index = Consts.PosToIndex(Highlight.pos);
 				//Debug.Log("I1="+index+" "+m.vertices[index]+" pos="+highlight.pos);
 				indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
 				indicator.transform.localScale = new Vector3(.25f, 1, .25f);
@@ -199,7 +199,7 @@ public class SingleMode : MonoBehaviour
 			// Time to get second position
 			if (Consts.IsWithinMapBounds(Highlight.pos))
 			{
-				int index2 = (int)(Highlight.pos.x + 4 * Consts.TRACK.Width * Highlight.pos.z + Highlight.pos.z);
+				int index2 = Consts.PosToIndex(Highlight.pos);
 				//Debug.Log("I2="+index2+" "+m.vertices[index]+" pos="+highlight.pos);
 				Vector3Int a = Vector3Int.RoundToInt(Consts.IndexToPos(index));
 				Vector3Int b = Vector3Int.RoundToInt(Consts.IndexToPos(index2));
