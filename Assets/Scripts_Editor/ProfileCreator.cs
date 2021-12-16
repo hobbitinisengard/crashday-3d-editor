@@ -65,7 +65,7 @@ public class ProfileCreator : MonoBehaviour
 	}
 	void AcceptProfile()
 	{
-		if (!IsNewProfileValid())
+		if (!IsNewProfileValid() || state == ProfileState.preview_visible)
 			return;
 		SwitchTextStatus(ProfileState.idle);
 	}
