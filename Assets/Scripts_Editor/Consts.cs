@@ -128,7 +128,7 @@ public static class Consts
 		Vector3 newposition = new Vector3();
 		if (pos == null)
 			newposition = Highlight.pos;
-		else if (float.IsNaN(pos.Value.y))
+		else if (float.IsNaN(pos.Value.y) || float.IsInfinity(pos.Value.y))
 			newposition.Set(pos.Value.x, 0, pos.Value.z);
 		else
 			newposition = (Vector3)pos;
@@ -191,7 +191,7 @@ public static class Consts
 					}
 					else
 						verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
-					if (float.IsNaN(verts[i].y))
+					if (float.IsNaN(verts[i].y) || float.IsInfinity(verts[i].y))
 						HasNaNs = true;
 				}
 				var mc = grass.GetComponent<MeshCollider>();
@@ -277,7 +277,7 @@ public static class Consts
 				}
 				else
 					verts[i].y = Consts.current_heights[Consts.PosToIndex(v)];
-				if (float.IsNaN(verts[i].y))
+				if (float.IsNaN(verts[i].y) || float.IsInfinity(verts[i].y))
 					HasNaNs = true;
 			}
 			if (!grass.GetComponent<MeshRenderer>().enabled)

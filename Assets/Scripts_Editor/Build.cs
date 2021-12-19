@@ -811,10 +811,9 @@ public class Build : MonoBehaviour
 				else
 					verts[index].y = Consts.current_heights[Consts.PosToIndex(v)];
 			}
-
 			Consts.current_heights[Consts.PosToIndex(v)] = verts[index].y;
 
-			if (float.IsNaN(verts[index].y))
+			if (float.IsNaN(verts[index].y) || float.IsInfinity(verts[index].y))
 			{
 				return false;
 			}
