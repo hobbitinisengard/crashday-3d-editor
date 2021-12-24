@@ -22,21 +22,23 @@ public class TileListEntry
 	public bool IsCheckpoint { get; set; }
 	public string Custom_tileset_id { get; set; }
 	public string TilesetName { get; set; }
+	public string Description { get; set; }
 	public TileListEntry(float[] flatterpoints)
 	{
 		FlatterPoints = flatterpoints;
 	}
 
 	/// <summary>
-	/// cfl constructor
+	/// cat constructor
 	/// </summary>
-	public TileListEntry(string tilesetName)
+	public TileListEntry(string tilesetName, string description)
 	{
 		TilesetName = tilesetName;
+		Description = description;
 	}
 
 	/// <summary>
-	/// cat constructor
+	/// cfl constructor
 	/// </summary>
 	/// <param name="size"></param>
 	/// <param name="Restrictions"></param>
@@ -66,6 +68,12 @@ public class TileListEntry
 		Icon = icon;
 		Custom_tileset_id = custom_tileset_id;
 		RMCname = Size.x.ToString() + "x" + Size.y.ToString() + Restrictions;
+	}
+
+	public void Set(string tilesetName, string description)
+    {
+		TilesetName = tilesetName;
+		Description = description;
 	}
 
 	public string Show()

@@ -128,8 +128,10 @@ public class P3DModel
 		// if mod, search for custom texture. If not found, it means texture we're searching for is default
 		if (mod_id != null)
 		{
-			string[] texturePath = Directory.GetFiles(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/", textureName + ".*").Where(s => s.EndsWith(".dds") || s.EndsWith(".tga")).ToArray();
-
+			string[] texturePath = new string[0];
+			if (Directory.Exists(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/"))
+				texturePath = Directory.GetFiles(IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/", textureName + ".*").Where(s => s.EndsWith(".dds") || s.EndsWith(".tga")).ToArray();
+			
 			if (texturePath.Length > 0)
 				path = IO.GetCrashdayPath() + "/moddata/" + mod_id + "/content/textures/" + textureName + texturePath[0].Substring(texturePath[0].Length - 4);
 		}
@@ -154,8 +156,12 @@ public class P3DModel
 			Debug.LogError("Failed to load. Loading default texture. Path: " + path);
 			tex = DDSDecoder.LoadTextureDXT(File.ReadAllBytes(IO.GetCrashdayPath() + "/data/content/textures/colwhite.dds"), TextureFormat.DXT1);
 		}
-		tex.mipMapBias = -0.5f;
-		tex.Apply(true);
+		try
+		{
+			tex.mipMapBias = -0.5f;
+			tex.Apply(true);
+        }
+        catch { return default(Material); }
 
 		bool tr = P3DRenderInfo[id].TextureFile.Contains("transp");
 		bool gls = P3DRenderInfo[id].TextureFile.Contains("gls") || P3DRenderInfo[id].TextureFile.Contains("glass");
@@ -181,7 +187,7 @@ public class P3DModel
 		{// every tile with grass (all of the tunnels) have link to "floor1.mat" material set in resources folder. That way we can globally change material's shader from every script we want
 			if (textureName == "floor1")
 				mat = Resources.Load<Material>("floor1");
-			else if (textureName.Contains("decals") || textureName == "railings" ||textureName.Contains("fen") || textureName == "pine" 
+			else if (textureName == "inv_wall" || textureName.Contains("decals") || textureName == "railings" ||textureName.Contains("fen") || textureName == "pine" 
 				|| textureName == "mtlgrid" || textureName.Contains("strut") || textureName.Contains("detail"))
 				mat = new Material(Shader.Find("Sprites/Default"));
 			else if (textureName == "window")
@@ -189,7 +195,8 @@ public class P3DModel
 			else
 				mat = new Material(Shader.Find("Mobile/Bumped Diffuse"));
 
-			mat.SetFloat("_Glossiness", 0);
+				mat.SetFloat("_Glossiness", 0);
+
 		}
 		mat.mainTexture = tex;
 		mat.name = textureName;

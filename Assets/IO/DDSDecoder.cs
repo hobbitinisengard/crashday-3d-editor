@@ -11,8 +11,11 @@ public class DDSDecoder : ScriptableObject
 
 		byte ddsSizeCheck = ddsBytes[4];
 		if (ddsSizeCheck != 124)
-			throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
-
+		{
+			Debug.LogError("Invalid DDS DXTn texture. Unable to read");
+			return default(Texture2D);
+			//throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
+		}
 		int height = ddsBytes[13] * 256 + ddsBytes[12];
 		int width = ddsBytes[17] * 256 + ddsBytes[16];
 
