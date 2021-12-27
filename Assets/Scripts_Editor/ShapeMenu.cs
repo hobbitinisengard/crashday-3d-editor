@@ -525,67 +525,27 @@ public class ShapeMenu : MonoBehaviour
 					hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
 			}
 		}
-		// for vertices on tiles
-		if (selected_tiles.Count > 0)
+
+		if (BL.x < hiX)
 		{
-			if (BL.x < hiX)
+			if (BL.z < hiZ)
 			{
-				if (BL.z < hiZ)
-				{
-					TR.Set(hiX, 0, hiZ);
-				}
-				else
-					TR.Set(hiX, 0, lowZ);
+				TR.Set(hiX, 0, hiZ);
 			}
 			else
-			{
-				if (BL.z < hiZ)
-				{
-					TR.Set(lowX, 0, hiZ);
-				}
-				else
-					TR.Set(lowX, 0, lowZ);
-			}
+				TR.Set(hiX, 0, lowZ);
 		}
 		else
 		{
-			// for vertices of grass
-			Vector3 center = new Vector3(BL.x, BL.y, BL.z);
-			bool D = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.back, out RaycastHit Dhit, Quaternion.identity, 1, 1 << 11);
-			bool L = Physics.BoxCast(center, new Vector3(1e-3f, Consts.MAX_H, 1e-3f), Vector3.left, out RaycastHit Lhit, Quaternion.identity, 1, 1 << 11);
-			if (D && Dhit.transform.name != "on")
-				D = false;
-			if (L && Lhit.transform.name != "on")
-				L = false;
-			if (D)
+			if (BL.z < hiZ)
 			{
-				if (L)
-				{
-					BL.Set(hiX, BL.y, hiZ);
-					TR.Set(lowX, 0, lowZ);
-				}
-				else
-				{
-					BL.Set(lowX, BL.y, hiZ);
-					TR.Set(hiX, 0, lowZ);
-				}
+				TR.Set(lowX, 0, hiZ);
 			}
 			else
-			{
-				if (L)
-				{
-					TR.Set(lowX, 0, hiZ);
-					BL.Set(hiX, BL.y, lowZ);
-				}
-				else
-				{
-					TR.Set(hiX, 0, hiZ);
-					BL.Set(lowX, BL.y, lowZ);
-				}
-			}
+				TR.Set(lowX, 0, lowZ);
 		}
 	}
-
+	
 	void SetMarkingPos(int x, int z, int step, int steps, float slider_realheight, float heightdiff)
 	{
 		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
