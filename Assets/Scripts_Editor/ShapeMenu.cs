@@ -168,14 +168,12 @@ public class ShapeMenu : MonoBehaviour
 				StateSwitch(SelectionState.SELECTING_VERTICES);
 			if (selectionState == SelectionState.SELECTING_VERTICES)
 			{
-				RaycastHit hit;
-				if (Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 9)
-					|| Physics.Raycast(V(Highlight.pos_float), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
-				{
-					GameObject tile = hit.transform.gameObject;
-
-					SpawnVertexBoxes(tile, selected_tiles.Count == 0 && Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
+				if (Highlight.tile.layer == 8 && Physics.Raycast(V(Highlight.pos_float), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 9))
+                {
+					SpawnVertexBoxes(hit.transform.gameObject, selected_tiles.Count == 0 && Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
 				}
+				else
+					SpawnVertexBoxes(Highlight.tile, selected_tiles.Count == 0 && Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
 			}
 		}
 	}
@@ -227,7 +225,7 @@ public class ShapeMenu : MonoBehaviour
 				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11) && hit.transform.gameObject.name == "on")
 				{
 					BL = Vector3Int.RoundToInt(hit.point);
-					BL.y = hit.transform.gameObject.transform.position.y;
+					BL.y = Consts.current_heights[Consts.PosToIndex(hit.point)];
 					if (SelectTR.isOn)
 						StateSwitch(SelectionState.WAITING4TR);
 					else
@@ -278,9 +276,9 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (znacznik.name == "on")
 			{
-				Vector3 v = znacznik.transform.position;
-				int index = Consts.PosToIndex(v);
+				int index = Consts.PosToIndex(znacznik.transform.position);
 				indexes.Add(index);
+				Vector3 v = Consts.IndexToPos(index);
 
 				if (KeepShape.isOn)
 				{
@@ -291,7 +289,7 @@ public class ShapeMenu : MonoBehaviour
 					Consts.current_heights[index] = slider_value;
 				}
 
-				znacznik.transform.position = new Vector3(znacznik.transform.position.x, Consts.current_heights[index], znacznik.transform.position.z);
+				znacznik.transform.Translate(0, Consts.current_heights[index] - v.y, 0);
 				Consts.former_heights[index] = Consts.current_heights[index];
 				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
@@ -461,13 +459,13 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (marking.name == "on")
 			{
-				Vector3 v = marking.transform.position;
-				int index = Consts.PosToIndex(v);
+				int index = Consts.PosToIndex(marking.transform.position);
 				indexes.Add(index);
+				Vector3 v = Consts.IndexToPos(index);
 
 				Consts.current_heights[index] = BL.y + slider_value * (Consts.current_heights[index] - BL.y);
 
-				marking.transform.position = new Vector3(marking.transform.position.x, Consts.current_heights[index], marking.transform.position.z);
+				marking.transform.Translate(0, Consts.current_heights[index] - v.y, 0);
 				Consts.former_heights[index] = Consts.current_heights[index];
 				UndoBuffer.Add(v, Consts.IndexToPos(index));
 			}
@@ -551,7 +549,6 @@ public class ShapeMenu : MonoBehaviour
 		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
 		if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
 		{
-
 			index = Consts.PosToIndex(x, z);
  
 			float old_Y = Consts.current_heights[index]; // tylko do keepshape
@@ -586,7 +583,7 @@ public class ShapeMenu : MonoBehaviour
 			Consts.current_heights[index] = Consts.former_heights[index];
 			UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
 			GameObject znacznik = hit.transform.gameObject;
-			znacznik.transform.position = new Vector3(znacznik.transform.position.x, Y, znacznik.transform.position.z);
+			znacznik.transform.Translate(0, Y - for_buffer.y, 0);
 		}
 	}
 	private bool IsFlatter(string Name)

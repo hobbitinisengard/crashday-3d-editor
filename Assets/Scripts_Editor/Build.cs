@@ -58,7 +58,7 @@ public class Build : MonoBehaviour
 	public static byte MixingHeight = 0;
 	/// <summary>former position of temporary placement of tile in build mode</summary>
 	Vector3 last_trawa;
-	public static bool over_b4 = Highlight.over;
+	public static bool over_b4 = Highlight.over_grass;
 	private bool IsEnteringKeypadValue;
 	private static GameObject outlined_element;
 
@@ -199,7 +199,7 @@ public class Build : MonoBehaviour
 
 			if (!Input.GetKey(KeyCode.Space))
 			{
-				if (!Highlight.over)
+				if (!Highlight.over_grass)
 				{
 					if (over_b4)
 					{
@@ -216,7 +216,7 @@ public class Build : MonoBehaviour
 					if (!over_b4)
 					{
 						//Debug.Log("cursor: void -> terrain");
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
 						last_trawa = Highlight.TL;
 						over_b4 = true;
 					}
@@ -226,7 +226,7 @@ public class Build : MonoBehaviour
 						if (!LMBclicked)//If element hasn't been placed
 							DelLastPrefab();
 						ExitTileSelection();
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
 						last_trawa = Highlight.TL;
 						LMBclicked = false;
 					}
@@ -234,12 +234,12 @@ public class Build : MonoBehaviour
 					{//Place currently showed tile on terrain
 						LMBclicked = true;
 						Save_tile_properties(current_rmc, tile_name, inversion, cum_rotation,
-								new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), enableMixing ? MixingHeight : (byte)0);
+								new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), MixingHeight);
 					}
-					if (Input.GetMouseButtonDown(1) && Highlight.over && !LMBclicked)
+					if (Input.GetMouseButtonDown(1) && Highlight.over_grass && !LMBclicked)
 					{//Rotation with RMB
 						DelLastPrefab();
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
 						over_b4 = true;
 					}
 				}
@@ -279,19 +279,16 @@ public class Build : MonoBehaviour
 			MixingInfoText.text = "";
 			MixingInfoText.gameObject.SetActive(false);
 
-			if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 			{
 				if (tile_name == "NULL")
 				{
 					MixingHeightPreview();
 				}
 				else
-				{
-					DelLastPrefab();
-					PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
-				}
+					current_rmc.transform.position =
+						new Vector3(current_rmc.transform.position.x, MixingHeight / 5f, current_rmc.transform.position.z);
 			}
-			StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		}
 		KeyCode[] keyCodes = { KeyCode.Keypad0, KeyCode.Keypad1, KeyCode.Keypad2, KeyCode.Keypad3, KeyCode.Keypad4,
 			KeyCode.Keypad5, KeyCode.Keypad6, KeyCode.Keypad7, KeyCode.Keypad8, KeyCode.Keypad9 };
@@ -332,17 +329,15 @@ public class Build : MonoBehaviour
 				else
 					return;
 			}
-			if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 			{
 				if (tile_name == "NULL")
 				{
 					MixingHeightPreview();
 				}
 				else
-				{
-					DelLastPrefab();
-					PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
-				}
+					current_rmc.transform.position =
+						new Vector3(current_rmc.transform.position.x, MixingHeight / 5f, current_rmc.transform.position.z);
 			}
 			StartCoroutine(DisplayMessageFor(MixingHeight.ToString(), 2));
 		}
@@ -368,9 +363,9 @@ public class Build : MonoBehaviour
 			{
 				if (tile_name == "NULL")
 				{
-					if (!Input.GetKey(KeyCode.Space) && Highlight.over)
+					if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 					{
-						PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion);
+						PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion, MixingHeight);
 					}
 				}
 				else
@@ -412,10 +407,10 @@ public class Build : MonoBehaviour
 		{
 			BuildButtonText.color = new Color32(255, 161, 54, 255);
 		}
-		if (!MouseInputUIBlocker.BlockedByUI && !Input.GetKey(KeyCode.Space) && Highlight.over)
+		if (!MouseInputUIBlocker.BlockedByUI && !Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 		{
 			DelLastPrefab();
-			PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion);
+			PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
 		}
 	}
 	public static void DelLastPrefab()
@@ -438,6 +433,9 @@ public class Build : MonoBehaviour
 	void PickUpTileHeightUnderCursor()
 	{
 		MixingHeight = Consts.TilePlacementArray[Highlight.TL.z / 4 - 1, Highlight.TL.x / 4].Height;
+		if (current_rmc != null)
+			current_rmc.transform.position =
+				new Vector3(current_rmc.transform.position.x, MixingHeight / 5f, current_rmc.transform.position.z);
 	}
 	void PickUpTileUnderCursor()
 	{
@@ -450,6 +448,7 @@ public class Build : MonoBehaviour
 			var pos = Vpos2tpos(outlined_element);
 			inversion = Consts.TilePlacementArray[pos.z, pos.x].Inversion;
 			cum_rotation = Consts.TilePlacementArray[pos.z, pos.x].Rotation;
+			MixingHeight = Consts.TilePlacementArray[pos.z, pos.x].Height;
 			if (tile_name == "NULL")
 				editorPanel.GetComponent<SliderCase>().SwitchToTileset(TileManager.TileListInfo[previous_tile_name].TilesetName);
 			else
@@ -654,7 +653,7 @@ public class Build : MonoBehaviour
 	/// Center of tile. real dimensions of tile.
 	/// Checks if tile isn't sticking out of map boundaries
 	/// </summary>
-	static bool IsTherePlace4Tile(Vector3Int pos, Vector3Int dims)
+	static bool IsTherePlace4Tile(Vector3 pos, Vector3Int dims)
 	{
 
 		pos.y = Consts.MAX_H;
@@ -710,7 +709,7 @@ public class Build : MonoBehaviour
 				byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
 				GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
 				GetPrefabMesh(Mirrored, Prefab);
-				Tile_to_RMC_Cast(Prefab, rmc_o, Height);
+				Tile_to_RMC_Cast(Prefab, rmc_o);
 				rmc_o.layer = 9;
 			}
 		}
@@ -750,6 +749,7 @@ public class Build : MonoBehaviour
 	{
 		// suppose MeshVerts returns nxm unconstrained mesh
 		Vector3[] verts = GetMeshVerts(rmc);
+		Vector3 pos = Vpos2tpos(rmc);
 
 		Quarter[] tile_quarters = Quarter.Generate_Quarters(rmc);
 
@@ -864,7 +864,7 @@ public class Build : MonoBehaviour
 			tileDims.x = tileDims.z;
 			tileDims.z = pom;
 		}
-		Vector3Int rmcPlacement = new Vector3Int(TLpos.x + 2 + 2 * (tileDims.x - 1), 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
+		Vector3 rmcPlacement = new Vector3(TLpos.x + 2 + 2 * (tileDims.x - 1), enableMixing || Loader.Isloading ? Height / 5f : 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
 
 		if (rmcPlacement.z < 0)
 			return null;
@@ -911,7 +911,7 @@ public class Build : MonoBehaviour
 
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
 			Consts.UpdateMapColliders(current_rmc.transform.position, tileDims);
-			Tile_to_RMC_Cast(Prefab, current_rmc, MixingHeight);
+			Tile_to_RMC_Cast(Prefab, current_rmc);
 
 			return null;
 		}
@@ -921,7 +921,7 @@ public class Build : MonoBehaviour
 			return current_rmc;
 		}
 	}
-	bool IsTherePlaceForQuarter(Vector3Int TLpos, Vector3Int rmc_pos, Vector3Int dims)
+	bool IsTherePlaceForQuarter(Vector3Int TLpos, Vector3 rmc_pos, Vector3Int dims)
 	{
 		// out of grass
 		if (rmc_pos.z <= 0 || rmc_pos.z >= 4 * Consts.TRACK.Height || rmc_pos.x <= 0 || rmc_pos.x >= 4 * Consts.TRACK.Width)
@@ -1050,7 +1050,7 @@ public class Build : MonoBehaviour
 			InverseMesh(prefab.GetComponent<MeshFilter>().mesh);
 	}
 
-	static void Tile_to_RMC_Cast(GameObject prefab, GameObject rmc, byte Height = 0)
+	static void Tile_to_RMC_Cast(GameObject prefab, GameObject rmc)
 	{
 		rmc.layer = 10;
 		Mesh mesh = prefab.GetComponent<MeshFilter>().mesh;
@@ -1062,25 +1062,11 @@ public class Build : MonoBehaviour
 		{
 			RaycastHit hit;
 			Vector3 v = prefab.transform.TransformPoint(verts[i]);
-			if (Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 10))
-			{
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-			}
-			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 10))
-			{
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-			}
-			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 10))
-			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts. 
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-			}
-			else
-			{
-				if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
-					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y - pzero, v.z));
-				else // out of map boundaries: height of closest edge
-					verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
-			}
+			float floating_offset = rmc.transform.position.y;
+			if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
+			else // out of map boundaries: height of closest edge
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y + floating_offset - pzero, v.z));
 		}
 
 		mesh.vertices = verts;
@@ -1088,7 +1074,7 @@ public class Build : MonoBehaviour
 		mesh.RecalculateNormals();
 		prefab.SetActive(false);
 		prefab.SetActive(true);
-		prefab.transform.position = new Vector3(prefab.transform.position.x, Height / 5f, prefab.transform.position.z);
+		prefab.transform.position = new Vector3(prefab.transform.position.x, 0, prefab.transform.position.z);
 		rmc.layer = 9;
 
 	}

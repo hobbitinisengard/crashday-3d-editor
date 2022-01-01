@@ -95,6 +95,7 @@ public class Quarter
 			Debug.LogError("rmc can't be a grass");
 
 		this.pos = Vector3Int.RoundToInt(rmc.transform.TransformPoint(move_to_center));
+		this.pos.y = 0;
 		this.original_grid = Generate_grid(move_to_center, VH, rmc);
 		this.qt = Build.Border_Vault.Get_quarter(Vector3Int.RoundToInt(pos));
 	}

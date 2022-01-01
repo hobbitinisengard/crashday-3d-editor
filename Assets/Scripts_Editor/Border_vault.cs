@@ -106,14 +106,12 @@ public class Border_vault
 
 		// suppose MeshVerts returns nxm unconstrained mesh
 		Vector3[] verts = Build.GetMeshVerts(rmc);
-
 		Quarter[] tile_quarters = Quarter.Generate_All_Quarters(rmc);
 
 		for (int index = 0; index < verts.Length; index++)
 		{
 			Vector3 v = rmc.transform.TransformPoint(verts[index]);
 			v.x = Mathf.Round(v.x);
-			v.y = Consts.current_heights[Consts.PosToIndex(v)];
 			v.z = Mathf.Round(v.z);
 
 			if (!Consts.IsWithinMapBounds(v))
@@ -136,7 +134,9 @@ public class Border_vault
 			else if (quarter.qt.Both_restricted())
 			{
 				if (quarter.original_grid.Contains(Consts.PosToIndex(v)) && !Consts.Lies_on_any_restricted_borders(v, quarter))
+				{
 					sensitive_vertices.Add(v);
+				}
 			}
 			else if (quarter.qt.Horizontal_restricted())
 			{

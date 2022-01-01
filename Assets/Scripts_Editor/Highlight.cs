@@ -13,6 +13,10 @@ public class Highlight : MonoBehaviour
 	/// </summary>
 	public static bool over = false;
 	/// <summary>
+	/// Is mouse pointer currently over grass?
+	/// </summary>
+	public static bool over_grass = false;
+	/// <summary>
 	/// Position over map Rounded to Int
 	/// </summary>
 	public static Vector3 pos;
@@ -20,39 +24,50 @@ public class Highlight : MonoBehaviour
 	/// Position over map not rounded to int
 	/// </summary>
 	public static Vector3 pos_float;
-	RaycastHit hit;
+	/// <summary>
+	/// RMC currently being under the cursor
+	/// </summary>
+	public static GameObject tile;
 
 	void Update()
 	{
-
 		Ray r = Camera.main.ScreenPointToRay(Input.mousePosition);
-		Get_valid_init_vector(r);
-		if (pos.x == -1)
-		{
-			over = false;
-		}
-		else
-		{
-			TL.x = 4 * Mathf.FloorToInt(pos.x / 4); // Get TopLeft of current 1x1 tile
-			TL.z = 4 * Mathf.FloorToInt(pos.z / 4) + 4;
-			over = true;
-		}
+		GetPos(r);
+		GetTLgrass(r);
+		over = pos.x != -1;
+		over_grass = TL.x != -1;
 	}
 
-	//Returns position of map's vertex that is closest to pointer
-	void Get_valid_init_vector(Ray r)
+	//Returns position of tile's or map's vertex that is closest to pointer
+	void GetPos(Ray r)
 	{
-		bool traf = Physics.Raycast(r.origin, r.direction, out hit, Consts.RAY_H, 1 << 8);
-		if (traf && hit.transform.gameObject.layer != 5)
-		{ // Raycast nie przejdzie przez elementy UI
+		RaycastHit hit;
+		if (Physics.Raycast(r.origin, r.direction, out hit, Consts.RAY_H, 1 << 9)
+		    || Physics.Raycast(r.origin, r.direction, out hit, Consts.RAY_H, 1 << 8))
+		{
+			tile = hit.transform.gameObject;
 			pos_float = hit.point;
 			pos = Vector3Int.RoundToInt(hit.point);
 			pos.y = Consts.current_heights[Consts.PosToIndex((int)pos.x, (int)pos.z)];
 			pos_float.y = pos.y;
 		}
 		else
-			pos =  new Vector3Int(-1, -1, -1);
-		
+		{
+			pos = new Vector3Int(-1, -1, -1);
+			tile = null;
+		}
+	}
+
+	void GetTLgrass(Ray r)
+    {
+		if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Consts.RAY_H, 1 << 8))
+		{
+			Vector3Int pos_grass = Vector3Int.RoundToInt(hit.point);
+			TL.x = 4 * Mathf.FloorToInt(pos_grass.x / 4);
+			TL.z = 4 * Mathf.FloorToInt(pos_grass.z / 4) + 4;
+		}
+		else
+			TL = new Vector3Int(-1, -1, -1);
 	}
 
 	//void DebugRayCast(Vector3 pos, Ray r)
