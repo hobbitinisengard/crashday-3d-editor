@@ -13,6 +13,7 @@ public class ProfileCreator : MonoBehaviour
 	public Toggle tClosedPath;
 	public Slider sCurviness;
 	public GameObject FormPanel;
+	public GameObject HeightSliderAndPreviewToggle;
 	private VertexPath[] paths;
 	private GameObject RoadMesh;
 	private List<List<GameObject>> Profiles = new List<List<GameObject>>();
@@ -22,13 +23,13 @@ public class ProfileCreator : MonoBehaviour
 
 	private void OnEnable()
 	{
-		FormPanel.GetComponent<Form>().HeightSliderAndPreviewToggle.SetActive(false);
+		HeightSliderAndPreviewToggle.SetActive(false);
 	}
 	private void OnDisable()
 	{
 		RemovePreview();
 		state = ProfileState.idle;
-		FormPanel.GetComponent<Form>().HeightSliderAndPreviewToggle.SetActive(true);
+		HeightSliderAndPreviewToggle.SetActive(true);
 	}
 	private void SwitchTextStatus(string text)
 	{

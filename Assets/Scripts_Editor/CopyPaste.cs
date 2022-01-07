@@ -12,6 +12,7 @@ public class CopyPaste : MonoBehaviour
 	public GameObject FormPanel;
 	public GameObject FormMenu;
 	public GameObject MarkerBounds;
+	public Slider HeightSlider;
 	public Button CopyButton;
 	public Button EnterCopyPasteMenu;
 	public Button PastingModeSwitch;
@@ -46,20 +47,20 @@ public class CopyPaste : MonoBehaviour
 		EnterCopyPasteMenu.onClick.AddListener(() => { SwitchState(CopyState.copying); });
 		PastingModeSwitch.onClick.AddListener(SwitchPastingMode);
 
-		FormPanel.GetComponent<Form>().HeightSlider.onValueChanged.AddListener((val) => { MousewheelWorks(val); });
+		HeightSlider.onValueChanged.AddListener((val) => { MousewheelWorks(val); });
 	}
 	void SwitchPastingMode()
 	{
 		if (pastingMode == PastingMode.fixed_height)
 		{
-			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
+			HeightSlider.gameObject.SetActive(false);
 			pastingMode = PastingMode.addition;
 			PastingModeSwitch.transform.GetChild(0).gameObject.GetComponent<Text>().text = "Addition";
 			UpdatePreview();
 		}
 		else if (pastingMode == PastingMode.addition)
 		{
-			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+			HeightSlider.gameObject.SetActive(true);
 			pastingMode = PastingMode.fixed_height;
 			PastingModeSwitch.transform.GetChild(0).gameObject.GetComponent<Text>().text = "Fixed height";
 			UpdatePreview();
@@ -81,10 +82,10 @@ public class CopyPaste : MonoBehaviour
 		{
 			if (pastingMode == PastingMode.fixed_height)
 			{
-				FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+				HeightSlider.gameObject.SetActive(true);
 			}
 			else if (pastingMode == PastingMode.addition)
-				FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(false);
+				HeightSlider.gameObject.SetActive(false);
 
 			if (Input.GetKeyDown(KeyCode.Tab))
 				SwitchPastingMode();
@@ -174,7 +175,7 @@ public class CopyPaste : MonoBehaviour
 		}
 		else
 		{
-			FormPanel.GetComponent<Form>().HeightSlider.gameObject.SetActive(true);
+			HeightSlider.gameObject.SetActive(true);
 			MarkerBounds.SetActive(true);
 			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Shape forming");
 			if (cs == CopyState.empty)
