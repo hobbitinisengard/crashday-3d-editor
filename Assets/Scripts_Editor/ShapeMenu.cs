@@ -3,8 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-public enum SelectionState { NOSELECTION, SELECTING_VERTICES, MARKING_VERTICES, LMB_DOWN, WAITING4LD, WAITING4TR, POINT_SELECTED }
-public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, copy, infinity, amplify }
+
+public class DuVec3
+{
+	public Vector3 P1;
+	public Vector3 P2;
+	public DuVec3(Vector3 p1, Vector3 p2)
+	{
+		P1 = p1;
+		P2 = p2;
+	}
+}
+public enum SelectionState { NOSELECTION, SELECTING_VERTICES, MARKING_VERTICES, LMB_DOWN, WAITING4BL, WAITING4TR, SETTING_PARAMETERS, POINT_SELECTED }
+public enum FormButton { none, linear, integral, jump, jumpend, flatter, to_slider, rounded, copy, infinity, amplify }
 public enum MarkingPattern { rect, triangle, triangle_inv, diagonal }
 /// <summary>
 /// Hooked to ShapeMenu
@@ -13,6 +24,9 @@ public class ShapeMenu : MonoBehaviour
 {
 	public Camera mainCamera;
 	public GameObject FormPanel;
+	public FormSlider formSlider;
+	public Slider HeightSlider;
+	public CopyPaste copyPaste;
 	/// <summary>
 	/// child - formMenu with all the below listed buttons
 	/// </summary>
@@ -26,6 +40,7 @@ public class ShapeMenu : MonoBehaviour
 	public Button Prostry;
 	public Button JumperEnd;
 	public Button Integral;
+	public Button Rounded;
 	public Button Infinity;
 	public Button AmplifyButton;
 	public InputField Bounds_x;
@@ -34,6 +49,7 @@ public class ShapeMenu : MonoBehaviour
 	public Toggle KeepShape;
 	public Toggle Connect;
 	public Toggle SelectTR;
+	public Toggle Symmetric;
 	public Toggle Inversion_mode;
 	public Toggle Addition_mode;
 	public Toggle Exclusion_mode;
@@ -43,7 +59,6 @@ public class ShapeMenu : MonoBehaviour
 	public static FormButton LastSelected = FormButton.none;
 	public static SelectionState selectionState = SelectionState.NOSELECTION;
 	public static MarkingPattern CurrentPattern = MarkingPattern.rect;
-	int index = 0;
 	/// <summary>
 	/// list of selected tiles
 	/// </summary>
@@ -54,10 +69,17 @@ public class ShapeMenu : MonoBehaviour
 	/// </summary>
 	private static bool areal_selection = false;
 	/// <summary>
-	/// Bottom Left pointing vector set in waiting4LD state
+	/// Bottom Left pointing vector set in waiting4BL state
 	/// </summary>
 	public static Vector3 BL;
 	private Vector3Int TR;
+	/// <summary>
+	/// Half the number of steps when with symmetric modifier
+	/// </summary>
+	private int slope_length;
+	private float slider_realheight;
+	private int start_rounding = -1;
+	private int end_rounding = -1;
 	/// <summary>
 	/// Where the user has pressed LMB in LMB_DOWN state
 	/// </summary>
@@ -70,40 +92,74 @@ public class ShapeMenu : MonoBehaviour
 	/// Former state of markings before being marked/unmarked
 	/// </summary>
 	private static Dictionary<int, string> BeforeMarking = new Dictionary<int, string>();
+	struct ShapeShortcuts
+	{
+		public static Dictionary<KeyCode, FormButton> ShapeTypes { get; set; }
+		public static Dictionary<KeyCode, Toggle> Modifiers { get; set; }
+	}
 
 	void Start()
 	{
-		toslider.onClick.AddListener(() => LastSelected = FormButton.to_slider);
-		Prostry.onClick.AddListener(() => LastSelected = FormButton.linear);
-		Integral.onClick.AddListener(() => LastSelected = FormButton.integral);
-		Jumper.onClick.AddListener(() => LastSelected = FormButton.jump);
-		JumperEnd.onClick.AddListener(() => LastSelected = FormButton.jumpend);
-		Flatten.onClick.AddListener(() => LastSelected = FormButton.flatter);
-		Infinity.onClick.AddListener(() => LastSelected = FormButton.infinity);
-		AmplifyButton.onClick.AddListener(() => LastSelected = FormButton.amplify);
+		AmplifyButton.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.amplify  ); });
+		    JumperEnd.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.jumpend  ); });
+		     Infinity.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.infinity ); });
+		     Integral.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.integral ); });
+		     toslider.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.to_slider); });
+		      Prostry.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.linear   ); });
+		      Rounded.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.rounded  ); });
+		      Flatten.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.flatter  ); });
+		       Jumper.onClick.AddListener(delegate { ShapeTypeSwitch(FormButton.jump     ); });
+
+		ShapeShortcuts.ShapeTypes = new Dictionary<KeyCode, FormButton>
+		{
+			{ KeyCode.Alpha1, FormButton.to_slider },
+			{ KeyCode.Alpha2, FormButton.linear    },
+			{ KeyCode.Alpha3, FormButton.jump      },
+			{ KeyCode.Alpha4, FormButton.jumpend   },
+			{ KeyCode.Alpha5, FormButton.integral  },
+			{ KeyCode.Alpha6, FormButton.flatter   },
+			{ KeyCode.Alpha7, FormButton.rounded   },
+			{ KeyCode.K,      FormButton.amplify   }
+		};
+		ShapeShortcuts.Modifiers = new Dictionary<KeyCode, Toggle>
+		{
+			{ KeyCode.F1, KeepShape },
+			{ KeyCode.F2, Connect   },
+			{ KeyCode.F3, SelectTR  },
+			{ KeyCode.F4, Symmetric }
+		};
+
+		Symmetric.onValueChanged.AddListener(delegate
+		{
+			if (Symmetric.isOn)
+				slope_length /= 2;
+			else
+			{
+				if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
+				{
+					slope_length = (int)Mathf.Abs(BL.x - TR.x);
+				}
+				else
+					slope_length = (int)Mathf.Abs(BL.z - TR.z);
+			}
+			if (selectionState == SelectionState.SETTING_PARAMETERS)
+				StateSwitch(SelectionState.SETTING_PARAMETERS); // Update the maximum start and end rounding on the status bar
+		});
 	}
 	void CheckNumericShortcuts()
 	{
-		if (Input.GetKeyDown(KeyCode.Alpha1) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.jump;
-		else if (Input.GetKeyDown(KeyCode.Alpha2) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.linear;
-		else if (Input.GetKeyDown(KeyCode.Alpha3) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.jumpend;
-		else if (Input.GetKeyDown(KeyCode.Alpha4) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.integral;
-		else if (Input.GetKeyDown(KeyCode.Alpha5) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.to_slider;
-		else if (Input.GetKeyDown(KeyCode.Alpha6) && !Bounds_x.isFocused && !Bounds_y.isFocused)
-			LastSelected = FormButton.flatter;
-		else if (Input.GetKeyDown(KeyCode.K))
-			LastSelected = FormButton.amplify;
-		else if (Input.GetKeyDown(KeyCode.F1))
-			KeepShape.isOn = !KeepShape.isOn;
-		else if (Input.GetKeyDown(KeyCode.F2))
-			Connect.isOn = !Connect.isOn;
-		else if (Input.GetKeyDown(KeyCode.F3))
-			SelectTR.isOn = !SelectTR.isOn;
+		foreach (KeyCode key in ShapeShortcuts.ShapeTypes.Keys)
+			if (Input.GetKeyDown(key) && !Bounds_x.isFocused && !Bounds_y.isFocused)
+			{
+				ShapeTypeSwitch(ShapeShortcuts.ShapeTypes[key]);
+				break;
+			}
+		foreach (KeyCode key in ShapeShortcuts.Modifiers.Keys)
+			if (Input.GetKeyDown(key))
+			{
+				ShapeShortcuts.Modifiers[key].isOn = !ShapeShortcuts.Modifiers[key].isOn;
+				break;
+			}
 	}
 	public void OnDisable()
 	{
@@ -124,21 +180,22 @@ public class ShapeMenu : MonoBehaviour
 			if (!MouseInputUIBlocker.BlockedByUI)
 			{
 				VertexSelectionState();
-				VertexMarkingState(); 
-				Waiting4_Top_Right_state();
-				Waiting4_Bottom_Left_state();
+				VertexMarkingState();
+				WaitingForParametersState();
+				WaitingForTopRightState(); 
+				WaitingForBottomLeftState();
 				ApplyOperation();
 			}
 		}
 	}
 	void EnsureModifiersNAND()
 	{
-		if (Connect.isOn && KeepShape.isOn == Connect.isOn)
+		if (Connect.isOn && KeepShape.isOn)
 		{
 			Connect.isOn = false;
 			KeepShape.isOn = false;
 		}
-		else if (Connect.isOn && SelectTR.isOn == Connect.isOn)
+		else if (Connect.isOn && SelectTR.isOn)
 		{
 			Connect.isOn = false;
 			SelectTR.isOn = false;
@@ -196,19 +253,29 @@ public class ShapeMenu : MonoBehaviour
 		{
 			// only ShapeMenu class handles selecting BL vertex which is essential for setting up vertices' orientation
 			if (LastSelected == FormButton.copy)
-				FormPanel.GetComponent<Form>().ShapeMenu.GetComponent<CopyPaste>().CopySelectionToClipboard();
+				copyPaste.CopySelectionToClipboard();
 			else
 			{
-				ApplyFormingFunction();
+				if (LastSelected == FormButton.amplify)
+					Amplify();
+				else if (LastSelected == FormButton.infinity)
+					SetToInfinity();
+				else if (LastSelected == FormButton.to_slider)
+					FormMenu_toSlider();
+				else
+					ApplyFormingFunction();
+
 				StateSwitch(SelectionState.MARKING_VERTICES);
 			}
 			LastSelected = FormButton.none;
+			start_rounding = -1;
+			end_rounding = -1;
 		}
 	}
 
-	private void Waiting4_Bottom_Left_state()
+	private void WaitingForBottomLeftState()
 	{
-		if (selectionState == SelectionState.WAITING4LD)
+		if (selectionState == SelectionState.WAITING4BL)
 		{
 			// to slider and infinity buttons don't require BL selection
 			if (LastSelected == FormButton.infinity || LastSelected == FormButton.to_slider)
@@ -229,18 +296,23 @@ public class ShapeMenu : MonoBehaviour
 					if (SelectTR.isOn)
 						StateSwitch(SelectionState.WAITING4TR);
 					else
-						StateSwitch(SelectionState.POINT_SELECTED);
+					{
+						SetShapeInfo(true);
+						if (LastSelected == FormButton.rounded && slope_length > 1)
+							StateSwitch(SelectionState.SETTING_PARAMETERS);
+						else
+							StateSwitch(SelectionState.POINT_SELECTED);
+					}
 				}
 			}
 			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
 			{
 				StateSwitch(SelectionState.MARKING_VERTICES);
-				LastSelected = FormButton.none;
 			}
 		}
 	}
 	
-	private void Waiting4_Top_Right_state()
+	private void WaitingForTopRightState()
 	{
 		if (selectionState == SelectionState.WAITING4TR)
 		{
@@ -252,16 +324,50 @@ public class ShapeMenu : MonoBehaviour
 				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11))
 				{
 					TR = Vector3Int.RoundToInt(Highlight.pos);
-					StateSwitch(SelectionState.POINT_SELECTED);
+					SetShapeInfo(false);
+					if (LastSelected == FormButton.rounded && slope_length > 1)
+						StateSwitch(SelectionState.SETTING_PARAMETERS);
+					else
+						StateSwitch(SelectionState.POINT_SELECTED);
 				}
 			}
 			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
 			{
 				StateSwitch(SelectionState.MARKING_VERTICES);
-				LastSelected = FormButton.none;
 			}
 		}
 	}
+
+	private void WaitingForParametersState()
+	{
+		if (selectionState == SelectionState.SETTING_PARAMETERS)
+		{
+			if (LastSelected != FormButton.rounded || slope_length < 2) // Only the manually-rounded slope requires additional parameters
+				StateSwitch(SelectionState.POINT_SELECTED);
+
+			if (Input.GetKeyUp(KeyCode.Return))
+			{
+				if (start_rounding == -1)
+					start_rounding = (int)Mathf.Clamp(HeightSlider.value, 0, slope_length - 1);
+				else
+					end_rounding = (int)Mathf.Clamp(HeightSlider.value, 0, slope_length - 1 - start_rounding);
+
+				if (start_rounding == slope_length - 1) // Skip end rounding selection if it can't be more than 0
+					end_rounding = 0;
+
+				if (end_rounding == -1)
+					StateSwitch(SelectionState.SETTING_PARAMETERS);
+				else
+					StateSwitch(SelectionState.POINT_SELECTED);
+			}
+
+			else if (Input.GetMouseButtonDown(1)) // Cancelling selection
+			{
+				StateSwitch(SelectionState.MARKING_VERTICES);
+			}
+		}
+	}
+
 	/// <summary>
 	/// TO SLIDER button logic
 	/// </summary>
@@ -269,7 +375,7 @@ public class ShapeMenu : MonoBehaviour
 	{
 		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 		
-		float slider_value = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
+		float slider_value = Consts.SliderValue2RealHeight(HeightSlider.value);
 		//Update terrain
 		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject znacznik in markings.Values)
@@ -299,7 +405,6 @@ public class ShapeMenu : MonoBehaviour
 
 		Build.UpdateTiles(surroundings);
 		surroundings.Clear();
-
 	}
 
 	/// <summary>
@@ -307,107 +412,64 @@ public class ShapeMenu : MonoBehaviour
 	/// </summary>
 	void ApplyFormingFunction()
 	{
-		if (LastSelected == FormButton.amplify)
-		{
-			Amplify();
-			return;
-		}
-		if (LastSelected == FormButton.infinity)
-		{
-			SetToInfinity();
-			return;
-		}
-		if (LastSelected == FormButton.to_slider)
-		{
-			FormMenu_toSlider();
-			return;
-		}
-		float slider_realheight = Consts.SliderValue2RealHeight(FormPanel.GetComponent<Form>().HeightSlider.value);
-		float heightdiff = slider_realheight - BL.y;
-
-		//Flatter check
 		if (LastSelected == FormButton.flatter)
 		{
 			if (selected_tiles.Count != 1 || !IsFlatter(selected_tiles[0].name))
 				return;
 		}
-		else
-		{
-			if (heightdiff == 0 && !Connect.isOn)
-				return;
-		}
-		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
+		else if (slider_realheight == BL.y && !Connect.isOn || slope_length == 0)
+			return;
 
-		if (selectionState == SelectionState.POINT_SELECTED)
+		start_rounding = Math.Min(start_rounding, slope_length - 1);
+		end_rounding = Math.Min(end_rounding, slope_length - 1 - start_rounding);
+		List<DuVec3> extremes = GetOpposingVertices();
+		List<float> slope_points = new List<float>();
+
+		if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
 		{
-			if (!SelectTR.isOn)
-				Set_rotated_BL_and_TR();
-			List<DuVec3> extremes = new List<DuVec3>();
-			if (Connect.isOn)
+			for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
 			{
-				extremes = GetOpposingVerticesForConnect(BL, TR);
-				foreach (DuVec3 duvec in extremes)
-					Debug.Log(duvec.P1.ToString() + " " + duvec.P2.ToString());
-			}
-			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
-			{ // equal heights along Z axis ||||
+				int extreme_index = (int)Mathf.Abs(z - BL.z);
+				BL.y = extremes[extreme_index].P1.y;
+				slider_realheight = extremes[extreme_index].P2.y;
+				float heightdiff = extremes[extreme_index].P2.y - extremes[extreme_index].P1.y;
 				int steps = (int)Mathf.Abs(BL.x - TR.x);
 				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
-				{
-					for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
-					{
-						for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
-						{		
-							// check for elements 
-							if (Connect.isOn)
-							{
-								int ext_index = (int)Mathf.Abs(z - BL.z);
-								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-								steps = (int)Mathf.Abs(extremes[ext_index].P1.x - extremes[ext_index].P2.x);
-								slider_realheight = extremes[ext_index].P2.y;
-								BL.y = extremes[ext_index].P1.y;
-							}
-							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff);
-						}
-						step += 1;
-					}
-				}
-			}
-			else
-			{ // equal heights along X axis _-_-
-				int steps = (int)Mathf.Abs(BL.z - TR.z);
-				//Debug.Log("steps = " + steps);
-				int step = 0;
-				if (steps != 0 && (heightdiff != 0 || LastSelected == FormButton.flatter || Connect.isOn))
-				{
-					for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
-					{
-						for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
-						{
-							// check for elements 
-							if (Connect.isOn)
-							{
-								int ext_index = (int)Mathf.Abs(x - BL.x);
-								heightdiff = extremes[ext_index].P2.y - extremes[ext_index].P1.y;
-								steps = (int)Mathf.Abs(extremes[ext_index].P1.z - extremes[ext_index].P2.z);
-								slider_realheight = extremes[ext_index].P2.y;
-								BL.y = extremes[ext_index].P1.y;
-							}
-							SetMarkingPos(x, z, step, steps, slider_realheight, heightdiff);
-						}
-						step += 1;
-					}
-				}
-			}
+				if (Connect.isOn || z == (int)BL.z)
+					slope_points = GetSlopePoints(heightdiff, steps);
 
-			Consts.UpdateMapColliders(markings.Values.ToList());
-			//if (current != null)
-			//  Build.UpdateTiles(new List<GameObject> { current });
-			Build.UpdateTiles(surroundings);
-			surroundings.Clear();
-			UndoBuffer.ApplyOperation();
+				for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
+				{
+					SetMarkingPos(x, z, step, steps, heightdiff, slope_points);
+					step++;
+				}
+			}
 		}
+		else
+		{
+			for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
+			{
+				int extreme_index = (int)Mathf.Abs(x - BL.x);
+				BL.y = extremes[extreme_index].P1.y;
+				slider_realheight = extremes[extreme_index].P2.y;
+				float heightdiff = slider_realheight - BL.y;
+				int steps = (int)Mathf.Abs(BL.z - TR.z);
+				int step = 0;
+				if (Connect.isOn || x == (int)BL.x)
+					slope_points = GetSlopePoints(heightdiff, steps);
+
+				for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
+				{
+					SetMarkingPos(x, z, step, steps, heightdiff, slope_points);
+					step++;
+				}
+			}
+		}
+		Consts.UpdateMapColliders(markings.Values.ToList());
+		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
+		Build.UpdateTiles(surroundings);
+		surroundings.Clear();
+		UndoBuffer.ApplyOperation();
 
 		// LOCAL FUNCTIONS
 		void Go2High(float low, float high, ref int x)
@@ -425,24 +487,48 @@ public class ShapeMenu : MonoBehaviour
 		/// <summary>
 		/// Returns List of vertices contains their global position (x or z, depending on bottom-left vertex) and height  
 		/// </summary>
-		List<DuVec3> GetOpposingVerticesForConnect(Vector3 LD, Vector3Int PG)
+		List<DuVec3> GetOpposingVertices()
 		{
 			List<DuVec3> Extremes = new List<DuVec3>();
-			if ((LD.x < PG.x && LD.z > PG.z) || (LD.x > PG.x && LD.z < PG.z))
-			{ // extremes spreading along Z axis
-				for (int z = (int)LD.z; BL_aims4_TR(LD.z, PG.z, z); Go2High(LD.z, PG.z, ref z))
+			if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
+			{   // extremes spreading along Z axis
+				for (int z = (int)BL.z; BL_aims4_TR(BL.z, TR.z, z); Go2High(BL.z, TR.z, ref z))
 				{
-					Vector3 P1 = new Vector3(LD.x, Consts.current_heights[Consts.PosToIndex((int)LD.x, z)], z);
-					Vector3 P2 = new Vector3(PG.x, Consts.current_heights[Consts.PosToIndex(PG.x, z)], z);
+					Vector3 P1, P2;
+					if (Connect.isOn)
+					{
+						P1 = new Vector3(BL.x, Consts.current_heights[Consts.PosToIndex((int)BL.x, z)], z);
+						if (!Symmetric.isOn)
+							P2 = new Vector3(TR.x, Consts.current_heights[Consts.PosToIndex(TR.x, z)], z);
+						else
+							P2 = new Vector3(((int)BL.x + TR.x) / 2, Consts.current_heights[Consts.PosToIndex(((int)BL.x + TR.x) / 2, z)], z);
+					}
+					else
+                    {
+						P1 = new Vector3(BL.x, BL.y, z);
+						P2 = new Vector3(TR.x, slider_realheight, z);
+					}
 					Extremes.Add(new DuVec3(P1, P2));
 				}
 			}
 			else
-			{ // extremes spreading along X axis
-				for (int x = (int)LD.x; BL_aims4_TR(LD.x, PG.x, x); Go2High(LD.x, PG.x, ref x))
+			{   // extremes spreading along X axis
+				for (int x = (int)BL.x; BL_aims4_TR(BL.x, TR.x, x); Go2High(BL.x, TR.x, ref x))
 				{
-					Vector3 P1 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, (int)LD.z)], LD.z);
-					Vector3 P2 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, PG.z)], PG.z);
+					Vector3 P1, P2;
+					if (Connect.isOn)
+					{
+						P1 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, (int)BL.z)], BL.z);
+						if (!Symmetric.isOn)
+							P2 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, TR.z)], TR.z);
+						else
+							P2 = new Vector3(x, Consts.current_heights[Consts.PosToIndex(x, ((int)BL.z + TR.z) / 2)], ((int)BL.z + TR.z) / 2);
+					}
+					else
+                    {
+						P1 = new Vector3(x, BL.y, BL.z);
+						P2 = new Vector3(x, slider_realheight, TR.z);
+					}
 					Extremes.Add(new DuVec3(P1, P2));
 				}
 			}
@@ -452,7 +538,7 @@ public class ShapeMenu : MonoBehaviour
 	void Amplify()
 	{
 		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
-		float slider_value = FormPanel.GetComponent<Form>().HeightSlider.value;
+		float slider_value = HeightSlider.value;
 		//Update terrain
 		HashSet<int> indexes = new HashSet<int>();
 		foreach (GameObject marking in markings.Values)
@@ -504,78 +590,106 @@ public class ShapeMenu : MonoBehaviour
 		UndoBuffer.ApplyOperation();
 		Consts.UpdateMapColliders(indexes);
 	}
-	void Set_rotated_BL_and_TR()
+	void SetShapeInfo(bool SetTR)
 	{
-		//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
-		int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
-		foreach (GameObject znacznik in markings.Values)
+		if (SetTR)
 		{
-			if (znacznik.name == "on")
+			//We have bottom-left, now we're searching for upper-right (all relative to 'rotation' of selection)
+			int lowX = int.MaxValue, hiX = int.MinValue, lowZ = int.MaxValue, hiZ = int.MinValue;
+			foreach (GameObject znacznik in markings.Values)
 			{
-				if (lowX > znacznik.transform.position.x)
-					lowX = Mathf.RoundToInt(znacznik.transform.position.x);
-				if (hiX < znacznik.transform.position.x)
-					hiX = Mathf.RoundToInt(znacznik.transform.position.x);
+				if (znacznik.name == "on")
+				{
+					if (lowX > znacznik.transform.position.x)
+						lowX = Mathf.RoundToInt(znacznik.transform.position.x);
+					if (hiX < znacznik.transform.position.x)
+						hiX = Mathf.RoundToInt(znacznik.transform.position.x);
 
-				if (lowZ > znacznik.transform.position.z)
-					lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
-				if (hiZ < znacznik.transform.position.z)
-					hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
+					if (lowZ > znacznik.transform.position.z)
+						lowZ = Mathf.RoundToInt(znacznik.transform.position.z);
+					if (hiZ < znacznik.transform.position.z)
+						hiZ = Mathf.RoundToInt(znacznik.transform.position.z);
+				}
+			}
+
+			if (BL.x < hiX)
+			{
+				if (BL.z < hiZ)
+				{
+					TR.Set(hiX, 0, hiZ);
+				}
+				else
+					TR.Set(hiX, 0, lowZ);
+			}
+			else
+			{
+				if (BL.z < hiZ)
+				{
+					TR.Set(lowX, 0, hiZ);
+				}
+				else
+					TR.Set(lowX, 0, lowZ);
 			}
 		}
 
-		if (BL.x < hiX)
+		slider_realheight = Consts.SliderValue2RealHeight(HeightSlider.value);
+
+		if ((BL.x < TR.x && BL.z >= TR.z) || (BL.x > TR.x && BL.z <= TR.z))
 		{
-			if (BL.z < hiZ)
-			{
-				TR.Set(hiX, 0, hiZ);
-			}
-			else
-				TR.Set(hiX, 0, lowZ);
+			slope_length = (int)Mathf.Abs(BL.x - TR.x);
 		}
 		else
-		{
-			if (BL.z < hiZ)
-			{
-				TR.Set(lowX, 0, hiZ);
-			}
-			else
-				TR.Set(lowX, 0, lowZ);
-		}
+			slope_length = (int)Mathf.Abs(BL.z - TR.z);
+
+		if (Symmetric.isOn)
+			slope_length /= 2;
 	}
 	
-	void SetMarkingPos(int x, int z, int step, int steps, float slider_realheight, float heightdiff)
+	List<float> GetSlopePoints(float height, int steps)
+    {
+		switch (LastSelected)
+        {
+			case FormButton.jump:
+				return Consts.Razorstep(height, steps, steps - 1, 0); // Doesn't need the symmetric modifier
+			case FormButton.jumpend:
+				return Consts.Razorstep(height, steps, 0, slope_length - 1, Symmetric.isOn);
+			case FormButton.integral:
+				return Consts.Razorstep(height, steps, (slope_length - 1) / 2, (slope_length - 1) / 2, Symmetric.isOn);
+			case FormButton.rounded:
+				return Consts.Razorstep(height, steps, start_rounding, end_rounding, Symmetric.isOn);
+			default:
+				return new List<float>();
+		}
+    }
+
+	void SetMarkingPos(int x, int z, int step, int steps, float heightdiff, List<float> slope_points)
 	{
 		bool traf = Physics.Raycast(new Vector3(x, Consts.MAX_H, z), Vector3.down, out RaycastHit hit, Consts.RAY_H, 1 << 11);
 		if (traf && hit.transform.gameObject.name == "on" && Consts.IsWithinMapBounds(x, z))
 		{
-			index = Consts.PosToIndex(x, z);
- 
-			float old_Y = Consts.current_heights[index]; // tylko do keepshape
-			float Y = old_Y;
-			if (LastSelected == FormButton.linear)
-				Y = BL.y + (float)step / steps * heightdiff;
-			else if (LastSelected == FormButton.integral)
+			int index = Consts.PosToIndex(x, z);
+			float Y;
+			if (LastSelected == FormButton.flatter)
 			{
-				if (2 * step <= steps)
-				{
-					Y = BL.y + step * (step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-					+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
-				}
+				slope_points = TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints.ToList();
+				if (!Input.GetKey(KeyCode.Y))
+					Y = BL.y - slope_points[step];
 				else
 				{
-					Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (Mathf.Ceil(steps / 2f) * (Mathf.Ceil(steps / 2f) + 1)
-					+ Mathf.Floor(steps / 2f) * (Mathf.Floor(steps / 2f) + 1));
+					heightdiff = slope_points[steps];
+					Y = BL.y + heightdiff - slope_points[steps - step];
 				}
 			}
-			else if (LastSelected == FormButton.jump)
-				Y = BL.y + step * (step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * Consts.Smoothstep(BL.y, slider_realheight, BL.y + 0.5f * step / steps * heightdiff) * heightdiff;
-			else if (LastSelected == FormButton.jumpend)
-				Y = slider_realheight - (steps - step) * (steps - step + 1) * heightdiff / (steps * (steps + 1));//Y = BL.y + 2 * (Consts.Smoothstep(BL.y, slider_realheight, BL.y + (0.5f * step / steps + 0.5f) * heightdiff) - 0.5f) * heightdiff;
-			else if (LastSelected == FormButton.flatter)
-				Y = BL.y - TileManager.TileListInfo[selected_tiles[0].name].FlatterPoints[step];
+			else if (LastSelected == FormButton.linear)
+			{
+				Y = BL.y + (float)step / steps * heightdiff;
+			}
+			else
+			{
+				Y = BL.y + slope_points[step];
+			}
 			if (KeepShape.isOn)
-				Y += old_Y - BL.y;
+				Y += Consts.current_heights[index] - BL.y;
 			if (float.IsNaN(Y))
 				return;
 			Vector3 for_buffer = Consts.IndexToPos(index);
@@ -659,7 +773,7 @@ public class ShapeMenu : MonoBehaviour
 			StateSwitch(SelectionState.MARKING_VERTICES);
 		}
 		if (selectionState == SelectionState.MARKING_VERTICES && LastSelected != FormButton.none)
-			StateSwitch(SelectionState.WAITING4LD);
+			StateSwitch(SelectionState.WAITING4BL);
 
 		void InverseSelection()
 		{
@@ -928,6 +1042,12 @@ public class ShapeMenu : MonoBehaviour
 		CurrentPattern = (MarkingPattern)(((int)CurrentPattern + 1) % Enum.GetNames(typeof(MarkingPattern)).Length);
     }
 
+	private void ShapeTypeSwitch(FormButton new_type)
+    {
+		LastSelected = new_type;
+		StateSwitch(SelectionState.WAITING4BL);
+	}
+
 	/// <summary>
 	/// internal => visible also for every script attached to ShapeMenu
 	/// </summary>
@@ -939,30 +1059,37 @@ public class ShapeMenu : MonoBehaviour
 			areal_selection = false;
 			Del_znaczniki();
 			FormMenu.SetActive(false);
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Shape forming");
+			formSlider.SwitchTextStatus("Shape forming");
 		}
 		else if (newstate == SelectionState.SELECTING_VERTICES)
 		{
 			FormMenu.SetActive(true);
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Selecting vertices..");
+			formSlider.SwitchTextStatus("Selecting vertices..");
 		}
 		else if (newstate == SelectionState.MARKING_VERTICES)
 		{
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Marking vertices..");
+			LastSelected = FormButton.none;
+			start_rounding = -1;
+			end_rounding = -1;
+			formSlider.SwitchTextStatus("Marking vertices..");
 		}
-		else if (newstate == SelectionState.WAITING4LD)
+		else if (newstate == SelectionState.WAITING4BL)
 		{
 			if(LastSelected == FormButton.amplify)
-				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Select h0 vertex..");
+				formSlider.SwitchTextStatus("Select h0 vertex..");
 			else
-				FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for bottom-left vertex..");
+				formSlider.SwitchTextStatus("Waiting for bottom-left vertex..");
 		}
 		else if (newstate == SelectionState.WAITING4TR)
 		{
-			FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus("Waiting for top-right vertex..");
+			formSlider.SwitchTextStatus("Waiting for top-right vertex..");
 		}
-		else if (newstate == SelectionState.POINT_SELECTED)
+		else if (newstate == SelectionState.SETTING_PARAMETERS)
 		{
+			if (start_rounding == -1)
+				formSlider.SwitchTextStatus($"Set start rounding (0 - {slope_length - 1}) & Enter");
+			else if (end_rounding == -1)
+				formSlider.SwitchTextStatus($"Set end rounding (0 - {Math.Max(slope_length - 1 - start_rounding, 0)}) & Enter");
 		}
 	}
 }

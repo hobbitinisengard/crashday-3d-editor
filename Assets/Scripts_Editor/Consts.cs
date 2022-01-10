@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 /// <summary>
 /// Static class containing fields that need to survive during scene change
@@ -327,6 +328,7 @@ public static class Consts
 		}
 		UpdateMapColliders(mcs, recover_terrain);
 	}
+
 	public static float Smoothstep(float edge0, float edge1, float x)
 	{
 		if (edge1 == edge0)
@@ -335,6 +337,77 @@ public static class Consts
 		x = (x - edge0) / (edge1 - edge0);
 		return x * x * (3 - 2 * x);
 	}
+
+	/// <summary>
+	/// Height increase by 2^(step*n) per step; searches for n and returns the list of heights for each step.
+	/// </summary>
+	public static List<float> Razorstep(float target_height, int steps, int round_start, int round_end, bool symmetric = false)
+ 	{
+		float[] heights = new float[steps + 1];
+		if (target_height == 0)
+			return heights.ToList();
+		int direction = (int)(Mathf.Abs(target_height) / target_height);
+		target_height = Mathf.Abs(target_height);
+		int slope_length = symmetric ? steps / 2 : steps;
+		float low_bound = 0;
+		float high_bound = Mathf.Log(2 * MAX_H, 2);
+		float exp;
+		int step;
+		int i = 0;
+		do
+		{
+			exp = (low_bound + high_bound) / 2;
+			for (step = 1; step <= slope_length; step++)
+			{
+				heights[step] = HeightAtStep(exp, heights[step - 1]);
+				if (heights[step] > target_height + .0001f)
+				{
+					step++;
+					break;
+				}
+			}
+			if (target_height > heights[step - 1] + .0001f)
+			{
+				low_bound = exp;
+			}
+			else if (target_height < heights[step - 1] - .0001f)
+			{
+				high_bound = exp;
+			}
+			i++;
+		} while (Mathf.Abs(target_height - heights[step - 1]) > .0001f && i < 100);
+
+		heights[slope_length] = target_height;
+		if (symmetric)
+			for (step = slope_length + 1; step <= steps; step++)
+				heights[step] = heights[steps - step];
+
+		return heights.Select((h) => h * direction).ToList();
+
+		// Determines height at the current step based on the previous one
+		float HeightAtStep(float exp_increase, float height)
+		{
+			float max_exp = (round_start + 1) * exp_increase;
+			float reverse_exp_increase = max_exp / (round_end + (symmetric && steps % 2 == 0 ? .5f : 1));
+			float current_exp;
+
+			if (step <= round_start)
+			{
+				current_exp = step * exp_increase;
+			}
+			else if (round_start < step && step <= slope_length - round_end)
+			{
+				current_exp = max_exp;
+			}
+			else
+			{
+				current_exp = (slope_length - step + (symmetric && steps % 2 == 0 ? .5f : 1)) * reverse_exp_increase;
+			}
+			height += Mathf.Pow(2, current_exp) - 1;
+			return height;
+		}
+	}
+
 	public static IEnumerable<string> SplitBy(this string str, int chunkLength)
 	{
 		for (int i = 0; i < str.Length; i += chunkLength)
