@@ -709,7 +709,7 @@ public class Build : MonoBehaviour
 				byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
 				GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
 				GetPrefabMesh(Mirrored, Prefab);
-				Tile_to_RMC_Cast(Prefab, rmc_o);
+				Tile_To_Grass_Cast(Prefab, rmc_o);
 				rmc_o.layer = 9;
 			}
 		}
@@ -911,7 +911,7 @@ public class Build : MonoBehaviour
 
 			UpdateTiles(Get_surrounding_tiles(current_rmc));
 			Consts.UpdateMapColliders(current_rmc.transform.position, tileDims);
-			Tile_to_RMC_Cast(Prefab, current_rmc);
+			Tile_To_Grass_Cast(Prefab, current_rmc);
 
 			return null;
 		}
@@ -1050,7 +1050,7 @@ public class Build : MonoBehaviour
 			InverseMesh(prefab.GetComponent<MeshFilter>().mesh);
 	}
 
-	static void Tile_to_RMC_Cast(GameObject prefab, GameObject rmc)
+	static void Tile_To_Grass_Cast(GameObject prefab, GameObject rmc)
 	{
 		rmc.layer = 10;
 		Mesh mesh = prefab.GetComponent<MeshFilter>().mesh;
@@ -1063,10 +1063,20 @@ public class Build : MonoBehaviour
 			RaycastHit hit;
 			Vector3 v = prefab.transform.TransformPoint(verts[i]);
 			float floating_offset = rmc.transform.position.y;
-			if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+			if (Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+			{
 				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
+			}
+			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 8))
+			{
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
+			}
+			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
+			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts.
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
+			}
 			else // out of map boundaries: height of closest edge
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y + floating_offset - pzero, v.z));
+				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
 		}
 
 		mesh.vertices = verts;
