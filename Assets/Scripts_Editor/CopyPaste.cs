@@ -117,15 +117,16 @@ public class CopyPaste : MonoBehaviour
 		fixed_height = ShapeMenu.BL.y;
 		// reserve place for first marking = Vector3 zero.
 		CopyClipboard.Add(Vector3.zero);
-		foreach (var mrk in ShapeMenu.markings.Values)
+		foreach (int index in ShapeMenu.markings.Keys)
 		{
+			GameObject mrk = ShapeMenu.markings[index];
 			if (mrk.name == "on")
 			{
-				Vector3 pom = Consts.RoundVector3(mrk.transform.position - ShapeMenu.BL);
-				if (pom.x == 0 && pom.z == 0)
+				Vector3 pos = Consts.RoundVector3(Consts.IndexToPos(index) - ShapeMenu.BL);
+				if (pos.x == 0 && pos.z == 0)
 					continue;
 				else
-					CopyClipboard.Add(pom);
+					CopyClipboard.Add(pos);
 			}
 		}
 		SelectionRotationVal = 0;

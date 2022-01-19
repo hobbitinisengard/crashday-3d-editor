@@ -132,7 +132,10 @@ public static class Consts
 		else if (float.IsNaN(pos.Value.y) || float.IsInfinity(pos.Value.y))
 			newposition.Set(pos.Value.x, 0, pos.Value.z);
 		else
+		{
 			newposition = (Vector3)pos;
+			newposition.Set(Mathf.RoundToInt(newposition.x), newposition.y, Mathf.RoundToInt(newposition.z));
+		}
 		znacznik.transform.position = newposition;
 
 		if (hasCollider)
