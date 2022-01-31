@@ -314,7 +314,7 @@ public class ShapeMenu : MonoBehaviour
 		{
 			StateSwitch(SelectionState.MARKING_VERTICES);
 		}
-		else if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyDown(KeyCode.LeftControl))
+		else if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyDown(KeyCode.LeftControl) && !areal_selection)
 		{
 			StateSwitch(SelectionState.SELECTING_VERTICES);
 		}
@@ -333,6 +333,9 @@ public class ShapeMenu : MonoBehaviour
 				}
 				else
 					SpawnVertexBoxes(Highlight.tile, selected_tiles.Count == 0 && Input.GetKey(KeyCode.Q), Input.GetKey(KeyCode.LeftShift));
+
+				if (!Input.GetKey(KeyCode.LeftControl))
+					StateSwitch(SelectionState.MARKING_VERTICES);
 			}
 		}
 	}
@@ -365,8 +368,7 @@ public class ShapeMenu : MonoBehaviour
 
 			if (Input.GetMouseButtonUp(0)) //First click
 			{
-				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z),
-									Vector3.down, Consts.RAY_H, 1 << 11))
+				if (Physics.Raycast(new Vector3(Highlight.pos.x, Consts.MAX_H, Highlight.pos.z), Vector3.down, Consts.RAY_H, 1 << 11))
 				{
 					BL = Highlight.pos;
 					BL.y = Consts.current_heights[Consts.PosToIndex(Highlight.pos)];
@@ -788,6 +790,7 @@ public class ShapeMenu : MonoBehaviour
 					Y = BL.y - slope_points[step];
 				else
 				{
+					steps = slope_points.Count - 1;
 					heightdiff = slope_points[steps];
 					Y = BL.y + heightdiff - slope_points[steps - step];
 				}
