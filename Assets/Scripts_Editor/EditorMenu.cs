@@ -31,6 +31,7 @@ public class EditorMenu : MonoBehaviour
 	public GameObject help;
 	public GameObject MissingTilesPanel;
 	public GameObject MissingTilesPanel_content;
+	public GameObject EscapeConfirmationPanel;
 	public GameObject editorPANEL;
 	public GameObject formPANEL;
 	public InputField MarkingBoundsWidth;
@@ -90,6 +91,11 @@ public class EditorMenu : MonoBehaviour
 			{
 				Toggle_help();
 			}
+			if (Input.GetKeyDown(KeyCode.Escape) && ShapeMenu.selectionState == SelectionState.NOSELECTION
+				&& ProfileCreator.state == ProfileState.idle)
+			{
+				ToggleEscapeWindow();
+			}
 			if (Input.GetMouseButtonDown(2))
 			{//MMB przełącza teren/budowanie
 				SwitchPanels();
@@ -130,6 +136,17 @@ public class EditorMenu : MonoBehaviour
 		else
 			floor1.shader = Shader.Find("Mobile/Bumped Diffuse");
 	}
+
+	public void ToggleEscapeWindow()
+	{
+		if (EscapeConfirmationPanel.activeSelf)
+			EscapeConfirmationPanel.transform.GetChild(0).gameObject.SetActive(false);
+		else
+		{
+			EscapeConfirmationPanel.SetActive(true);
+			EscapeConfirmationPanel.transform.GetChild(0).gameObject.SetActive(true);
+		}
+ 	}
 
 	public void EditorToMenu()
 	{

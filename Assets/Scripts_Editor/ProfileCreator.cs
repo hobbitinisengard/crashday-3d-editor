@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-enum ProfileState { idle, first_clicked, profileApplied, preview_visible }
+public enum ProfileState { idle, first_clicked, profileApplied, preview_visible }
 /// <summary>
 /// Hooked in Profiles Menu. Responsible for Profiles functionality
 /// </summary>
@@ -19,7 +19,7 @@ public class ProfileCreator : MonoBehaviour
 	private List<List<GameObject>> Profiles = new List<List<GameObject>>();
 	public Material white;
 	public Material red;
-	private ProfileState state = ProfileState.idle;
+	public static ProfileState state = ProfileState.idle;
 
 	private void OnEnable()
 	{
