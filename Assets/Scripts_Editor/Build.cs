@@ -61,7 +61,7 @@ public class Build : MonoBehaviour
 	public static bool over_b4 = Highlight.over_grass;
 	private bool IsEnteringKeypadValue;
 	private static GameObject outlined_element;
-
+	private static GameObject HeightIndicator;
 
 	private void OnDisable()
 	{
@@ -345,12 +345,14 @@ public class Build : MonoBehaviour
 	/// <summary>Displays transparent cuboid for 2 secs.</summary>
 	public void MixingHeightPreview()
 	{
-		GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
-		Destroy(preview.GetComponent<BoxCollider>());
-		preview.GetComponent<MeshRenderer>().material = partiallytransparent;
-		preview.transform.localScale = new Vector3(3f, 0.05f, 3);
-		preview.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight / 5f, Highlight.TL.z - 2);
-		Destroy(preview, 2);
+		if (HeightIndicator != null)
+			Destroy(HeightIndicator);
+		HeightIndicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		Destroy(HeightIndicator.GetComponent<BoxCollider>());
+		HeightIndicator.GetComponent<MeshRenderer>().material = partiallytransparent;
+		HeightIndicator.transform.localScale = new Vector3(3f, 0.05f, 3);
+		HeightIndicator.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight / 5f, Highlight.TL.z - 2);
+		Destroy(HeightIndicator, 2);
 	}
 	/// <summary>
 	/// Toggles tile preview 

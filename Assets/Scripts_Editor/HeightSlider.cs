@@ -11,6 +11,7 @@ public class HeightSlider : MonoBehaviour
     public Toggle PreviewToggle;
     public Material partiallytransparent;
     bool IsEnteringKeypadValue = false; // used in numericenter();
+    private static GameObject HeightIndicator;
     private void Start()
     {
         HSlider.minValue = Consts.MIN_H;
@@ -43,15 +44,17 @@ public class HeightSlider : MonoBehaviour
     /// <summary>Displays transparent cuboid for 2 secs.</summary>
     public void SliderPreview(float v)
     {
+        if (HeightIndicator != null)
+            Destroy(HeightIndicator);
         if (PreviewToggle.isOn && !CopyPaste.IsEnabled())
         {
             float y = Consts.SliderValue2RealHeight(v);
-            GameObject preview = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(preview.GetComponent<BoxCollider>());
-            preview.GetComponent<MeshRenderer>().material = partiallytransparent;
-            preview.transform.localScale = new Vector3(3f, 0.05f, 3);
-            preview.transform.position = new Vector3(2 + Highlight.TL.x, y, Highlight.TL.z - 2);
-            Destroy(preview, 2);
+            HeightIndicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Destroy(HeightIndicator.GetComponent<BoxCollider>());
+            HeightIndicator.GetComponent<MeshRenderer>().material = partiallytransparent;
+            HeightIndicator.transform.localScale = new Vector3(3f, 0.05f, 3f);
+            HeightIndicator.transform.position = new Vector3(2 + Highlight.TL.x, y, Highlight.TL.z - 2);
+            Destroy(HeightIndicator, 2);
         }
     }
     private void Hide_text_helper()
