@@ -65,7 +65,7 @@ public static class Consts
 	}
 
 	/// <summary>
-	/// Saves latest path to StreamingAssets/Path.txt
+	/// Saves latest path to Documents\Crashday 3D Editor\path.txt
 	/// </summary>
 	public static void SaveLastFolderPath(string path)
 	{
@@ -79,6 +79,32 @@ public static class Consts
 		w.WriteLine(path);
 		w.Close();
 	}
+
+	/// <summary>
+	/// Saves latest loaded track to Documents\Crashday 3D Editor\userdata.txt
+	/// </summary>
+	public static void SaveLastMap(string name)
+    {
+		string[] data = File.ReadAllLines(userdata_path);
+
+		List<string> maps = data.ToList().GetRange(1, data.Length - 1);
+		if (maps.Contains(name))
+			maps.Remove(name);
+		maps.Insert(0, name);
+		if (maps.Count > 10)
+			maps.RemoveAt(maps.Count - 1);
+
+		List<string> newdata = maps;
+		newdata.Insert(0, data[0]); // The bit indicating the first game launch
+		File.WriteAllLines(userdata_path, newdata);
+	}
+
+	public static void SaveTrackInfo(string path)
+	{
+		TRACK = MapParser.ReadMap(path);
+		Trackname = Path.GetFileNameWithoutExtension(path);
+	}
+
 	public static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles, bool precision = false)
 	{
 		Vector3 dir = point - pivot; // get point direction relative to pivot

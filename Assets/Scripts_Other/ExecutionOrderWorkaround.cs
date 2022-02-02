@@ -9,7 +9,7 @@ class ExecutionOrderWorkaround : MonoBehaviour
 	public GameObject EscapeConfirmationWindow;
 
 	void Update()
-    {
+	{
 		if (EscapeConfirmationPanel.activeSelf && !EscapeConfirmationWindow.activeSelf)
 			EscapeConfirmationPanel.SetActive(false);
 	}

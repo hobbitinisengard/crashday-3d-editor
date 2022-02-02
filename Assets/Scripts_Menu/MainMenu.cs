@@ -1,8 +1,8 @@
 ﻿using SFB;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -23,6 +23,8 @@ public class MainMenu : MonoBehaviour
 	public InputField ResizeMenu_Left;
 	public InputField ResizeMenu_Up;
 	public InputField ResizeMenu_Down;
+	public GameObject TrackEntryTemplate;
+	public GameObject TrackNotFound;
 
 	/// <summary>Whether new track dimensions don't exceed TrackTileLimit</summary>
 	public static bool CanCreateTrack = true;
@@ -42,6 +44,7 @@ public class MainMenu : MonoBehaviour
 			TileManager.LoadTiles();
 		}
 	}
+
 	void Initialize_Documents_Folder()
 	{
 		if (!Directory.Exists(Consts.documents_3deditor_path))
@@ -62,6 +65,7 @@ public class MainMenu : MonoBehaviour
 			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
 		}
 	}
+
 	public void ToggleMirrored()
 	{
 		Consts.LoadMirrored = MirroredToggle.isOn;
@@ -71,6 +75,7 @@ public class MainMenu : MonoBehaviour
 			MirroredToggle.transform.gameObject.SetActive(true);
         }
 	}
+
 	public void ToggleResize()
     {
 		if (!ResizeToggle.isOn)
@@ -79,6 +84,7 @@ public class MainMenu : MonoBehaviour
 			ResizeToggle.transform.gameObject.SetActive(true);
         }
     }
+
 	public void RemoveEntryAndContentFolder()
 	{
 		try
@@ -91,6 +97,7 @@ public class MainMenu : MonoBehaviour
 		IO.RemoveCrashdayPath();
 		QuitGame();
 	}
+
 	public static void DeleteDirectory(string target_dir)
 	{
 		string[] files = Directory.GetFiles(target_dir);
@@ -109,40 +116,92 @@ public class MainMenu : MonoBehaviour
 
 		Directory.Delete(target_dir, false);
 	}
+
 	public void CreateNewTrack()
 	{
 		ChangeSceneToEditor();
 	}
+
 	public void QuitGame()
 	{
 		Application.Quit();
 	}
-	public void LoadTrackToVariablesAndRunEditor()
+
+	private IEnumerator ShowText(GameObject text, float delay)
 	{
-		string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", Consts.LoadLastFolderPath(), "trk", false);
-		if (sourcepath.Length == 0)
-			return;
-		else// player hasnt clicked 'cancel' button
+		text.SetActive(true);
+		yield return new WaitForSeconds(delay);
+		text.SetActive(false);
+	}
+
+	public void PopulateRecentTracks()
+    {
+		Transform tracklist = TrackEntryTemplate.transform.parent;
+		string[] data = File.ReadAllLines(Consts.userdata_path);
+		List<string> maps = data.ToList().GetRange(1, data.Length - 1);
+
+		if (tracklist.childCount == 1) // Haven't loaded anything yet
 		{
-			string path = sourcepath[0];
-			Consts.TRACK = MapParser.ReadMap(path);
-			Consts.Trackname = path.Substring(path.LastIndexOf('\\') + 1, path.Length - path.LastIndexOf('\\') - 5);
-			path = path.Substring(0, path.LastIndexOf('\\'));
-			Consts.SaveLastFolderPath(path);
-			
-			if (ResizeToggle.isOn)
+			foreach (string map in maps)
 			{
-				LoadMenu.SetActive(false);
-				ResizeMenu.SetActive(true);
-				UpdateResizeMenu();
-			}
-			else
-			{
-				Loader.Isloading = true;
-				ChangeSceneToEditor();
+				GameObject new_entry = Instantiate(TrackEntryTemplate, tracklist);
+				new_entry.transform.GetChild(0).GetComponent<Text>().text = map;
+				new_entry.name = map;
+				new_entry.SetActive(true);
 			}
 		}
+		else
+        {
+			string map = maps[0];
+			foreach (Transform track in tracklist) // Removing the entry if it's already in the list
+            {
+				if (track.gameObject.name == map)
+					Destroy(track.gameObject);
+            }
+			GameObject new_entry = Instantiate(TrackEntryTemplate, tracklist);
+			new_entry.transform.GetChild(0).GetComponent<Text>().text = map;
+			new_entry.name = map;
+			new_entry.SetActive(true);
+		}
+    }
+
+	public void LoadRecentTrack(Text name)
+    {
+		string path = Consts.LoadLastFolderPath() + "\\" + name.text + ".trk";
+		if (File.Exists(path))
+		{
+			LoadTrackToVariablesAndRunEditor(path);
+		}
+		else
+			StartCoroutine(ShowText(TrackNotFound, 2));
+    }
+
+	public void LoadTrackToVariablesAndRunEditor(string path = "")
+	{
+		if (path == "")
+		{
+			string[] sourcepath = StandaloneFileBrowser.OpenFilePanel("Select track (.trk) ", Consts.LoadLastFolderPath(), "trk", false);
+			if (sourcepath.Length == 0) // player has clicked 'cancel' button
+				return;
+			path = sourcepath[0];
+		}
+		Consts.SaveTrackInfo(path);
+		Consts.SaveLastFolderPath(Path.GetDirectoryName(path));
+		Consts.SaveLastMap(Path.GetFileNameWithoutExtension(path));
+
+		if (ResizeToggle.isOn)
+		{
+			LoadMenu.SetActive(false);
+			ResizeMenu.SetActive(true);
+			UpdateResizeMenu();
+		}
+		else
+		{
+			Loader.Isloading = true;
+			ChangeSceneToEditor();
+		}
 	}
+
 	public void UpdateResizeMenu()
 	{
 		ResizeMenu_Right.text = ResizeMenu_Right.text == "" ? "0" : ResizeMenu_Right.text;
@@ -155,6 +214,7 @@ public class MainMenu : MonoBehaviour
 		Resizemenu_Size_str.text = "Size: " + (Consts.TRACK.Width + newwidth) + " x " + (Consts.TRACK.Height + newheight);
 		Resizemenu_Elements_str.text = "Elements: " + (Consts.TRACK.Width + newwidth) * (Consts.TRACK.Height + newheight) + " / " + Consts.MAX_ELEMENTS;
 	}
+
 	public void Resize_n_Load()
 	{
 		int newwidth = int.Parse(ResizeMenu_Right.text) + int.Parse(ResizeMenu_Left.text);
