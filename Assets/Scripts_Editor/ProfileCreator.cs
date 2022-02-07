@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum ProfileState { idle, first_clicked, profileApplied, preview_visible }
+public enum ProfileState { IDLE, SELECTING_P1, SELECTING_P2, MANUAL_SELECTION, PREVIEW_VISIBLE }
 /// <summary>
 /// Hooked in Profiles Menu. Responsible for Profiles functionality
 /// </summary>
@@ -14,125 +14,148 @@ public class ProfileCreator : MonoBehaviour
 	public Slider sCurviness;
 	public GameObject FormPanel;
 	public GameObject HeightSliderAndPreviewToggle;
+	public FormSlider formSlider;
 	private VertexPath[] paths;
 	private GameObject RoadMesh;
 	private List<List<GameObject>> Profiles = new List<List<GameObject>>();
 	public Material white;
 	public Material red;
-	public static ProfileState state = ProfileState.idle;
+	public static ProfileState state = ProfileState.IDLE;
 
 	private void OnEnable()
 	{
 		HeightSliderAndPreviewToggle.SetActive(false);
 	}
+
 	private void OnDisable()
 	{
 		RemovePreview();
-		state = ProfileState.idle;
+		ClearPath();
 		HeightSliderAndPreviewToggle.SetActive(true);
 	}
-	private void SwitchTextStatus(string text)
-	{
-		FormPanel.GetComponent<Form>().FormSlider.GetComponent<FormSlider>().SwitchTextStatus(text);
-	}
-	private void SwitchTextStatus(ProfileState s)
+
+	private void StateSwitch(ProfileState s)
 	{
 		state = s;
-		if (s == ProfileState.idle)
-			SwitchTextStatus("Ready..");
-		else if (s == ProfileState.first_clicked)
-			SwitchTextStatus("*Selecting*");
-		else if (s == ProfileState.profileApplied)
-			SwitchTextStatus("RMB/backspace");
-		else if (s == ProfileState.preview_visible)
-			SwitchTextStatus("Enter/Backspace/Del");
+		if (state == ProfileState.IDLE)
+		{
+			formSlider.SwitchTextStatus("Profiles mode");
+		}
+		else if (state == ProfileState.SELECTING_P1)
+		{
+			if (Profiles.Count < 3)
+				formSlider.SwitchTextStatus("Selecting P1..");
+			else
+				formSlider.SwitchTextStatus("Selecting P1 / Enter..");
+		}
+		else if (state == ProfileState.SELECTING_P2)
+		{
+			formSlider.SwitchTextStatus("Selecting P2..");
+		}
+		else if (state == ProfileState.MANUAL_SELECTION)
+		{
+			if (Profiles.Count == 1 && Profiles[0].Count > 1)
+				formSlider.SwitchTextStatus("Manual selection / Enter");
+			else
+				formSlider.SwitchTextStatus("Manual selection");
+		}
+		else if (state == ProfileState.PREVIEW_VISIBLE)
+		{
+			formSlider.SwitchTextStatus("Enter/Esc..");
+		}
 	}
+
 	private void Update()
 	{
-		SelectingProfile();
+ 		AutoManualSwitch();
 
-		if (Input.GetMouseButtonDown(1))
-			AcceptProfile();
-		if (Input.GetKeyDown(KeyCode.Backspace) && state != ProfileState.preview_visible)
-			RemoveProfile();
-		if (Input.GetKeyDown(KeyCode.Return) && (state == ProfileState.profileApplied || state == ProfileState.idle))
-			GeneratePreview();
-		else if (Input.GetKeyDown(KeyCode.Return) && state == ProfileState.preview_visible)
-			ApplyProfile();
-		if (Input.GetKeyDown(KeyCode.Backspace) && state == ProfileState.preview_visible)
-			RemovePreview(false);
-		if (Input.GetKeyDown(KeyCode.Delete) && state == ProfileState.preview_visible)
-			RemovePreview(true);
+		if (Input.GetMouseButtonDown(0) && !MouseInputUIBlocker.BlockedByUI && Consts.IsWithinMapBounds(Highlight.pos))
+		{
+			if (state == ProfileState.IDLE || state == ProfileState.SELECTING_P1)
+				Add_P1();
+			else if (state == ProfileState.SELECTING_P2)
+				AddProfile();
+			else if (state == ProfileState.MANUAL_SELECTION)
+				AddPoint();
+		}
+		else if (Input.GetKeyDown(KeyCode.Return))
+		{
+			if (state == ProfileState.MANUAL_SELECTION && IsNewProfileValid())
+				StateSwitch(ProfileState.SELECTING_P1);
+			else if (state == ProfileState.SELECTING_P1 || state == ProfileState.IDLE)
+				GeneratePreview();
+			else if (state == ProfileState.PREVIEW_VISIBLE)
+				ApplyPath();
+		}
+		else if (state == ProfileState.PREVIEW_VISIBLE && (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape)))
+		{
+			RemovePreview();
+		}
+		else if (state != ProfileState.PREVIEW_VISIBLE)
+		{
+			if (Input.GetKeyDown(KeyCode.Backspace))
+				RemoveProfile();
+			else if (Input.GetKeyDown(KeyCode.Escape))
+				ClearPath();
+		}
 	}
-	void AcceptProfile()
+
+	private void AutoManualSwitch()
 	{
-		if (!IsNewProfileValid() || state == ProfileState.preview_visible)
-			return;
-		SwitchTextStatus(ProfileState.idle);
+		if (state == ProfileState.MANUAL_SELECTION && !Input.GetKey(KeyCode.LeftControl) && Profiles.Last().Count == 1)
+		{
+			StateSwitch(ProfileState.SELECTING_P2);
+		}
+		else if (state == ProfileState.SELECTING_P2 && Input.GetKeyDown(KeyCode.LeftControl))
+		{
+			StateSwitch(ProfileState.MANUAL_SELECTION);
+		}
 	}
+
+	void Add_P1()
+	{
+		GameObject znacznik = Consts.CreateMarking(red);
+		Profiles.Add(new List<GameObject>() { znacznik });
+		if (!Input.GetKey(KeyCode.LeftControl))
+			StateSwitch(ProfileState.SELECTING_P2);
+		else
+			StateSwitch(ProfileState.MANUAL_SELECTION);
+	}
+
+	void AddProfile()
+	{
+		Vector3[] ProfilePoints = GetRemainingPoints(Profiles.Last().Last().transform.position, Highlight.pos);
+		if (!IsNewProfileValid(ProfilePoints.Length + 1))
+			return;
+		foreach (Vector3 pos in ProfilePoints)
+			Profiles.Last().Add(Consts.CreateMarking(white, pos));
+
+		StateSwitch(ProfileState.SELECTING_P1);
+	}
+
+	void AddPoint()
+	{
+		GameObject znacznik = Consts.CreateMarking(white);
+		Profiles.Last().Add(znacznik);
+		if (Profiles.Count > 1 && Profiles.Last().Count == Profiles[0].Count)
+			StateSwitch(ProfileState.SELECTING_P1);
+		else if (Profiles.Count == 1 && Profiles[0].Count == 2)
+			StateSwitch(ProfileState.MANUAL_SELECTION); // Allow Enter
+	}
+
 	void RemoveProfile()
 	{
 		if (Profiles.Count == 0)
 			return;
 		for (int i = 0; i < Profiles.Last().Count; i++) // delete markings of current profile
 			Destroy(Profiles.Last()[i]);
-		Profiles.Remove(Profiles.Last());
-		SwitchTextStatus(ProfileState.idle);
+		Profiles.RemoveAt(Profiles.Count - 1);
+		if (Profiles.Count == 0)
+			StateSwitch(ProfileState.IDLE);
+		else
+			StateSwitch(ProfileState.SELECTING_P1);
 	}
 
-	void SelectingProfile()
-	{
-		if (!MouseInputUIBlocker.BlockedByUI)
-		{
-			if (Input.GetMouseButtonDown(0))
-			{
-				if (!Consts.IsWithinMapBounds(Highlight.pos))
-					return;
-				if (Input.GetKey(KeyCode.LeftControl)) // add single vertex
-				{
-					if (state == ProfileState.idle || state == ProfileState.first_clicked)
-					{ // first or middle marking
-						if (state == ProfileState.idle)
-						{
-							GameObject znacznik = Consts.CreateMarking(red);
-							Profiles.Add(new List<GameObject>() { znacznik }); //add first marking to list
-						}
-						else if (state == ProfileState.first_clicked)
-						{
-							GameObject znacznik = Consts.CreateMarking(white);
-							Profiles.Last().Add(znacznik); //add middle marking
-						}
-						SwitchTextStatus(ProfileState.first_clicked);
-					}
-				}
-				else if (state == ProfileState.profileApplied) // standard multiple selection
-				{ // redo first marking
-					GameObject znacznik = Consts.CreateMarking(white);
-					for (int i = 0; i < Profiles.Last().Count; i++) // delete markings of current profile
-						Destroy(Profiles.Last()[i]);
-					Profiles.Last().Clear();
-					znacznik.GetComponent<MeshRenderer>().material = red;
-					Profiles.Last().Add(znacznik); // add to current profile 
-					SwitchTextStatus(ProfileState.first_clicked);
-				}
-				else if (state == ProfileState.idle)
-				{ // first marking
-					GameObject znacznik = Consts.CreateMarking(red);
-					Profiles.Add(new List<GameObject>() { znacznik }); //add first marking to list
-					SwitchTextStatus(ProfileState.first_clicked);
-				}
-				else if (state == ProfileState.first_clicked)
-				{ // second marking 
-					Vector3[] RemainingPos = GetRemainingPoints(Profiles.Last().Last().transform.position, Highlight.pos);
-					foreach (var pos in RemainingPos)
-						Profiles.Last().Add(Consts.CreateMarking(white, pos));
-
-					SwitchTextStatus(ProfileState.profileApplied);
-				}
-
-			}
-		}
-	}
 	Vector3[] GetRemainingPoints(Vector3 begin, Vector3 end)
 	{
 		List<Vector3> to_return = new List<Vector3>();
@@ -161,14 +184,18 @@ public class ProfileCreator : MonoBehaviour
 	//  lr.SetPosition(1, new Vector3(start.x, Consts.maxHeight, start.z));
 	//  Destroy(myLine, duration);
 	//}
+
 	bool IsNewProfileValid()
 	{
-		if (Profiles.Count == 0)
-			return true;
-
-		return Profiles.Last().Count == Profiles[0].Count ? true : false;
+		return Profiles.Count == 1 ? Profiles[0].Count > 1 : Profiles.Last().Count == Profiles[0].Count;
 	}
-	public void ApplyProfile()
+
+	bool IsNewProfileValid(int NewProfileLength)
+	{
+		return Profiles.Count == 1 ? NewProfileLength > 1 : NewProfileLength == Profiles[0].Count;
+	}
+
+	public void ApplyPath()
 	{
 		if (RoadMesh == null)
 			return;
@@ -197,21 +224,24 @@ public class ProfileCreator : MonoBehaviour
 		var surr = Build.Get_surrounding_tiles(indexes);
 		Build.UpdateTiles(surr);
 		UndoBuffer.ApplyOperation();
-		RemovePreview(false);
+		RemovePreview();
 	}
 
-	public void RemovePreview(bool ClearPts = true)
+	public void RemovePreview()
 	{
 		if (RoadMesh)
 		{
 			Destroy(RoadMesh);
 			RoadMesh = null;
 		}
-		if (ClearPts)
-			ClearPtsLists();
-		SwitchTextStatus(ProfileState.idle);
+
+		if (Profiles.Count > 0)
+			StateSwitch(ProfileState.SELECTING_P1);
+		else
+			StateSwitch(ProfileState.IDLE);
 	}
-	public void ClearPtsLists()
+
+	public void ClearPath()
 	{
 		foreach (var ProfileList in Profiles)
 		{
@@ -219,10 +249,12 @@ public class ProfileCreator : MonoBehaviour
 				Destroy(ProfileList[i]);
 		}
 		Profiles.Clear();
+		StateSwitch(ProfileState.IDLE);
 	}
+
 	public void GeneratePreview()
 	{
-		if (Profiles.Count < 3 || Profiles[0].Count < 2)
+		if (Profiles.Count < 3)
 			return;
 
 		paths = new VertexPath[Profiles[0].Count];
@@ -261,11 +293,15 @@ public class ProfileCreator : MonoBehaviour
 		foreach (var path in paths)
 		{
 			if (mostvertices == path.localPoints.Length)
+			{
 				verts.AddRange(path.localPoints);
+			}
 			else
 			{
 				for (int i = 0; i < mostvertices; i++)
+				{
 					verts.Add(path.GetPointAtTime(i / (mostvertices - 1f), EndOfPathInstruction.Stop));
+				}
 			}
 		}
 		Mesh mesh = CreateProfileMesh(verts, paths.Length, mostvertices);
@@ -277,7 +313,7 @@ public class ProfileCreator : MonoBehaviour
 		MeshCollider mc = RoadMesh.AddComponent<MeshCollider>();
 		mc.sharedMesh = mf.sharedMesh;
 
-		SwitchTextStatus(ProfileState.preview_visible);
+		StateSwitch(ProfileState.PREVIEW_VISIBLE);
 	}
 
 	private Mesh CreateProfileMesh(List<Vector3> vertz, int pnx, int pny)

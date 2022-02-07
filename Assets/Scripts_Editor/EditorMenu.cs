@@ -92,7 +92,7 @@ public class EditorMenu : MonoBehaviour
 				Toggle_help();
 			}
 			if (Input.GetKeyDown(KeyCode.Escape) && ShapeMenu.selectionState == SelectionState.NOSELECTION
-				&& ProfileCreator.state == ProfileState.idle)
+				&& ProfileCreator.state == ProfileState.IDLE)
 			{
 				ToggleEscapeWindow();
 			}

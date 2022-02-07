@@ -84,7 +84,7 @@ public static class Consts
 	/// Saves latest loaded track to Documents\Crashday 3D Editor\userdata.txt
 	/// </summary>
 	public static void SaveLastMap(string name)
-    {
+	{
 		string[] data = File.ReadAllLines(userdata_path);
 
 		List<string> maps = data.ToList().GetRange(1, data.Length - 1);

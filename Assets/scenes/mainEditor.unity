@@ -4291,6 +4291,7 @@ MonoBehaviour:
   sCurviness: {fileID: 1359034105}
   FormPanel: {fileID: 610547409}
   HeightSliderAndPreviewToggle: {fileID: 650494288}
+  formSlider: {fileID: 1037325900}
   white: {fileID: 2100000, guid: a8555e663d47543439216982a38dcc71, type: 2}
   red: {fileID: 2100000, guid: 7e5b60f4a30be92408f01fa81fe86b5d, type: 2}
 --- !u!114 &456685760
@@ -22822,8 +22823,9 @@ MonoBehaviour:
     (V) - enter copying mode with the last-copied terrain\r\n<color=red>[new]</color>
     Y + Flatten (6) - reverse flattenning \n\nIn copying menu:\nMouse scroll - set
     height of selection\nTab - relative/absolute height\n\n3. PROFILES MODE\n\nLMB
-    or CTRL + LMB select profile\nEvery profile has to have the same number of vertices\nRMB
-    - accept profile\nBackspace - remove last profile"
+    - add profile [+ Ctrl = one point per click]\nBackspace - remove last profile\n<color=red>[new]</color>
+    Esc - remove all profiles\nEach profile should have the same number of vertices
+    (at least 2).\nThe path should consist of at least 3 profiles."
 --- !u!222 &2080595189
 CanvasRenderer:
   m_ObjectHideFlags: 0

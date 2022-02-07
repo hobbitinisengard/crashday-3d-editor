@@ -312,7 +312,10 @@ public class ShapeMenu : MonoBehaviour
 	{
 		if (selectionState == SelectionState.SELECTING_VERTICES && !Input.GetKey(KeyCode.LeftControl))
 		{
-			StateSwitch(SelectionState.MARKING_VERTICES);
+			if (selected_tiles.Count > 0)
+				StateSwitch(SelectionState.MARKING_VERTICES);
+			else
+				StateSwitch(SelectionState.NOSELECTION);
 		}
 		else if (selectionState == SelectionState.MARKING_VERTICES && Input.GetKeyDown(KeyCode.LeftControl) && !areal_selection)
 		{
