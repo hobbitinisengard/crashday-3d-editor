@@ -5,56 +5,52 @@ using UnityEngine;
 
 public class IO
 {
-  public static string GetCrashdayPath()
-  {
-    string crashdayPath = null;
-
-    if (PlayerPrefs.HasKey("crashpath"))
+    public static string GetCrashdayPath()
     {
-      crashdayPath = PlayerPrefs.GetString("crashpath");
-      if (!Directory.Exists(crashdayPath))
-      {
-        crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false)[0];
-        if (crashdayPath == null)
-          Application.Quit();
-        PlayerPrefs.SetString("crashpath", crashdayPath);
-      }
+        string crashdayPath = null;
+
+        if (PlayerPrefs.HasKey("crashpath"))
+        {
+            crashdayPath = PlayerPrefs.GetString("crashpath");
+            if (!Directory.Exists(crashdayPath))
+            {
+                crashdayPath = StandaloneFileBrowser.OpenFolderPanel("Select Crashday RE folder", "", false)[0];
+                if (crashdayPath == null)
+                    Application.Quit();
+                PlayerPrefs.SetString("crashpath", crashdayPath);
+            }
+        }
+        else
+        {
+            string[] data = StandaloneFileBrowser.OpenFolderPanel("Select Crashday RE folder", "", false);
+            if (data.Length == 0)
+                Application.Quit();
+            else
+            {
+                crashdayPath = data[0];
+                PlayerPrefs.SetString("crashpath", crashdayPath);
+            }
+        }
+
+        if (!File.Exists(crashdayPath + "/crashday.exe") || !Directory.Exists(crashdayPath + "/data/"))
+        {
+            PlayerPrefs.DeleteKey("crashpath");
+            crashdayPath = GetCrashdayPath();
+        }
+        return crashdayPath;
     }
-    else
+
+    public static void RemoveCrashdayPath()
     {
-      string[] data = StandaloneFileBrowser.OpenFolderPanel("Select crashday folder", "", false);
-      if (data.Length == 0)
-        Application.Quit();
-      else
-      {
-        crashdayPath = data[0];
-        PlayerPrefs.SetString("crashpath", crashdayPath);
-      }
+        PlayerPrefs.DeleteKey("crashpath");
     }
-
-    if (!File.Exists(crashdayPath + "/crashday.exe"))
+    /// <summary>
+    /// Remove a comment in a file and remove all trailing spaces
+    /// </summary>
+    /// <param name="input">String to be edited</param>
+    /// <returns>new string with removed comments and spaces</returns>
+    public static string RemoveComment(string input)
     {
-      PlayerPrefs.DeleteKey("crashpath");
-      crashdayPath = GetCrashdayPath();
+        return input.IndexOf('#') > 0 ? input.Remove(input.IndexOf('#')).Trim() : input.Trim();
     }
-    return crashdayPath;
-  }
-
-  public static void RemoveCrashdayPath()
-  {
-    PlayerPrefs.DeleteKey("crashpath");
-  }
-  /// <summary>
-  /// Remove a comment in a file and remove all trailing spaces
-  /// </summary>
-  /// <param name="input">String to be edited</param>
-  /// <returns>new string with removed comments and spaces</returns>
-  public static string RemoveComment(string input)
-  {
-    return input.IndexOf('#') > 0 ? input.Remove(input.IndexOf('#')).Trim() : input.Trim();
-  }
-
-  
-
-  
 }
