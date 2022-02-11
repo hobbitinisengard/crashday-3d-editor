@@ -15,13 +15,26 @@ public class TilePlacement
 	{
 
 	}
-	public TilePlacement(TilePlacement tilePlacement)
+	public TilePlacement(string nazwa, int rotacja, bool inwersja, byte Height)
 	{
-		Name = tilePlacement.Name;
-		Rotation = tilePlacement.Rotation;
-		Inversion = tilePlacement.Inversion;
-		Height = tilePlacement.Height;
+		this.Name = nazwa;
+		this.Inversion = inwersja;
+		this.Rotation = rotacja;
+		this.Height = Height;
 	}
+
+	private TilePlacement(TilePlacement copy)
+	{
+		this.Name = copy.Name;
+		this.Inversion = copy.Inversion;
+		this.Rotation = copy.Rotation;
+		this.Height = copy.Height;
+	}
+
+	public TilePlacement Copy()
+    {
+		return new TilePlacement(this);
+    }
 
 	public void Set(string nazwa, int rotacja, bool inwersja, byte Height)
 	{
@@ -30,5 +43,4 @@ public class TilePlacement
 		this.Rotation = rotacja;
 		this.Height = Height;
 	}
-
 }

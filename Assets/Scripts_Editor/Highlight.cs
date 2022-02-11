@@ -5,9 +5,9 @@ using UnityEngine;
 public class Highlight : MonoBehaviour
 {
 	/// <summary>
-	/// Vertex dimension of Top left of grass
+	/// Position of the tile (in cells) the cursor is pointing at
 	/// </summary>
-	public static Vector3Int TL = new Vector3Int();
+	public static Vector3Int tile_pos = new Vector3Int();
 	/// <summary>
 	/// Is mouse pointer currently over map?
 	/// </summary>
@@ -35,7 +35,7 @@ public class Highlight : MonoBehaviour
 		GetPos(r);
 		GetTLgrass(r);
 		over = pos.x != -1;
-		over_grass = TL.x != -1;
+		over_grass = tile_pos.x != -1;
 	}
 
 	//Returns position of tile's or map's vertex that is closest to pointer
@@ -62,12 +62,11 @@ public class Highlight : MonoBehaviour
     {
 		if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, Consts.RAY_H, 1 << 8))
 		{
-			Vector3Int pos_grass = Vector3Int.RoundToInt(hit.point);
-			TL.x = 4 * Mathf.FloorToInt(pos_grass.x / 4);
-			TL.z = 4 * Mathf.FloorToInt(pos_grass.z / 4) + 4;
+			tile_pos.x = Mathf.FloorToInt(hit.point.x / 4);
+			tile_pos.z = Mathf.FloorToInt(hit.point.z / 4);
 		}
 		else
-			TL = new Vector3Int(-1, -1, -1);
+			tile_pos = new Vector3Int(-1, -1, -1);
 	}
 
 	//void DebugRayCast(Vector3 pos, Ray r)

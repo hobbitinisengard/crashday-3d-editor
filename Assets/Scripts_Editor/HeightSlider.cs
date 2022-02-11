@@ -53,7 +53,7 @@ public class HeightSlider : MonoBehaviour
             Destroy(HeightIndicator.GetComponent<BoxCollider>());
             HeightIndicator.GetComponent<MeshRenderer>().material = partiallytransparent;
             HeightIndicator.transform.localScale = new Vector3(3f, 0.05f, 3f);
-            HeightIndicator.transform.position = new Vector3(2 + Highlight.TL.x, y, Highlight.TL.z - 2);
+            HeightIndicator.transform.position = new Vector3(4 * Highlight.tile_pos.x + 2, y, 4 * Highlight.tile_pos.z + 2);
             Destroy(HeightIndicator, 2);
         }
     }

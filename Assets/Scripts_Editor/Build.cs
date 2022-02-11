@@ -38,11 +38,13 @@ public class Build : MonoBehaviour
 	public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
 	public GameObject savePanel; // "save track scheme" menu
 	public Material partiallytransparent;
-	public Material transparent;
+	public Material transp;
 	public Material reddish;
+	private static Material transparent;
 	public static Border_vault Border_Vault = new Border_vault();
-	bool LMBclicked = false;
-	bool AllowLMB = false;
+	public static GameObject[,] TileObjectsArray { get; set; }
+	static bool LMBclicked = false;
+	static bool AllowLMB = false;
 	/// <summary>obj_rmc = current RMC</summary>
 	public static GameObject current_rmc;
 	/// <summary>current tile or null</summary>
@@ -63,7 +65,11 @@ public class Build : MonoBehaviour
 	private static GameObject outlined_element;
 	private static GameObject HeightIndicator;
 
-	private void OnDisable()
+    private void Awake()
+    {
+		transparent = transp;
+    }
+    private void OnDisable()
 	{
 		ExitTileSelection();
 		if (current_rmc != null)
@@ -100,9 +106,17 @@ public class Build : MonoBehaviour
 	void XTileSelection()
 	{
 		Outline_underlying();
-		DelLastPrefab();
-		if (Input.GetMouseButtonDown(0))
-			Del_selected_element();
+		if (Input.GetKeyDown(KeyCode.X))
+		{
+			DelLastPrefab();
+		}
+		if (Input.GetMouseButtonDown(0) && outlined_element)
+		{
+			Vector3Int pos = Vpos2tpos(outlined_element);
+			TilePlacement info = Consts.TilePlacementArray[pos.z, pos.x].Copy();
+			DeleteTile(pos);
+			UndoBuffer.ApplyTileOperation(pos, info, BufferOperationType.REMOVE);
+		}
 	}
 	void CTileSelection()
 	{
@@ -138,24 +152,25 @@ public class Build : MonoBehaviour
 			outlined_element = hits[0].transform.gameObject;
 		}
 	}
-	public static void Del_selected_element()
+	public static void DeleteTile(Vector3Int pos)
 	{
-		if (!outlined_element)
+		GameObject tile = TileObjectsArray[pos.z, pos.x];
+
+		if (!tile)
 			return;
 
-		Vector3Int pos = Vpos2tpos(outlined_element);
-		if (TileManager.TileListInfo[outlined_element.name].IsCheckpoint)
+		if (TileManager.TileListInfo[tile.name].IsCheckpoint)
 		{
 			Consts.TRACK.Checkpoints.Remove((ushort)(pos.x + (Consts.TRACK.Height - 1 - pos.z) * Consts.TRACK.Width));
 			Consts.TRACK.CheckpointsNumber--;
 		}
 
-		Show_underlying_grass_tiles(outlined_element);
-		List<GameObject> to_restore = Get_surrounding_tiles(outlined_element);
-		Border_Vault.Remove_borders_of(outlined_element);
-		DestroyImmediate(outlined_element);
-		outlined_element = null;
+		Show_underlying_grass_tiles(tile);
+		List<GameObject> to_restore = Get_surrounding_tiles(tile);
+		Border_Vault.Remove_borders_of(tile);
+		DestroyImmediate(tile);
 		Consts.TilePlacementArray[pos.z, pos.x].Name = null;
+		TileObjectsArray[pos.z, pos.x] = null;
 		RecoverTerrain(Consts.TilePlacementArray[pos.z, pos.x].t_verts);
 		UpdateTiles(to_restore);
 	}
@@ -167,7 +182,7 @@ public class Build : MonoBehaviour
 
 		if (Input.GetKeyUp(KeyCode.M))
 			SwitchMixingMode();
-		if (Input.GetKeyUp(KeyCode.LeftAlt))
+		if (Input.GetKeyDown(KeyCode.J))
 			ToggleVisibility();
 		if (!MouseInputUIBlocker.BlockedByUI)
 		{
@@ -185,6 +200,11 @@ public class Build : MonoBehaviour
 				CTileSelection(); // Choose the tile to be picked up with C
 			if (Input.GetKeyUp(KeyCode.X) || Input.GetKeyUp(KeyCode.C))
 				ExitTileSelection();
+
+			if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Z) && outlined_element == null)
+				UndoBuffer.MoveThroughTileLayers(BufferDirection.BACKWARD);
+			if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Y) && outlined_element == null)
+				UndoBuffer.MoveThroughTileLayers(BufferDirection.FORWARD);
 
 			if (enableMixing && !IsEnteringKeypadValue && Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButtonDown(1))
 			{// Pick up mixing height with RMB + ctrl
@@ -216,31 +236,40 @@ public class Build : MonoBehaviour
 					if (!over_b4)
 					{
 						//Debug.Log("cursor: void -> terrain");
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
-						last_trawa = Highlight.TL;
+						current_rmc = PlaceTile(Highlight.tile_pos, tile_name, cum_rotation, inversion, MixingHeight, enableMixing);
+						last_trawa = Highlight.tile_pos;
 						over_b4 = true;
 					}
-					else if (last_trawa.x != Highlight.TL.x || last_trawa.z != Highlight.TL.z)
+					else if (last_trawa.x != Highlight.tile_pos.x || last_trawa.z != Highlight.tile_pos.z)
 					{
 						//Debug.Log("cursor: terrain chunk -> terrain chunk");
 						if (!LMBclicked)//If element hasn't been placed
 							DelLastPrefab();
 						ExitTileSelection();
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
-						last_trawa = Highlight.TL;
+						current_rmc = PlaceTile(Highlight.tile_pos, tile_name, cum_rotation, inversion, MixingHeight, enableMixing);
+						last_trawa = Highlight.tile_pos;
 						LMBclicked = false;
 					}
 					else if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.X) && !Input.GetKey(KeyCode.C) && AllowLMB)
 					{//Place currently showed tile on terrain
-						LMBclicked = true;
-						Save_tile_properties(current_rmc, tile_name, inversion, cum_rotation,
-								new Vector3Int(Highlight.TL.x / 4, 0, Highlight.TL.z / 4 - 1), MixingHeight);
+						if (current_rmc)
+						{
+							Vector3Int pos = Vpos2tpos(current_rmc);
+							if (Consts.TilePlacementArray[pos.z, pos.x].Name == null)
+							{
+								LMBclicked = true;
+								SaveTileProperties(current_rmc, tile_name, inversion, cum_rotation, pos, MixingHeight);
+								UndoBuffer.ApplyTileOperation(pos, Consts.TilePlacementArray[pos.z, pos.x].Copy(), BufferOperationType.PLACE);
+							}
+						}
 					}
 					if (Input.GetMouseButtonDown(1) && Highlight.over_grass && !LMBclicked)
 					{//Rotation with RMB
-						DelLastPrefab();
-						PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
-						over_b4 = true;
+						if (current_rmc)
+						{
+							UpdateOrDeleteActiveTile();
+							over_b4 = true;
+						}
 					}
 				}
 			}
@@ -351,7 +380,7 @@ public class Build : MonoBehaviour
 		Destroy(HeightIndicator.GetComponent<BoxCollider>());
 		HeightIndicator.GetComponent<MeshRenderer>().material = partiallytransparent;
 		HeightIndicator.transform.localScale = new Vector3(3f, 0.05f, 3);
-		HeightIndicator.transform.position = new Vector3(2 + Highlight.TL.x, MixingHeight / 5f, Highlight.TL.z - 2);
+		HeightIndicator.transform.position = new Vector3(4 * Highlight.tile_pos.x + 2, MixingHeight / 5f, 4 * Highlight.tile_pos.z + 2);
 		Destroy(HeightIndicator, 2);
 	}
 	/// <summary>
@@ -367,7 +396,7 @@ public class Build : MonoBehaviour
 				{
 					if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 					{
-						PlaceTile(Highlight.TL, previous_tile_name, cum_rotation, inversion, MixingHeight);
+						current_rmc = PlaceTile(Highlight.tile_pos, previous_tile_name, cum_rotation, inversion, MixingHeight, enableMixing);
 					}
 				}
 				else
@@ -411,30 +440,38 @@ public class Build : MonoBehaviour
 		}
 		if (!MouseInputUIBlocker.BlockedByUI && !Input.GetKey(KeyCode.Space) && Highlight.over_grass)
 		{
-			DelLastPrefab();
-			PlaceTile(Highlight.TL, tile_name, cum_rotation, inversion, MixingHeight);
+			UpdateOrDeleteActiveTile();
 		}
 	}
-	public static void DelLastPrefab()
+
+	public static void DelLastPrefab(bool force = false)
 	{
-		if (current_rmc != null)
-		{
-			Vector3Int pos = Vpos2tpos(current_rmc);
-			if (Consts.TilePlacementArray[pos.z, pos.x].Name != null)
-				return;
-			Show_underlying_grass_tiles(current_rmc);
-			List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
-			Border_Vault.Remove_borders_of(current_rmc);
-			DestroyImmediate(current_rmc);
-			var t_verts = Consts.TilePlacementArray[pos.z, pos.x].t_verts;
-			if (t_verts != null)
-				RecoverTerrain(t_verts);
-			UpdateTiles(surroundings);
-		}
+		if (current_rmc == null)
+			return;
+
+		Vector3Int pos = Vpos2tpos(current_rmc);
+		if (Consts.TilePlacementArray[pos.z, pos.x].Name != null && !force)
+			return;
+
+		Show_underlying_grass_tiles(current_rmc);
+		List<GameObject> surroundings = Get_surrounding_tiles(current_rmc);
+		Border_Vault.Remove_borders_of(current_rmc);
+		DestroyImmediate(current_rmc);
+		var t_verts = Consts.TilePlacementArray[pos.z, pos.x].t_verts;
+		if (t_verts != null)
+			RecoverTerrain(t_verts);
+		UpdateTiles(surroundings);
 	}
+
+	public static void UpdateOrDeleteActiveTile(bool force = false)
+    {
+		DelLastPrefab(force);
+		current_rmc = PlaceTile(Highlight.tile_pos, tile_name, cum_rotation, inversion, MixingHeight, enableMixing);
+	}
+
 	void PickUpTileHeightUnderCursor()
 	{
-		MixingHeight = Consts.TilePlacementArray[Highlight.TL.z / 4 - 1, Highlight.TL.x / 4].Height;
+		MixingHeight = Consts.TilePlacementArray[Highlight.tile_pos.z, Highlight.tile_pos.x].Height;
 		if (current_rmc != null)
 			current_rmc.transform.position =
 				new Vector3(current_rmc.transform.position.x, MixingHeight / 5f, current_rmc.transform.position.z);
@@ -495,8 +532,8 @@ public class Build : MonoBehaviour
 	{
 		Vector3Int to_return = new Vector3Int();
 		Vector3Int dim = GetRealTileDims(rmc);
-		to_return.x = ((int)rmc.transform.position.x - 2 - 2 * (dim.x - 1)) / 4;
-		to_return.z = ((int)rmc.transform.position.z - 2 + 4 * (dim.z - 1)) / 4;
+		to_return.x = (Mathf.RoundToInt(rmc.transform.position.x) - 2 * dim.x) / 4;
+		to_return.z = Mathf.RoundToInt(rmc.transform.position.z) / 4;
 		return to_return;
 	}
 	/// <summary>
@@ -511,7 +548,18 @@ public class Build : MonoBehaviour
 		else
 			return extents;
 	}
-	static void Save_tile_properties(GameObject rmc, string name, bool mirror, int rotation, Vector3Int arraypos, byte Height = 0)
+
+	public static void SaveTileProperties(Vector3Int pos, TilePlacement info)
+	{
+		GameObject rmc = TileObjectsArray[pos.z, pos.x];
+		string name = info.Name;
+		int rotation = info.Rotation;
+		bool inversion = info.Inversion;
+		byte height = info.Height;
+		SaveTileProperties(rmc, name, inversion, rotation, pos, height);
+	}
+
+	public static void SaveTileProperties(GameObject rmc, string name, bool mirror, int rotation, Vector3Int arraypos, byte Height = 0)
 	{
 		Consts.TilePlacementArray[arraypos.z, arraypos.x].Set(name, rotation, mirror, Height);
 
@@ -521,8 +569,6 @@ public class Build : MonoBehaviour
 			Consts.TRACK.Checkpoints.Add((ushort)(arraypos.x + (Consts.TRACK.Height - 1 - arraypos.z) * Consts.TRACK.Width));
 			Consts.TRACK.CheckpointsNumber++;
 		}
-
-
 	}
 	public static HashSet<int> GetRmcIndices(GameObject rmc)
 	{
@@ -846,10 +892,16 @@ public class Build : MonoBehaviour
 		float calculated_h = h1 + n / 4 * (h3 - h1) + m / 4 * ((h2 + n / 4 * (h4 - h2)) - (h1 + n / 4 * (h3 - h1)));
 		return calculated_h;
 	}
+
+	public static void PlaceTile(Vector3Int pos, TilePlacement info, bool mixing)
+    {
+		PlaceTile(pos, info.Name, info.Rotation, info.Inversion, info.Height, mixing);
+    }
+
 	/// <summary>
-	/// Instantiates rmc with no correct placing and no prefab. Rest of the work is delegated to UpdateTiles function
+	/// Instantiates and returns the tile.
 	/// </summary>
-	public GameObject PlaceTile(Vector3Int TLpos, string name, int cum_rotation, bool mirrored = false, byte Height = 0)
+	public static GameObject PlaceTile(Vector3Int pos, string name, int cum_rotation, bool mirrored, byte Height, bool mixing)
 	{
 		// Placing tile with LMB cannot be accepted if X is pressed or there's no place 4 tile 
 		AllowLMB = false;
@@ -866,64 +918,59 @@ public class Build : MonoBehaviour
 			tileDims.x = tileDims.z;
 			tileDims.z = pom;
 		}
-		Vector3 rmcPlacement = new Vector3(TLpos.x + 2 + 2 * (tileDims.x - 1), enableMixing || Loader.Isloading ? Height / 5f : 0, TLpos.z - 2 - 2 * (tileDims.z - 1));
+		Vector3 rmcPlacement = new Vector3(4 * pos.x + 2 * tileDims.x, mixing ? Height / 5f : 0,  4 * (pos.z + 1) - 2 * tileDims.z);
 
 		if (rmcPlacement.z < 0)
 			return null;
 
-		if (enableMixing || Loader.Isloading)
+		if (mixing)
 		{
-			if (!IsTherePlaceForQuarter(TLpos, rmcPlacement, tileDims))
+			if (!IsTherePlaceForQuarter(pos, rmcPlacement, tileDims))
 			{
-				current_rmc = null;
 				if (Loader.Isloading)
-					Consts.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
+					Consts.TilePlacementArray[pos.z, pos.x].Name = null;
 				return null;
 			}
 		}
 		else if (!IsTherePlace4Tile(rmcPlacement, tileDims))
 		{
 			if (Loader.Isloading)
-				Consts.TilePlacementArray[TLpos.z / 4 - 1, TLpos.x / 4].Name = null;
-			current_rmc = null;
+				Consts.TilePlacementArray[pos.z, pos.x].Name = null;
 			return null;
 		}
 		
 		AllowLMB = true;
 		// Instantiate RMC
-		current_rmc = GetRMC_and_Set_Restriction_info(name, cum_rotation, mirrored, rmcPlacement);
-		current_rmc.name = name;
-		Border_Vault.Add_borders_of(current_rmc);
+		GameObject rmc = GetRMC_and_Set_Restriction_info(name, cum_rotation, mirrored, rmcPlacement);
+		rmc.name = name;
+		Border_Vault.Add_borders_of(rmc);
 		//Update RMC
-		if (!Calculate_All_RMC_points(current_rmc))
+		if (!Calculate_All_RMC_points(rmc))
 		{
-			Border_Vault.Remove_borders_of(current_rmc);
-			Destroy(current_rmc);
+			Border_Vault.Remove_borders_of(rmc);
+			Destroy(rmc);
 			return null;
 		}
 
-		Vector3Int pos = Vpos2tpos(current_rmc);
-		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(current_rmc);
-		Hide_underlying_grass(current_rmc.transform.position);
+		Consts.TilePlacementArray[pos.z, pos.x].t_verts = GetRmcIndices(rmc);
+		TileObjectsArray[pos.z, pos.x] = rmc;
+		Hide_underlying_grass(rmc.transform.position);
 		
 		if (!Loader.Isloading)
 		{
-			GameObject Prefab = GetPrefab(current_rmc.name, current_rmc.transform, cum_rotation);
+			GameObject Prefab = GetPrefab(rmc.name, rmc.transform, cum_rotation);
 			GetPrefabMesh(mirrored, Prefab);
 
-			UpdateTiles(Get_surrounding_tiles(current_rmc));
-			Consts.UpdateMapColliders(current_rmc.transform.position, tileDims);
-			Tile_To_Grass_Cast(Prefab, current_rmc);
-
-			return null;
+			UpdateTiles(Get_surrounding_tiles(rmc));
+			Consts.UpdateMapColliders(rmc.transform.position, tileDims);
+			Tile_To_Grass_Cast(Prefab, rmc);
 		}
 		else
-		{
-			Save_tile_properties(current_rmc, name, mirrored, cum_rotation, new Vector3Int(TLpos.x / 4, 0, TLpos.z / 4 - 1), Height);
-			return current_rmc;
-		}
+			SaveTileProperties(rmc, name, mirrored, cum_rotation, pos, Height);
+
+		return rmc;
 	}
-	bool IsTherePlaceForQuarter(Vector3Int TLpos, Vector3 rmc_pos, Vector3Int dims)
+	static bool IsTherePlaceForQuarter(Vector3Int TLpos, Vector3 rmc_pos, Vector3Int dims)
 	{
 		// out of grass
 		if (rmc_pos.z <= 0 || rmc_pos.z >= 4 * Consts.TRACK.Height || rmc_pos.x <= 0 || rmc_pos.x >= 4 * Consts.TRACK.Width)
@@ -933,9 +980,6 @@ public class Build : MonoBehaviour
 			return false;
 		if (Loader.Isloading)
 			return true;
-		TLpos.x /= 4;
-		TLpos.z /= 4;
-		TLpos.z--; //get BL not TL for array check
 		if (Consts.TilePlacementArray[TLpos.z, TLpos.x].Name == null)
 			return true;
 		else
@@ -943,7 +987,7 @@ public class Build : MonoBehaviour
 	}
 
 
-	private GameObject GetRMC_and_Set_Restriction_info(string tilename, int rotation, bool is_mirrored, Vector3 rmcPlacement)
+	private static GameObject GetRMC_and_Set_Restriction_info(string tilename, int rotation, bool is_mirrored, Vector3 rmcPlacement)
 	{// ((unity loads models with -x axis))
 		string RMCname = TileManager.TileListInfo[tilename].RMCname;
 		Quaternion rotate_q = Quaternion.Euler(new Vector3(0, rotation, 0));
@@ -1022,7 +1066,7 @@ public class Build : MonoBehaviour
 		rmc.GetComponent<MeshRenderer>().material = transparent;
 		return rmc;
 	}
-	string NormalizeRMCname(string RMCname)
+	static string NormalizeRMCname(string RMCname)
 	{ //RMCname position: 
 		char x = RMCname[0];
 		char z = RMCname[2];
@@ -1034,7 +1078,7 @@ public class Build : MonoBehaviour
 
 		return RMCname;
 	}
-	GameObject Get_RMC_Containing(string RMCname)
+	static GameObject Get_RMC_Containing(string RMCname)
 	{
 		// V1H1H2 => string(V1) string(H1) string(H2)
 		//	var restr = RMCname.Substring(3).SplitBy(2).OrderBy(s => s).ToArray();

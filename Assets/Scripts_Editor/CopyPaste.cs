@@ -257,11 +257,11 @@ public class CopyPaste : MonoBehaviour
 					Consts.current_heights[newindex] = pom.y;
 					Consts.former_heights[newindex] = pom.y;
 				}
-				UndoBuffer.Add(for_buffer, Consts.IndexToPos(newindex));
+				UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(newindex));
 			}
 		}
 		Consts.UpdateMapColliders(indexes);
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 		Build.UpdateTiles(Build.Get_surrounding_tiles(Markings, true));
 	}
 	void MousewheelWorks(float sliderval)

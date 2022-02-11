@@ -21,9 +21,9 @@ public class Form : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F))
             ToggleFormingMode(Input.GetKey(KeyCode.LeftShift));
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Z))
-            UndoBuffer.MoveThroughLayers(BufferDirection.BACKWARD);
+            UndoBuffer.MoveThroughTerrainLayers(BufferDirection.BACKWARD);
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.Y))
-            UndoBuffer.MoveThroughLayers(BufferDirection.FORWARD);
+            UndoBuffer.MoveThroughTerrainLayers(BufferDirection.FORWARD);
     }
     /// <summary>
     /// Toggles between manual, shape forming, and profiles.

@@ -286,7 +286,7 @@ public class ShapeMenu : MonoBehaviour
 				WaitingForParametersState();
 				WaitingForTopRightState();
 				WaitingForBottomLeftState();
-				ApplyOperation();
+				ApplyTerrainOperation();
 			}
 		}
 	}
@@ -455,7 +455,7 @@ public class ShapeMenu : MonoBehaviour
 		}
 	}
 
-	void ApplyOperation()
+	void ApplyTerrainOperation()
 	{
 		if (selectionState == SelectionState.POINT_SELECTED)
 		{
@@ -510,10 +510,10 @@ public class ShapeMenu : MonoBehaviour
 
 				znacznik.transform.Translate(0, Consts.current_heights[index] - v.y, 0);
 				Consts.former_heights[index] = Consts.current_heights[index];
-				UndoBuffer.Add(v, Consts.IndexToPos(index));
+				UndoBuffer.AddVertexPair(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 		Consts.UpdateMapColliders(indexes);
 
 		Build.UpdateTiles(surroundings);
@@ -538,10 +538,10 @@ public class ShapeMenu : MonoBehaviour
 
 				marking.transform.Translate(0, Consts.current_heights[index] - v.y, 0);
 				Consts.former_heights[index] = Consts.current_heights[index];
-				UndoBuffer.Add(v, Consts.IndexToPos(index));
+				UndoBuffer.AddVertexPair(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 		Consts.UpdateMapColliders(indexes);
 		Build.UpdateTiles(surroundings);
 	}
@@ -570,10 +570,10 @@ public class ShapeMenu : MonoBehaviour
 				indexes.Add(index);
 				Consts.current_heights[index] = float.NaN;
 				Consts.former_heights[index] = Consts.current_heights[index];
-				UndoBuffer.Add(v, Consts.IndexToPos(index));
+				UndoBuffer.AddVertexPair(v, Consts.IndexToPos(index));
 			}
 		}
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 		Consts.UpdateMapColliders(indexes);
 	}
 
@@ -620,7 +620,7 @@ public class ShapeMenu : MonoBehaviour
 		var surroundings = Build.Get_surrounding_tiles(markings.Values.ToList());
 		Build.UpdateTiles(surroundings);
 		surroundings.Clear();
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 
 		int StartIndicator()
         {
@@ -813,7 +813,7 @@ public class ShapeMenu : MonoBehaviour
 			Vector3 for_buffer = Consts.IndexToPos(index);
 			Consts.former_heights[index] = Y;
 			Consts.current_heights[index] = Consts.former_heights[index];
-			UndoBuffer.Add(for_buffer, Consts.IndexToPos(index));
+			UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(index));
 			GameObject znacznik = hit.transform.gameObject;
 			znacznik.transform.Translate(0, Y - for_buffer.y, 0);
 		}

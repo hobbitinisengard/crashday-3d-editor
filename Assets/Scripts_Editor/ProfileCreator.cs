@@ -215,7 +215,7 @@ public class ProfileCreator : MonoBehaviour
 					Vector3 for_buffer = Consts.IndexToPos(idx);
 					Consts.former_heights[idx] = hit.point.y;
 					Consts.current_heights[idx] = Consts.former_heights[idx];
-					UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
+					UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(idx));
 				}
 			}
 		}
@@ -223,7 +223,7 @@ public class ProfileCreator : MonoBehaviour
 		//Search for any tiles
 		var surr = Build.Get_surrounding_tiles(indexes);
 		Build.UpdateTiles(surr);
-		UndoBuffer.ApplyOperation();
+		UndoBuffer.ApplyTerrainOperation();
 		RemovePreview();
 	}
 

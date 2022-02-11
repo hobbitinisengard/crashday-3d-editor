@@ -179,6 +179,7 @@ public class Loader : MonoBehaviour
 	private void InitializeTilePlacementArray(int height, int width)
 	{
 		Consts.TilePlacementArray = new TilePlacement[height, width];
+		Build.TileObjectsArray = new GameObject[height, width];
 		for (int z = 0; z < height; z++)
 		{
 			for (int x = 0; x < width; x++)
@@ -246,11 +247,10 @@ public class Loader : MonoBehaviour
 				{
 					if (Consts.TilePlacementArray[z, x].Name == null)
 						continue;
-					Vector3Int TLpos = new Vector3Int(4 * x, 0, 4 * (z + 1));
 
-					to_update.Add(editorPanel.GetComponent<Build>().PlaceTile(TLpos,
+					to_update.Add(Build.PlaceTile(new Vector3Int(x, 0, z),
 							Consts.TilePlacementArray[z, x].Name, Consts.TilePlacementArray[z, x].Rotation,
-							Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height));
+							Consts.TilePlacementArray[z, x].Inversion, Consts.TilePlacementArray[z, x].Height, true));
 				}
 			}
 		LoadingScreen_progressbar.text = "Placing tiles..";

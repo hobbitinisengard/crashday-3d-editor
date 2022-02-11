@@ -122,7 +122,7 @@ public class ManualMode : MonoBehaviour
 
 		if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(0))
 		{
-			UndoBuffer.ApplyOperation();
+			UndoBuffer.ApplyTerrainOperation();
 			InitialPos = new Vector3(-1, -1, -1);
 		}
 		if (Input.GetKeyDown(KeyCode.Escape)) //ESC deletes white indicator in Make_Elevation()
@@ -163,7 +163,7 @@ public class ManualMode : MonoBehaviour
 					Consts.former_heights[idx] += (TargetSetHeight - currentpos.y)
 												  * Mathf.Pow(IntensitySlider.value * 5, 2) / 10000;
 					Consts.current_heights[idx] = Consts.former_heights[idx];
-					UndoBuffer.Add(currentpos, Consts.IndexToPos(idx));
+					UndoBuffer.AddVertexPair(currentpos, Consts.IndexToPos(idx));
 					indexes.Add(idx);
 				}
 			}
@@ -216,7 +216,7 @@ public class ManualMode : MonoBehaviour
 							Consts.former_heights[idx] += Hdiff * Consts.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
 						}
 						Consts.current_heights[idx] = Consts.former_heights[idx];
-						UndoBuffer.Add(currentpos, Consts.IndexToPos(idx));
+						UndoBuffer.AddVertexPair(currentpos, Consts.IndexToPos(idx));
 						indexes.Add(idx);
 					}
 				}
@@ -227,7 +227,7 @@ public class ManualMode : MonoBehaviour
 										 0.5f * Mathf.Abs(P1.z - P2.z) + RadiusSlider.value + .5f);
 			RaycastHit[] hits = Physics.BoxCastAll(center, bounds, Vector3.down, Quaternion.identity, Consts.RAY_H, 1 << 9);
 			Build.UpdateTiles(hits.Select(hit => hit.transform.gameObject).ToList());
-			UndoBuffer.ApplyOperation();
+			UndoBuffer.ApplyTerrainOperation();
 			RemoveIndicator();
 		}
 
@@ -283,7 +283,7 @@ public class ManualMode : MonoBehaviour
 					Consts.current_heights[idx] += (avg - Consts.current_heights[idx])
 												   * Mathf.Pow(IntensitySlider.value * 5, 2) / 10000;
 					Consts.former_heights[idx] = Consts.current_heights[idx];
-					UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
+					UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(idx));
 					indexes.Add(idx);
 				}
 			}
@@ -335,7 +335,7 @@ public class ManualMode : MonoBehaviour
 												   * Mathf.Pow(IntensitySlider.value * 5, 2) / 10000;
 					Consts.former_heights[idx] = Consts.current_heights[idx];
 
-					UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
+					UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(idx));
 					Consts.UpdateMapColliders(new HashSet<int> { idx });
 					var tiles = Build.Get_surrounding_tiles(new HashSet<int> { idx });
 					Build.UpdateTiles(tiles);
@@ -371,7 +371,7 @@ public class ManualMode : MonoBehaviour
 					Consts.former_heights[idx] += dir * heightdiff * Mathf.Pow(IntensitySlider.value * 2, 2) / 20000
 												  * Consts.Smoothstep(0, 1, (RadiusSlider.value - dist) / RadiusSlider.value);
 					Consts.current_heights[idx] = Consts.former_heights[idx];
-					UndoBuffer.Add(for_buffer, Consts.IndexToPos(idx));
+					UndoBuffer.AddVertexPair(for_buffer, Consts.IndexToPos(idx));
 					indexes.Add(idx);
 				}
 			}
