@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-class ExecutionOrderWorkaround : MonoBehaviour
+public class ExecutionOrderWorkaround : MonoBehaviour
 {
 	/// <summary>
 	/// An invisible full-screen panel that triggers Mouse Input UI Blocker

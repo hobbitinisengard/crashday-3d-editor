@@ -233,6 +233,10 @@ public class Build : MonoBehaviour
 				}
 				else
 				{ //If cursor points on map
+					if (Input.GetKeyUp(KeyCode.X) || Input.GetKeyUp(KeyCode.C))
+					{
+						current_rmc = PlaceTile(Highlight.tile_pos, tile_name, cum_rotation, inversion, MixingHeight, enableMixing);
+					}
 					if (!over_b4)
 					{
 						//Debug.Log("cursor: void -> terrain");
