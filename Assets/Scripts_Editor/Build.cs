@@ -115,6 +115,7 @@ public class Build : MonoBehaviour
 			Vector3Int pos = Vpos2tpos(outlined_element);
 			TilePlacement info = Consts.TilePlacementArray[pos.z, pos.x].Copy();
 			DeleteTile(pos);
+			LMBclicked = false;
 			UndoBuffer.ApplyTileOperation(pos, info, BufferOperationType.REMOVE);
 		}
 	}
@@ -182,7 +183,7 @@ public class Build : MonoBehaviour
 
 		if (Input.GetKeyUp(KeyCode.M))
 			SwitchMixingMode();
-		if (Input.GetKeyDown(KeyCode.J))
+		if (Input.GetKeyDown(KeyCode.V))
 			ToggleVisibility();
 		if (!MouseInputUIBlocker.BlockedByUI)
 		{
@@ -269,11 +270,8 @@ public class Build : MonoBehaviour
 					}
 					if (Input.GetMouseButtonDown(1) && Highlight.over_grass && !LMBclicked)
 					{//Rotation with RMB
-						if (current_rmc)
-						{
-							UpdateOrDeleteActiveTile();
-							over_b4 = true;
-						}
+						UpdateOrDeleteActiveTile();
+						over_b4 = true;
 					}
 				}
 			}

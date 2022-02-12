@@ -24,7 +24,7 @@ public class CopyPaste : MonoBehaviour
 	private static List<GameObject> Markings = new List<GameObject>();
 	private int SelectionRotationVal;
 
-	private static CopyState copystate = CopyState.empty;
+	public static CopyState copystate = CopyState.empty;
 	private PastingMode pastingMode = PastingMode.fixed_height;
 	private static float fixed_height;
 	private Vector3 lastpos;

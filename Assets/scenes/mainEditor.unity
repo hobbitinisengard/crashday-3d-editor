@@ -6661,9 +6661,13 @@ MonoBehaviour:
 
     U - toggle underground mode
 
-    Alt - toggle tile visibility
+    <color=yellow>[tweak]</color> V - toggle tile visibility
 
     M - toggle mixing mode
+
+    <color=red>[new]</color> Alt + Z - undo last tile operation(s)
+
+    <color=red>[new]</color> Alt + Y - redo last tile operation(s)
 
 
     In mixing mode:

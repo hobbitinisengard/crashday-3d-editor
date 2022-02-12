@@ -820,7 +820,7 @@ public class ShapeMenu : MonoBehaviour
 	}
 	private bool IsFlatter(string Name)
 	{
-		return TileManager.TileListInfo[Name].FlatterPoints != null;
+		return TileManager.TileListInfo.ContainsKey(Name) && TileManager.TileListInfo[Name].FlatterPoints != null;
 	}
 	public bool IsMarkingVisible(GameObject mrk)
 	{

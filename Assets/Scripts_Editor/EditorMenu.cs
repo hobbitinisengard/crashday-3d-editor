@@ -91,8 +91,7 @@ public class EditorMenu : MonoBehaviour
 			{
 				Toggle_help();
 			}
-			if (Input.GetKeyDown(KeyCode.Escape) && ShapeMenu.selectionState == SelectionState.NOSELECTION
-				&& ProfileCreator.state == ProfileState.IDLE)
+			if (Input.GetKeyDown(KeyCode.Escape) && AllowEsc())
 			{
 				ToggleEscapeWindow();
 			}
@@ -135,6 +134,14 @@ public class EditorMenu : MonoBehaviour
 			floor1.shader = Shader.Find("Transparent/Bumped Diffuse");
 		else
 			floor1.shader = Shader.Find("Mobile/Bumped Diffuse");
+	}
+
+	private bool AllowEsc()
+    {
+		return ShapeMenu.selectionState == SelectionState.NOSELECTION
+			&& ProfileCreator.state == ProfileState.IDLE
+			&& CopyPaste.copystate != CopyState.copying
+			&& !ManualMode.IndicatorVisible();
 	}
 
 	public void ToggleEscapeWindow()

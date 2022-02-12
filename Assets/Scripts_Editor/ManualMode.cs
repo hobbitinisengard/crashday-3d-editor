@@ -18,8 +18,8 @@ public class ManualMode : MonoBehaviour
 	/// <summary>
 	/// Used for rectangular elevation (RMB)
 	/// </summary>
-	private GameObject P1_marker;
-	private Vector3 P1 = new Vector3(-1, -1, -1);
+	private static GameObject P1_marker;
+	private static Vector3 P1 = new Vector3(-1, -1, -1);
 	/// <summary>
 	/// Center of the circumference of height change
 	/// </summary>
@@ -35,6 +35,11 @@ public class ManualMode : MonoBehaviour
 		if (P1_marker != null)
 			Destroy(P1_marker);
 	}
+
+	public static bool IndicatorVisible()
+    {
+		return P1_marker != null;
+    }
 
 	public void SwitchSubMode(int mode)
 	{
