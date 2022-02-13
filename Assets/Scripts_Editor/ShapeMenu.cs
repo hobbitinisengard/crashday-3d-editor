@@ -226,7 +226,8 @@ public class ShapeMenu : MonoBehaviour
 			{ KeyCode.Alpha5, FormButton.integral  },
 			{ KeyCode.Alpha6, FormButton.flatter   },
 			{ KeyCode.Alpha7, FormButton.rounded   },
-			{ KeyCode.K,      FormButton.amplify   }
+			{ KeyCode.K,      FormButton.amplify   },
+			{ KeyCode.C,      FormButton.copy      }
 		};
 		ShapeShortcuts.Modifiers = new Dictionary<KeyCode, Toggle>
 		{
@@ -1196,6 +1197,8 @@ public class ShapeMenu : MonoBehaviour
 		{
 			if (LastSelected == FormButton.amplify)
 				formSlider.SwitchTextStatus("Select h0 vertex..");
+			else if (LastSelected == FormButton.copy)
+				formSlider.SwitchTextStatus("Select the pivot..");
 			else
 				formSlider.SwitchTextStatus("Waiting for start row..");
 		}
