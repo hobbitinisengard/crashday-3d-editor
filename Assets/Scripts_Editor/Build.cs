@@ -310,7 +310,7 @@ public class Build : MonoBehaviour
 			MixingInfoText.text = "";
 			MixingInfoText.gameObject.SetActive(false);
 
-			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass && !LMBclicked)
 			{
 				if (tile_name == "NULL")
 				{
@@ -360,7 +360,7 @@ public class Build : MonoBehaviour
 				else
 					return;
 			}
-			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass)
+			if (!Input.GetKey(KeyCode.Space) && Highlight.over_grass && !LMBclicked)
 			{
 				if (tile_name == "NULL")
 				{
