@@ -7335,6 +7335,7 @@ MonoBehaviour:
   loadScreen: {fileID: 643070343}
   flatters: {fileID: 4900000, guid: 7b3c8c4e929bcf841ae079ca28215987, type: 3}
   thismaterial: {fileID: 2100000, guid: 26a36a1c566b1d04c86f2a863ee7309a, type: 2}
+  transparent: {fileID: 2100000, guid: 815f333d76060ef48af4ccdc0c942ae6, type: 2}
   editorPanel: {fileID: 737123667}
 --- !u!20 &643070349
 Camera:
@@ -9219,7 +9220,6 @@ MonoBehaviour:
   savePanel: {fileID: 183996195}
   partiallytransparent: {fileID: 2100000, guid: d7bfda3feb265d343bf8b92dbed7dd2f,
     type: 2}
-  transp: {fileID: 2100000, guid: 815f333d76060ef48af4ccdc0c942ae6, type: 2}
   reddish: {fileID: 2100000, guid: 0360f7186a8ce624ba484d29c7756665, type: 2}
 --- !u!114 &737123672
 MonoBehaviour:

@@ -22,7 +22,8 @@ public class Loader : MonoBehaviour
 
 	public TextAsset flatters;
 	public Material thismaterial;
-	
+	public Material transparent;
+
 	public GameObject editorPanel;
 	public static bool Isloading = false;
 	void InitializeCone()
@@ -46,6 +47,7 @@ public class Loader : MonoBehaviour
 	}
 	void Awake()
 	{
+		Build.transparent = this.transparent;
 		InitializeCone();
 		EnableLoadingScreen();
 		StartCoroutine(LoadTrackCoroutine());

@@ -38,9 +38,8 @@ public class Build : MonoBehaviour
 	public Text MixingInfoText; // text for displaying H = mixingHeight and keypad enter
 	public GameObject savePanel; // "save track scheme" menu
 	public Material partiallytransparent;
-	public Material transp;
 	public Material reddish;
-	private static Material transparent;
+	public static Material transparent { get; set; }
 	public static Border_vault Border_Vault = new Border_vault();
 	public static GameObject[,] TileObjectsArray { get; set; }
 	static bool LMBclicked = false;
@@ -64,11 +63,6 @@ public class Build : MonoBehaviour
 	private bool IsEnteringKeypadValue;
 	private static GameObject outlined_element;
 	private static GameObject HeightIndicator;
-
-    private void Awake()
-    {
-		transparent = transp;
-    }
     private void OnDisable()
 	{
 		ExitTileSelection();
