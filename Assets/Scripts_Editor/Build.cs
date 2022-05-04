@@ -717,7 +717,7 @@ public class Build : MonoBehaviour
 	{
 		try
 		{
-			return -TileManager.TileListInfo[tilename].Model.P3DHeight / (2f * 5f);
+			return TileManager.TileListInfo[tilename].Model.P3DHeight / (2f * 5f);
 		}
 		catch
 		{
@@ -753,7 +753,7 @@ public class Build : MonoBehaviour
 				byte Height = Consts.TilePlacementArray[pos.z, pos.x].Height;
 				GameObject Prefab = GetPrefab(rmc_o.name, rmc_o.transform, Rotation);
 				GetPrefabMesh(Mirrored, Prefab);
-				Tile_To_Grass_Cast(Prefab, rmc_o);
+				CalculateTileMeshPoints(Prefab, rmc_o);
 				rmc_o.layer = 9;
 			}
 		}
@@ -959,7 +959,7 @@ public class Build : MonoBehaviour
 
 			UpdateTiles(Get_surrounding_tiles(rmc));
 			Consts.UpdateMapColliders(rmc.transform.position, tileDims);
-			Tile_To_Grass_Cast(Prefab, rmc);
+			CalculateTileMeshPoints(Prefab, rmc);
 		}
 		else
 			SaveTileProperties(rmc, name, mirrored, cum_rotation, pos, Height);
@@ -1092,44 +1092,86 @@ public class Build : MonoBehaviour
 			InverseMesh(prefab.GetComponent<MeshFilter>().mesh);
 	}
 
-	static void Tile_To_Grass_Cast(GameObject prefab, GameObject rmc)
+	static void CalculateTileMeshPoints(GameObject prefab, GameObject rmc)
 	{
 		rmc.layer = 10;
 		Mesh mesh = prefab.GetComponent<MeshFilter>().mesh;
-		Vector3[] verts = mesh.vertices;
-		float pzero = GetPzero(prefab.name);
-		// Raycast tiles(H) \ rmc
+		Vector3[] tileVerts = mesh.vertices;
 
-		for (int i = 0; i < verts.Length; i++)
+		Vector3[] rmcVerts = rmc.GetComponent<MeshFilter>().mesh.vertices;
+		Dictionary<(int, int), float> rmcVertsDictionary = new Dictionary<(int, int), float>();
+		foreach (Vector3 v in rmcVerts)
 		{
-			RaycastHit hit;
-			Vector3 v = prefab.transform.TransformPoint(verts[i]);
-			float floating_offset = rmc.transform.position.y;
-			if (Physics.Raycast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, Consts.RAY_H, 1 << 8))
-			{
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
-			}
-			else if (Conecast(new Vector3(v.x, Consts.MAX_H, v.z), Vector3.down, out hit, 8))
-			{
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
-			}
-			else if (Physics.SphereCast(new Vector3(v.x, Consts.MAX_H, v.z), .005f, Vector3.down, out hit, Consts.RAY_H, 1 << 8))
-			{ // due to the fact rotation in unity is stored in quaternions using floats you won't always hit mesh collider with one-dimensional raycasts.
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, hit.point.y + v.y + floating_offset - pzero, v.z));
-			}
-			else // out of map boundaries: height of closest edge
-				verts[i] = prefab.transform.InverseTransformPoint(new Vector3(v.x, Consts.current_heights[0] + v.y - pzero, v.z));
+			int x = Mathf.RoundToInt(rmc.transform.TransformPoint(v).x);
+			int z = Mathf.RoundToInt(rmc.transform.TransformPoint(v).z);
+			rmcVertsDictionary[(x, z)] = v.y;
 		}
 
-		mesh.vertices = verts;
+		float p0 = GetPzero(prefab.name);
+		float floatingOffset = rmc.transform.position.y;
+
+		for (int i = 0; i < tileVerts.Length; i++)
+		{
+			Vector3 v_non_rounded = prefab.transform.TransformPoint(tileVerts[i]);
+			Vector3Int v = new Vector3Int(Mathf.FloorToInt(v_non_rounded.x), 0, Mathf.FloorToInt(v_non_rounded.z));
+			float BL, dhx, dhz;
+
+			if (v.x < 0 || v.z < 0 || v.x > Consts.TRACK.Width * 4 || v.z > Consts.TRACK.Height * 4)
+			{
+				BL = dhx = dhz = 0;
+			}
+			else if ((v.x == 0 || v.x == Consts.TRACK.Width * 4) && (v.z == 0 || v.z == Consts.TRACK.Height * 4))
+			{
+				BL = Consts.current_heights[Consts.PosToIndex(v.x, v.z)];
+				dhx = dhz = 0;
+			}
+			else if (v.x == 0 || v.x == Consts.TRACK.Width * 4)
+			{
+				BL = Consts.current_heights[Consts.PosToIndex(v.x, v.z)];
+				float TL = Consts.current_heights[Consts.PosToIndex(v.x, v.z + 1)];
+				float k = v_non_rounded.z - v.z;
+				dhx = 0;
+				dhz = k * (TL - BL);
+			}
+			else if (v.z == 0 || v.z == Consts.TRACK.Height * 4)
+			{
+				BL = Consts.current_heights[Consts.PosToIndex(v.x, v.z)];
+				float BR = Consts.current_heights[Consts.PosToIndex(v.x + 1, v.z)];
+				float k = v_non_rounded.x - v.x;
+				dhx = k * (BR - BL);
+				dhz = 0;
+			}
+			else
+			{
+				BL = Consts.current_heights[Consts.PosToIndex(v.x, v.z)];
+				float BR = Consts.current_heights[Consts.PosToIndex(v.x + 1, v.z)];
+				float TL = Consts.current_heights[Consts.PosToIndex(v.x, v.z + 1)];
+				float TR = Consts.current_heights[Consts.PosToIndex(v.x + 1, v.z + 1)];
+
+				float kx = v_non_rounded.x - v.x;
+				float kz = v_non_rounded.z - v.z;
+
+				float TM = TL + kx * (TR - TL);
+				float BM = BL + kx * (BR - BL);
+
+				dhx = kx * (BR - BL);
+				dhz = kz * (TM - BM);
+			}
+
+			float tilePointRelativeYPos = p0 + v_non_rounded.y;
+			float h = tilePointRelativeYPos + floatingOffset + BL + dhx + dhz;
+			tileVerts[i] = prefab.transform.InverseTransformPoint(new Vector3(v_non_rounded.x, h, v_non_rounded.z));
+		}
+
+		mesh.vertices = tileVerts;
 		mesh.RecalculateBounds();
 		mesh.RecalculateNormals();
 		prefab.SetActive(false);
 		prefab.SetActive(true);
 		prefab.transform.position = new Vector3(prefab.transform.position.x, 0, prefab.transform.position.z);
 		rmc.layer = 9;
-
 	}
+
 	public static bool Conecast(Vector3 global_pos, Vector3 Direction, out RaycastHit hit, int layer)
 	{
 		Consts.Cone.transform.position = global_pos;
