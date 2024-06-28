@@ -43,6 +43,8 @@ public class MainMenu : MonoBehaviour
 		{
 			TileManager.LoadTiles();
 		}
+		Application.targetFrameRate = 60;
+		QualitySettings.vSyncCount = 1;
 	}
 
 	void Initialize_Documents_Folder()
